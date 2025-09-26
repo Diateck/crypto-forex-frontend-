@@ -41,10 +41,8 @@ import {
   Settings,
   Star,
   BarChart,
-  PersonIcon,
-  EmailIcon,
-  SettingsIcon,
-  VerifiedUserIcon
+  Email,
+  VerifiedUser
 } from '@mui/icons-material';
 
 function TabPanel({ children, value, index }) {
@@ -187,7 +185,7 @@ export default function CopyTrading() {
           </Box>
         </Box>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-          <Chip icon={<VerifiedUserIcon />} label="KYC" color="primary" variant="outlined" />
+          <Chip icon={<VerifiedUser />} label="KYC" color="primary" variant="outlined" />
           <Button variant="contained" color="primary" startIcon={<ContentCopy />} size="small">
             Copy Trading
           </Button>
