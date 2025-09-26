@@ -148,7 +148,7 @@ export default function Deposits() {
         ))}
       </Box>
 
-      <Typography variant={{ xs: 'h5', sm: 'h4' }} fontWeight={700} sx={{ mb: 3, color: theme.palette.primary.main, textAlign: 'center' }}>
+      <Typography variant="h4" fontWeight={700} sx={{ mb: 3, color: theme.palette.primary.main, textAlign: 'center' }}>
         Deposit Using Bitcoin/Ethereum/Litecoin
       </Typography>
 
@@ -160,7 +160,7 @@ export default function Deposits() {
             boxShadow: 3, 
             bgcolor: theme.palette.background.paper 
           }}>
-            <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight={700} sx={{ mb: 1 }}>
+            <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
               {method.name} Deposit Method
             </Typography>
             <Typography sx={{ mb: 1, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
@@ -173,8 +173,8 @@ export default function Deposits() {
               variant="contained" 
               color="primary" 
               onClick={() => handleOpenModal(method)}
-              fullWidth={{ xs: true, sm: false }}
-              size={{ xs: 'large', sm: 'medium' }}
+              fullWidth
+              size="large"
             >
               Make Deposit
             </Button>
@@ -188,7 +188,7 @@ export default function Deposits() {
           boxShadow: 3, 
           bgcolor: theme.palette.background.paper 
         }}>
-          <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight={700} sx={{ mb: 1 }}>
+          <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
             Other Deposit Method
           </Typography>
           <Typography sx={{ mb: 1, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
@@ -204,8 +204,8 @@ export default function Deposits() {
             variant="contained" 
             color="secondary" 
             onClick={() => handleOpenModal('other')}
-            fullWidth={{ xs: true, sm: false }}
-            size={{ xs: 'large', sm: 'medium' }}
+            fullWidth
+            size="large"
           >
             Proceed
           </Button>
@@ -230,7 +230,7 @@ export default function Deposits() {
         }}>
           {selectedMethod && selectedMethod !== 'other' ? (
             <>
-              <Typography variant={{ xs: 'h6', sm: 'h6' }} fontWeight={700} sx={{ mb: 2 }}>
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
                 {selectedMethod.name} Deposit Details
               </Typography>
               <Divider sx={{ mb: 2 }} />
@@ -257,7 +257,7 @@ export default function Deposits() {
                   size="small" 
                   variant="outlined" 
                   onClick={() => {navigator.clipboard.writeText(selectedMethod.address)}}
-                  fullWidth={{ xs: true, sm: false }}
+                  fullWidth
                 >
                   Copy
                 </Button>
@@ -275,7 +275,7 @@ export default function Deposits() {
                 sx={{ mb: 2 }} 
                 value={amount} 
                 onChange={e => setAmount(e.target.value)}
-                size={{ xs: 'small', sm: 'medium' }}
+                size="medium"
               />
               <Box sx={{ mb: 2 }}>
                 <Typography sx={{ mb: 1, fontSize: { xs: '0.9rem', sm: '1rem' } }}>
@@ -299,7 +299,7 @@ export default function Deposits() {
                   variant="outlined" 
                   color="secondary" 
                   onClick={handleCloseModal}
-                  fullWidth={{ xs: true, sm: false }}
+                  fullWidth
                 >
                   Cancel
                 </Button>
@@ -307,7 +307,7 @@ export default function Deposits() {
                   variant="contained" 
                   color="primary" 
                   onClick={handleCloseModal}
-                  fullWidth={{ xs: true, sm: false }}
+                  fullWidth
                 >
                   Submit
                 </Button>
@@ -315,7 +315,7 @@ export default function Deposits() {
             </>
           ) : selectedMethod === 'other' ? (
             <>
-              <Typography variant={{ xs: 'h6', sm: 'h6' }} fontWeight={700} sx={{ mb: 2 }}>
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
                 Other Deposit Details
               </Typography>
               <Divider sx={{ mb: 2 }} />
@@ -359,7 +359,7 @@ export default function Deposits() {
                 sx={{ mb: 2 }} 
                 value={amount} 
                 onChange={e => setAmount(e.target.value)}
-                size={{ xs: 'small', sm: 'medium' }}
+                size="medium"
               />
               <Box sx={{ 
                 display: 'flex', 
@@ -371,7 +371,7 @@ export default function Deposits() {
                   variant="outlined" 
                   color="secondary" 
                   onClick={handleCloseModal}
-                  fullWidth={{ xs: true, sm: false }}
+                  fullWidth
                 >
                   Cancel
                 </Button>
@@ -379,7 +379,7 @@ export default function Deposits() {
                   variant="contained" 
                   color="secondary" 
                   onClick={handleCloseModal}
-                  fullWidth={{ xs: true, sm: false }}
+                  fullWidth
                 >
                   Submit
                 </Button>
@@ -391,3 +391,4 @@ export default function Deposits() {
       </Box>
     </Container>
   );
+}
