@@ -99,15 +99,20 @@ export default function Dashboard() {
 
   return (
     <Box p={{ xs: 1, sm: 3 }}>
-      {/* Header with username and quick actions */}
+      {/* Header with site name, username and quick actions */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, bgcolor: '#232742', p: 2, borderRadius: 3, boxShadow: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
             <PersonIcon fontSize="large" />
           </Avatar>
-          <Typography variant="h6" fontWeight={700} color="#fff">
-            Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
-          </Typography>
+          <Box>
+            <Typography variant="h5" fontWeight={900} color={theme.palette.primary.main}>
+              Elon Investment Broker
+            </Typography>
+            <Typography variant="h6" fontWeight={700} color="#fff">
+              Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
+            </Typography>
+          </Box>
         </Box>
         <Stack direction="row" spacing={2} alignItems="center">
           <Chip icon={<VerifiedUserIcon />} label="KYC" color="primary" variant="outlined" />
