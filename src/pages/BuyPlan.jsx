@@ -189,11 +189,13 @@ export default function BuyPlan() {
         </Box>
 
         {/* Investment Plans */}
-        <Grid container spacing={4} sx={{ mb: 8 }}>
+        <Grid container spacing={3} sx={{ mb: 8, justifyContent: 'center' }}>
           {investmentPlans.map((plan) => (
-            <Grid item xs={12} md={4} key={plan.id}>
+            <Grid item xs={12} sm={6} lg={4} key={plan.id} sx={{ display: 'flex', justifyContent: 'center' }}>
               <Card sx={{ 
-                height: '100%',
+                width: '100%',
+                maxWidth: 380,
+                aspectRatio: '1/1.2',
                 position: 'relative',
                 background: plan.gradient,
                 color: plan.name === 'Gold Plan' ? '#000' : '#fff',
@@ -204,7 +206,9 @@ export default function BuyPlan() {
                   transform: 'translateY(-8px)',
                   boxShadow: 16
                 },
-                border: plan.name === 'Gold Plan' ? '3px solid #FFD700' : 'none'
+                border: plan.name === 'Gold Plan' ? '3px solid #FFD700' : 'none',
+                display: 'flex',
+                flexDirection: 'column'
               }}>
                 {plan.type === 'VIP' && (
                   <Chip
@@ -217,83 +221,91 @@ export default function BuyPlan() {
                       right: 16,
                       bgcolor: '#FF6B6B',
                       color: '#fff',
-                      fontWeight: 'bold'
+                      fontWeight: 'bold',
+                      zIndex: 1
                     }}
                   />
                 )}
                 
-                <CardContent sx={{ p: 4, textAlign: 'center' }}>
+                <CardContent sx={{ p: { xs: 2, sm: 3 }, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   {/* Plan Header */}
-                  <Typography variant="h4" fontWeight="bold" gutterBottom>
-                    {plan.name}
-                  </Typography>
-                  <Typography variant="subtitle1" sx={{ mb: 3, opacity: 0.9 }}>
-                    {plan.type.toUpperCase()}
-                  </Typography>
+                  <Box>
+                    <Typography variant={{ xs: 'h5', sm: 'h4' }} fontWeight="bold" gutterBottom>
+                      {plan.name}
+                    </Typography>
+                    <Typography variant="subtitle1" sx={{ mb: 2, opacity: 0.9 }}>
+                      {plan.type.toUpperCase()}
+                    </Typography>
 
-                  {/* ROI Display */}
-                  <Box sx={{ 
-                    mb: 4, 
-                    p: 3, 
-                    bgcolor: 'rgba(0,0,0,0.1)', 
-                    borderRadius: 3,
-                    border: '2px solid rgba(255,255,255,0.2)'
-                  }}>
-                    <Typography variant="h2" fontWeight="bold" color="inherit">
-                      {plan.roi}%
-                    </Typography>
-                    <Typography variant="h6" fontWeight="bold">
-                      ROI Daily
-                    </Typography>
+                    {/* ROI Display */}
+                    <Box sx={{ 
+                      mb: 3, 
+                      p: { xs: 2, sm: 3 }, 
+                      bgcolor: 'rgba(0,0,0,0.1)', 
+                      borderRadius: 3,
+                      border: '2px solid rgba(255,255,255,0.2)'
+                    }}>
+                      <Typography variant={{ xs: 'h3', sm: 'h2' }} fontWeight="bold" color="inherit">
+                        {plan.roi}%
+                      </Typography>
+                      <Typography variant={{ xs: 'body1', sm: 'h6' }} fontWeight="bold">
+                        ROI Daily
+                      </Typography>
+                    </Box>
                   </Box>
 
                   {/* Plan Details */}
-                  <Box sx={{ mb: 4, textAlign: 'left' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography fontWeight="bold">Minimum Amount:</Typography>
+                  <Box sx={{ mb: 3 }}>
+                    <Box sx={{ 
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: 1,
+                      mb: 2,
+                      textAlign: 'left',
+                      fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                    }}>
+                      <Typography fontWeight="bold">Minimum:</Typography>
                       <Typography>${plan.minAmount.toLocaleString()}</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                      <Typography fontWeight="bold">Maximum Amount:</Typography>
+                      <Typography fontWeight="bold">Maximum:</Typography>
                       <Typography>${plan.maxAmount.toLocaleString()}</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                       <Typography fontWeight="bold">Duration:</Typography>
                       <Typography>{plan.duration}</Typography>
                     </Box>
                     
                     {/* Amount Range Display */}
                     <Box sx={{ 
-                      p: 2, 
+                      p: { xs: 1.5, sm: 2 }, 
                       bgcolor: 'rgba(255,255,255,0.1)', 
                       borderRadius: 2,
                       textAlign: 'center'
                     }}>
-                      <Typography variant="h6" fontWeight="bold">
+                      <Typography variant={{ xs: 'body1', sm: 'h6' }} fontWeight="bold">
                         ${plan.minAmount.toLocaleString()} - ${plan.maxAmount.toLocaleString()}
                       </Typography>
                     </Box>
                   </Box>
 
-                  {/* Features List */}
-                  <List dense sx={{ mb: 3 }}>
-                    {plan.features.map((feature, index) => (
-                      <ListItem key={index} sx={{ px: 0 }}>
-                        <ListItemIcon sx={{ minWidth: 24 }}>
-                          <TrendingUp sx={{ color: 'inherit', fontSize: 20 }} />
-                        </ListItemIcon>
-                        <ListItemText 
-                          primary={feature} 
-                          sx={{ 
-                            '& .MuiTypography-root': { 
-                              fontSize: '0.9rem',
-                              color: 'inherit'
-                            } 
-                          }} 
+                  {/* Features List - Condensed for square format */}
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+                      Key Features:
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center' }}>
+                      {plan.features.slice(0, 4).map((feature, index) => (
+                        <Chip
+                          key={index}
+                          label={feature.length > 20 ? feature.substring(0, 20) + '...' : feature}
+                          size="small"
+                          sx={{
+                            bgcolor: 'rgba(255,255,255,0.1)',
+                            color: 'inherit',
+                            fontSize: '0.7rem',
+                            height: 24
+                          }}
                         />
-                      </ListItem>
-                    ))}
-                  </List>
+                      ))}
+                    </Box>
+                  </Box>
 
                   {/* Invest Button */}
                   <Button
@@ -302,14 +314,15 @@ export default function BuyPlan() {
                     size="large"
                     onClick={() => handleInvestClick(plan)}
                     sx={{ 
-                      py: 2,
-                      fontSize: '1.1rem',
+                      py: { xs: 1.5, sm: 2 },
+                      fontSize: { xs: '1rem', sm: '1.1rem' },
                       fontWeight: 'bold',
                       bgcolor: plan.name === 'Gold Plan' ? '#000' : '#fff',
                       color: plan.name === 'Gold Plan' ? '#FFD700' : plan.color,
                       '&:hover': {
                         bgcolor: plan.name === 'Gold Plan' ? '#333' : '#f0f0f0'
-                      }
+                      },
+                      mt: 'auto'
                     }}
                   >
                     Invest Now
