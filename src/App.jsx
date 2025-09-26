@@ -107,11 +107,29 @@ function RequireAuth({ children }) {
   return children;
 }
 
+
 function AppContent() {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const handleDrawerOpen = () => setDrawerOpen(true);
   const handleDrawerClose = () => setDrawerOpen(false);
+
+  // Check if current route is login or register
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+
+  if (isAuthPage) {
+    // Render only the auth page, no AppBar/Drawer
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      </Box>
+    );
+  }
+
+  // ...existing code for dashboard pages...
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <CssBaseline />
@@ -185,8 +203,6 @@ function AppContent() {
         <Toolbar />
         <Routes>
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
           <Route path="/dashboard/deposits" element={<RequireAuth><Deposits /></RequireAuth>} />
           <Route path="/dashboard/withdrawals" element={<RequireAuth><Withdrawals /></RequireAuth>} />
           <Route path="/dashboard/trade" element={<RequireAuth><Trade /></RequireAuth>} />
