@@ -1,7 +1,10 @@
-import React from 'react';
-import { Typography, Box } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Card, Typography, TextField, Button } from '@mui/material';
 
-export default function Register() {
+function Register() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   return (
     <Box minHeight="100vh" display="flex" alignItems="center" justifyContent="center" bgcolor="#181A20">
       <Card sx={{ p: 4, borderRadius: 3, boxShadow: 3, minWidth: 320, maxWidth: 400, width: '100%' }}>
@@ -41,3 +44,5 @@ export default function Register() {
     </Box>
   );
 }
+
+export default Register;
