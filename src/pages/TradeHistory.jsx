@@ -228,20 +228,27 @@ export default function AccountHistory() {
       </Box>
 
       {/* Page Title and Actions */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" gutterBottom fontWeight="bold" color="primary">
-            Trade History
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        mb: 3,
+        flexDirection: { xs: 'column', sm: 'row' },
+        gap: { xs: 2, sm: 0 }
+      }}>
+        <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
+          <Typography variant={{ xs: 'h5', sm: 'h4' }} gutterBottom fontWeight="bold" color="primary">
+            Account History
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">
             View your complete transaction and trading history
           </Typography>
         </Box>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Button variant="outlined" startIcon={<Refresh />} size="small">
+          <Button variant="outlined" startIcon={<Refresh />} size="small" fullWidth={{ xs: true, sm: false }}>
             Refresh
           </Button>
-          <Button variant="contained" startIcon={<Download />} size="small">
+          <Button variant="contained" startIcon={<Download />} size="small" fullWidth={{ xs: true, sm: false }}>
             Export
           </Button>
         </Stack>
@@ -436,17 +443,30 @@ export default function AccountHistory() {
         borderRadius: 3,
         boxShadow: 6
       }}>
-        <TableContainer>
-          <Table sx={{ '& .MuiTableCell-root': { color: '#fff', borderColor: 'rgba(255,255,255,0.1)' } }}>
+        <TableContainer sx={{ 
+          overflowX: 'auto',
+          '&::-webkit-scrollbar': { height: 8 },
+          '&::-webkit-scrollbar-track': { bgcolor: 'rgba(255,255,255,0.1)' },
+          '&::-webkit-scrollbar-thumb': { bgcolor: 'primary.main', borderRadius: 4 }
+        }}>
+          <Table sx={{ 
+            '& .MuiTableCell-root': { 
+              color: '#fff', 
+              borderColor: 'rgba(255,255,255,0.1)',
+              fontSize: { xs: '0.8rem', sm: '0.875rem' },
+              padding: { xs: '8px', sm: '16px' }
+            },
+            minWidth: 800
+          }}>
             <TableHead>
               <TableRow sx={{ '& .MuiTableCell-root': { fontWeight: 700, bgcolor: 'rgba(255,255,255,0.05)' } }}>
                 <TableCell>Date & Time</TableCell>
                 <TableCell>Type</TableCell>
-                <TableCell>Description</TableCell>
+                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Description</TableCell>
                 <TableCell align="right">Amount</TableCell>
                 <TableCell>Status</TableCell>
-                <TableCell>Reference</TableCell>
-                <TableCell align="right">Balance</TableCell>
+                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Reference</TableCell>
+                <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Balance</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -454,10 +474,10 @@ export default function AccountHistory() {
                 <TableRow key={transaction.id} sx={{ '&:hover': { bgcolor: 'rgba(255,255,255,0.05)' } }}>
                   <TableCell>
                     <Box>
-                      <Typography color="#fff" fontWeight={600}>
+                      <Typography color="#fff" fontWeight={600} sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                         {transaction.date}
                       </Typography>
-                      <Typography variant="caption" color="rgba(255,255,255,0.6)">
+                      <Typography variant="caption" color="rgba(255,255,255,0.6)" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                         {transaction.time}
                       </Typography>
                     </Box>
@@ -465,13 +485,16 @@ export default function AccountHistory() {
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       {getTypeIcon(transaction.type)}
-                      <Typography color="#fff" fontWeight={600}>
+                      <Typography color="#fff" fontWeight={600} sx={{ 
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        display: { xs: 'none', sm: 'block' }
+                      }}>
                         {transaction.type}
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>
-                    <Typography color="#fff">
+                  <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                    <Typography color="#fff" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                       {transaction.description}
                     </Typography>
                   </TableCell>
@@ -479,6 +502,7 @@ export default function AccountHistory() {
                     <Typography
                       color={transaction.amount.startsWith('+') ? 'success.main' : 'error.main'}
                       fontWeight="bold"
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
                     >
                       {transaction.amount}
                     </Typography>
@@ -488,16 +512,20 @@ export default function AccountHistory() {
                       label={transaction.status}
                       color={getStatusColor(transaction.status)}
                       size="small"
-                      sx={{ fontWeight: 600 }}
+                      sx={{ 
+                        fontWeight: 600,
+                        fontSize: { xs: '0.6rem', sm: '0.75rem' },
+                        height: { xs: 20, sm: 24 }
+                      }}
                     />
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="rgba(255,255,255,0.8)">
+                  <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                    <Typography variant="body2" color="rgba(255,255,255,0.8)" sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' } }}>
                       {transaction.reference}
                     </Typography>
                   </TableCell>
-                  <TableCell align="right">
-                    <Typography color="#fff" fontWeight={600}>
+                  <TableCell align="right" sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                    <Typography color="#fff" fontWeight={600} sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                       {transaction.balance}
                     </Typography>
                   </TableCell>
@@ -517,11 +545,15 @@ export default function AccountHistory() {
           rowsPerPage={rowsPerPage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           sx={{
-            '& .MuiTablePagination-toolbar': { color: '#fff' },
-            '& .MuiTablePagination-selectLabel': { color: '#fff' },
-            '& .MuiTablePagination-displayedRows': { color: '#fff' },
-            '& .MuiTablePagination-select': { color: '#fff' },
-            '& .MuiIconButton-root': { color: '#fff' }
+            '& .MuiTablePagination-toolbar': { 
+              color: '#fff',
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              padding: { xs: '8px 16px', sm: '16px' }
+            },
+            '& .MuiTablePagination-selectLabel': { color: '#fff', fontSize: { xs: '0.75rem', sm: '0.875rem' } },
+            '& .MuiTablePagination-displayedRows': { color: '#fff', fontSize: { xs: '0.75rem', sm: '0.875rem' } },
+            '& .MuiTablePagination-select': { color: '#fff', fontSize: { xs: '0.75rem', sm: '0.875rem' } },
+            '& .MuiIconButton-root': { color: '#fff', padding: { xs: '4px', sm: '8px' } }
           }}
         />
       </Card>
