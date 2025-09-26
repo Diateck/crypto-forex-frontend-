@@ -121,7 +121,7 @@ export default function Withdrawals() {
 
       {/* Withdraw Form - centered and professional */}
       <Box maxWidth={500} mx="auto" sx={{ px: { xs: 1, sm: 0 } }}>
-        <Typography variant={{ xs: 'h5', sm: 'h4' }} fontWeight={900} color={theme.palette.primary.main} sx={{ mb: 2, textAlign: 'center' }}>
+        <Typography variant="h4" fontWeight={900} color={theme.palette.primary.main} sx={{ mb: 2, textAlign: 'center' }}>
           Withdraw
         </Typography>
         <Box sx={{ 
@@ -139,7 +139,7 @@ export default function Withdrawals() {
           </Typography>
         </Box>
         <Divider sx={{ mb: 3 }} />
-        <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight={800} sx={{ mb: 2, textAlign: 'center' }}>
+        <Typography variant="h5" fontWeight={800} sx={{ mb: 2, textAlign: 'center' }}>
           Payment Details
         </Typography>
         <Card sx={{ 
@@ -158,7 +158,7 @@ export default function Withdrawals() {
             value={withdrawalType}
             onChange={e => setWithdrawalType(e.target.value)}
             sx={{ mb: 2 }}
-            size={{ xs: 'small', sm: 'medium' }}
+            size="medium"
           >
             {withdrawalOptions.map(option => (
               <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>
@@ -174,7 +174,7 @@ export default function Withdrawals() {
                 sx={{ mb: 2 }} 
                 value={bankName} 
                 onChange={e => setBankName(e.target.value)}
-                size={{ xs: 'small', sm: 'medium' }}
+                size="medium"
               />
               <TextField 
                 label="Account Name" 
@@ -182,7 +182,7 @@ export default function Withdrawals() {
                 sx={{ mb: 2 }} 
                 value={accountName} 
                 onChange={e => setAccountName(e.target.value)}
-                size={{ xs: 'small', sm: 'medium' }}
+                size="medium"
               />
               <TextField 
                 label="Account Number" 
@@ -190,7 +190,7 @@ export default function Withdrawals() {
                 sx={{ mb: 2 }} 
                 value={accountNumber} 
                 onChange={e => setAccountNumber(e.target.value)}
-                size={{ xs: 'small', sm: 'medium' }}
+                size="medium"
               />
             </>
           )}
@@ -201,7 +201,7 @@ export default function Withdrawals() {
               sx={{ mb: 2 }} 
               value={walletAddress} 
               onChange={e => setWalletAddress(e.target.value)}
-              size={{ xs: 'small', sm: 'medium' }}
+              size="medium"
             />
           )}
 
@@ -213,7 +213,7 @@ export default function Withdrawals() {
             onChange={e => setAmount(e.target.value)}
             type="number"
             inputProps={{ min: 0 }}
-            size={{ xs: 'small', sm: 'medium' }}
+            size="medium"
           />
           <Button 
             variant="contained" 
