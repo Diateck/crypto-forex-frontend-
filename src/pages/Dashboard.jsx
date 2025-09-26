@@ -120,11 +120,11 @@ export default function Dashboard() {
             width: { xs: 32, sm: 40, md: 48 }, 
             height: { xs: 32, sm: 40, md: 48 } 
           }}>
-            <PersonIcon fontSize={{ xs: 'medium', sm: 'large' }} />
+            <PersonIcon sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem', md: '1.8rem' } }} />
           </Avatar>
           <Box>
             <Typography 
-              variant={{ xs: 'subtitle1', sm: 'h6', md: 'h5' }} 
+              variant="h5"
               fontWeight={900} 
               color={theme.palette.primary.main}
               sx={{ fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' } }}
@@ -132,7 +132,7 @@ export default function Dashboard() {
               Elon Investment Broker
             </Typography>
             <Typography 
-              variant={{ xs: 'body2', sm: 'subtitle1', md: 'h6' }} 
+              variant="h6"
               fontWeight={700} 
               color="#fff"
               sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: '1.25rem' } }}
@@ -241,7 +241,7 @@ export default function Dashboard() {
               <Box sx={{ mr: { xs: 1, sm: 2 } }}>{card.icon}</Box>
               <Box>
                 <Typography 
-                  variant={{ xs: 'subtitle1', sm: 'h6' }} 
+                  variant="h6"
                   fontWeight={700} 
                   sx={{ 
                     color: '#fff',
@@ -251,7 +251,7 @@ export default function Dashboard() {
                   {card.value}
                 </Typography>
                 <Typography 
-                  variant={{ xs: 'caption', sm: 'subtitle2' }} 
+                  variant="subtitle2"
                   fontWeight={500} 
                   sx={{ 
                     color: '#fff', 
@@ -304,7 +304,7 @@ export default function Dashboard() {
               <Box sx={{ mr: { xs: 1, sm: 2 } }}>{card.icon}</Box>
               <Box>
                 <Typography 
-                  variant={{ xs: 'subtitle1', sm: 'h6' }} 
+                  variant="h6"
                   fontWeight={700} 
                   sx={{ 
                     color: '#fff',
@@ -314,7 +314,7 @@ export default function Dashboard() {
                   {card.value}
                 </Typography>
                 <Typography 
-                  variant={{ xs: 'caption', sm: 'subtitle2' }} 
+                  variant="subtitle2"
                   fontWeight={500} 
                   sx={{ 
                     color: '#fff', 
@@ -347,7 +347,7 @@ export default function Dashboard() {
           alignItems: 'center' 
         }}>
           <Typography 
-            variant={{ xs: 'h6', sm: 'h5' }} 
+            variant="h5"
             fontWeight={700} 
             sx={{ 
               mb: 2, 
@@ -436,7 +436,7 @@ export default function Dashboard() {
           alignItems: 'center' 
         }}>
           <Typography 
-            variant={{ xs: 'h6', sm: 'h5' }} 
+            variant="h5"
             fontWeight={700} 
             sx={{ 
               mb: 2,
@@ -507,7 +507,7 @@ export default function Dashboard() {
           alignItems: 'center' 
         }}>
           <Typography 
-            variant={{ xs: 'h6', sm: 'h5' }} 
+            variant="h5"
             fontWeight={700} 
             sx={{ 
               mb: 2,
