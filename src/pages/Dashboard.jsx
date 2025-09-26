@@ -108,31 +108,63 @@ export default function Dashboard() {
         justifyContent: 'space-between', 
         mb: 2, 
         bgcolor: '#232742', 
-        p: 2, 
+        p: { xs: 1.5, sm: 2 }, 
         borderRadius: 3, 
         boxShadow: 3,
         flexDirection: { xs: 'column', md: 'row' },
         gap: { xs: 2, md: 0 }
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
-            <PersonIcon fontSize="large" />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+          <Avatar sx={{ 
+            bgcolor: 'primary.main', 
+            width: { xs: 32, sm: 40, md: 48 }, 
+            height: { xs: 32, sm: 40, md: 48 } 
+          }}>
+            <PersonIcon fontSize={{ xs: 'medium', sm: 'large' }} />
           </Avatar>
           <Box>
-            <Typography variant="h5" fontWeight={900} color={theme.palette.primary.main}>
+            <Typography 
+              variant={{ xs: 'subtitle1', sm: 'h6', md: 'h5' }} 
+              fontWeight={900} 
+              color={theme.palette.primary.main}
+              sx={{ fontSize: { xs: '1rem', sm: '1.25rem', md: '1.5rem' } }}
+            >
               Elon Investment Broker
             </Typography>
-            <Typography variant="h6" fontWeight={700} color="#fff">
+            <Typography 
+              variant={{ xs: 'body2', sm: 'subtitle1', md: 'h6' }} 
+              fontWeight={700} 
+              color="#fff"
+              sx={{ fontSize: { xs: '0.875rem', sm: '1rem', md: '1.25rem' } }}
+            >
               Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
             </Typography>
           </Box>
         </Box>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-          <Chip icon={<VerifiedUserIcon />} label="KYC" color="primary" variant="outlined" />
-          <Button variant="contained" color="primary" startIcon={<EmailIcon />} size="small">
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 1, sm: 2 }} alignItems="center">
+          <Chip 
+            icon={<VerifiedUserIcon />} 
+            label="KYC" 
+            color="primary" 
+            variant="outlined" 
+            size={{ xs: 'small', sm: 'medium' }}
+          />
+          <Button 
+            variant="contained" 
+            color="primary" 
+            startIcon={<EmailIcon />} 
+            size={{ xs: 'small', sm: 'medium' }}
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
             Mail Us
           </Button>
-          <Button variant="contained" color="secondary" startIcon={<SettingsIcon />} size="small">
+          <Button 
+            variant="contained" 
+            color="secondary" 
+            startIcon={<SettingsIcon />} 
+            size={{ xs: 'small', sm: 'medium' }}
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
             Settings
           </Button>
         </Stack>
@@ -243,7 +275,7 @@ export default function Dashboard() {
         <Card sx={{ 
           borderRadius: 3, 
           boxShadow: 6, 
-          minHeight: 320, 
+          minHeight: { xs: 280, sm: 320 }, 
           bgcolor: theme.palette.background.paper, 
           width: '100%', 
           maxWidth: 1200, 
@@ -253,7 +285,15 @@ export default function Dashboard() {
           flexDirection: 'column', 
           alignItems: 'center' 
         }}>
-          <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight={700} sx={{ mb: 2, textAlign: 'center' }}>
+          <Typography 
+            variant={{ xs: 'h6', sm: 'h5' }} 
+            fontWeight={700} 
+            sx={{ 
+              mb: 2, 
+              textAlign: 'center',
+              fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+            }}
+          >
             Crypto Trading Chart
           </Typography>
           <Box sx={{ mb: 2, width: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -321,8 +361,27 @@ export default function Dashboard() {
         </Card>
 
         {/* Forex Trading Chart */}
-        <Card sx={{ borderRadius: 3, boxShadow: 6, minHeight: 320, bgcolor: theme.palette.background.paper, width: '100%', maxWidth: 1200, p: 2, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
+        <Card sx={{ 
+          borderRadius: 3, 
+          boxShadow: 6, 
+          minHeight: { xs: 280, sm: 320 }, 
+          bgcolor: theme.palette.background.paper, 
+          width: '100%', 
+          maxWidth: 1200, 
+          p: { xs: 1, sm: 2 }, 
+          position: 'relative', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center' 
+        }}>
+          <Typography 
+            variant={{ xs: 'h6', sm: 'h5' }} 
+            fontWeight={700} 
+            sx={{ 
+              mb: 2,
+              fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+            }}
+          >
             Forex Trading Chart
           </Typography>
           <Box sx={{ mb: 2, width: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -373,8 +432,27 @@ export default function Dashboard() {
         </Card>
 
         {/* Stock Market Data Chart */}
-        <Card sx={{ borderRadius: 3, boxShadow: 6, minHeight: 320, bgcolor: theme.palette.background.paper, width: '100%', maxWidth: 1200, p: 2, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
+        <Card sx={{ 
+          borderRadius: 3, 
+          boxShadow: 6, 
+          minHeight: { xs: 280, sm: 320 }, 
+          bgcolor: theme.palette.background.paper, 
+          width: '100%', 
+          maxWidth: 1200, 
+          p: { xs: 1, sm: 2 }, 
+          position: 'relative', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center' 
+        }}>
+          <Typography 
+            variant={{ xs: 'h6', sm: 'h5' }} 
+            fontWeight={700} 
+            sx={{ 
+              mb: 2,
+              fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+            }}
+          >
             Stock Market Data Chart
           </Typography>
           <Box sx={{ mb: 2, width: '100%', display: 'flex', justifyContent: 'center' }}>
