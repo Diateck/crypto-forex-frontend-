@@ -133,18 +133,15 @@ export default function Deposits() {
               <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
                 <img src={selectedMethod.qr} alt="Deposit QR" style={{ width: 120, height: 120 }} />
               </Box>
-              <TextField label="Amount" fullWidth sx={{ mb: 2 }} value={amount} onChange={e => setAmount(e.target.value)} />
               <Box sx={{ mb: 2 }}>
                 <Typography sx={{ mb: 1 }}>Upload Payment Proof:</Typography>
                 <input type="file" accept="image/*" onChange={e => setProof(e.target.files[0])} />
               </Box>
               <Divider sx={{ mb: 2 }} />
-              <Typography variant="subtitle2" fontWeight={700}>Full Name: {user.name}</Typography>
-              <Typography variant="subtitle2" fontWeight={700}>Email: {user.email}</Typography>
-              <Typography variant="subtitle2" fontWeight={700}>Account Type: {user.accountType}</Typography>
-              <Typography variant="subtitle2" fontWeight={700}>Deposit Type: {selectedMethod.currency}</Typography>
-              <Typography variant="subtitle2" fontWeight={700}>Amount: {amount}</Typography>
-              <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={handleCloseModal}>Submit</Button>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                <Button variant="outlined" color="secondary" onClick={handleCloseModal}>Cancel</Button>
+                <Button variant="contained" color="primary" onClick={handleCloseModal}>Submit</Button>
+              </Box>
             </>
           ) : selectedMethod === 'other' ? (
             <>
@@ -155,7 +152,10 @@ export default function Deposits() {
               <Typography variant="subtitle2" fontWeight={700}>Account Type: {user.accountType}</Typography>
               <Typography variant="subtitle2" fontWeight={700}>Deposit Type: Other</Typography>
               <TextField label="Amount" fullWidth sx={{ mb: 2 }} value={amount} onChange={e => setAmount(e.target.value)} />
-              <Button variant="contained" color="secondary" sx={{ mt: 2 }} onClick={handleCloseModal}>Submit</Button>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+                <Button variant="outlined" color="secondary" onClick={handleCloseModal}>Cancel</Button>
+                <Button variant="contained" color="secondary" onClick={handleCloseModal}>Submit</Button>
+              </Box>
             </>
           ) : null}
         </Box>
