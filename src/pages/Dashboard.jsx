@@ -35,17 +35,17 @@ const marketData = [
 
 const cardGradient = 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)';
 const topCards = [
-  { label: 'Total Balance', value: '$0.00', icon: <AccountBalanceWalletIcon fontSize="large" />, gradient: cardGradient },
-  { label: 'Profit', value: '$0.00', icon: <ShowChartIcon fontSize="large" />, gradient: cardGradient },
-  { label: 'Total Bonus', value: '$0.00', icon: <GroupIcon fontSize="large" />, gradient: cardGradient },
-  { label: 'Account Status', value: 'UNVERIFIED', icon: <VerifiedUserIcon fontSize="large" />, gradient: cardGradient, chip: true },
+  { label: 'Total Balance', value: '$0.00', icon: <AccountBalanceWalletIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />, gradient: cardGradient },
+  { label: 'Profit', value: '$0.00', icon: <ShowChartIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />, gradient: cardGradient },
+  { label: 'Total Bonus', value: '$0.00', icon: <GroupIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />, gradient: cardGradient },
+  { label: 'Account Status', value: 'UNVERIFIED', icon: <VerifiedUserIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />, gradient: cardGradient, chip: true },
 ];
 
 const bottomCards = [
-  { label: 'Total Trades', value: '0', icon: <ShowChartIcon fontSize="large" />, gradient: cardGradient },
-  { label: 'Open Trades', value: '0', icon: <FolderOpenIcon fontSize="large" />, gradient: cardGradient },
-  { label: 'Closed Trades', value: '0', icon: <HistoryIcon fontSize="large" />, gradient: cardGradient },
-  { label: 'Win/Loss Ratio', value: '0', icon: <EmojiEventsIcon fontSize="large" />, gradient: cardGradient },
+  { label: 'Total Trades', value: '0', icon: <ShowChartIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />, gradient: cardGradient },
+  { label: 'Open Trades', value: '0', icon: <FolderOpenIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />, gradient: cardGradient },
+  { label: 'Closed Trades', value: '0', icon: <HistoryIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />, gradient: cardGradient },
+  { label: 'Win/Loss Ratio', value: '0', icon: <EmojiEventsIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />, gradient: cardGradient },
 ];
 
 const notifications = [
@@ -147,14 +147,22 @@ export default function Dashboard() {
             label="KYC" 
             color="primary" 
             variant="outlined" 
-            size={{ xs: 'small', sm: 'medium' }}
+            size="small"
+            sx={{ 
+              height: { xs: 24, sm: 32 },
+              fontSize: { xs: '0.7rem', sm: '0.8125rem' }
+            }}
           />
           <Button 
             variant="contained" 
             color="primary" 
             startIcon={<EmailIcon />} 
-            size={{ xs: 'small', sm: 'medium' }}
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            size="small"
+            sx={{ 
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              height: { xs: 32, sm: 36 },
+              px: { xs: 2, sm: 3 }
+            }}
           >
             Mail Us
           </Button>
@@ -162,8 +170,12 @@ export default function Dashboard() {
             variant="contained" 
             color="secondary" 
             startIcon={<SettingsIcon />} 
-            size={{ xs: 'small', sm: 'medium' }}
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            size="small"
+            sx={{ 
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              height: { xs: 32, sm: 36 },
+              px: { xs: 2, sm: 3 }
+            }}
           >
             Settings
           </Button>
@@ -217,22 +229,52 @@ export default function Dashboard() {
                 boxShadow: 6,
                 background: card.gradient,
                 color: '#fff',
-                minHeight: 120,
+                minHeight: { xs: 100, sm: 120 },
                 display: 'flex',
                 alignItems: 'center',
-                px: 2,
-                py: 2,
+                px: { xs: 1.5, sm: 2 },
+                py: { xs: 1.5, sm: 2 },
                 position: 'relative',
                 overflow: 'hidden',
               }}
             >
-              <Box sx={{ mr: 2 }}>{card.icon}</Box>
+              <Box sx={{ mr: { xs: 1, sm: 2 } }}>{card.icon}</Box>
               <Box>
-                <Typography variant="h6" fontWeight={700} sx={{ color: '#fff' }}>{card.value}</Typography>
-                <Typography variant="subtitle2" fontWeight={500} sx={{ color: '#fff', opacity: 0.9 }}>{card.label}</Typography>
+                <Typography 
+                  variant={{ xs: 'subtitle1', sm: 'h6' }} 
+                  fontWeight={700} 
+                  sx={{ 
+                    color: '#fff',
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}
+                >
+                  {card.value}
+                </Typography>
+                <Typography 
+                  variant={{ xs: 'caption', sm: 'subtitle2' }} 
+                  fontWeight={500} 
+                  sx={{ 
+                    color: '#fff', 
+                    opacity: 0.9,
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                  }}
+                >
+                  {card.label}
+                </Typography>
                 {card.chip && (
                   <Box sx={{ mt: 1 }}>
-                    <Chip label="UNVERIFIED" color="default" size="small" sx={{ bgcolor: '#fff', color: '#f5576c', fontWeight: 700 }} />
+                    <Chip 
+                      label="UNVERIFIED" 
+                      color="default" 
+                      size="small" 
+                      sx={{ 
+                        bgcolor: '#fff', 
+                        color: '#f5576c', 
+                        fontWeight: 700,
+                        height: { xs: 20, sm: 24 },
+                        fontSize: { xs: '0.6rem', sm: '0.75rem' }
+                      }} 
+                    />
                   </Box>
                 )}
               </Box>
@@ -250,19 +292,38 @@ export default function Dashboard() {
                 boxShadow: 6,
                 background: card.gradient,
                 color: '#fff',
-                minHeight: 120,
+                minHeight: { xs: 100, sm: 120 },
                 display: 'flex',
                 alignItems: 'center',
-                px: 2,
-                py: 2,
+                px: { xs: 1.5, sm: 2 },
+                py: { xs: 1.5, sm: 2 },
                 position: 'relative',
                 overflow: 'hidden',
               }}
             >
-              <Box sx={{ mr: 2 }}>{card.icon}</Box>
+              <Box sx={{ mr: { xs: 1, sm: 2 } }}>{card.icon}</Box>
               <Box>
-                <Typography variant="h6" fontWeight={700} sx={{ color: '#fff' }}>{card.value}</Typography>
-                <Typography variant="subtitle2" fontWeight={500} sx={{ color: '#fff', opacity: 0.9 }}>{card.label}</Typography>
+                <Typography 
+                  variant={{ xs: 'subtitle1', sm: 'h6' }} 
+                  fontWeight={700} 
+                  sx={{ 
+                    color: '#fff',
+                    fontSize: { xs: '1rem', sm: '1.25rem' }
+                  }}
+                >
+                  {card.value}
+                </Typography>
+                <Typography 
+                  variant={{ xs: 'caption', sm: 'subtitle2' }} 
+                  fontWeight={500} 
+                  sx={{ 
+                    color: '#fff', 
+                    opacity: 0.9,
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                  }}
+                >
+                  {card.label}
+                </Typography>
               </Box>
             </Card>
           </Grid>
