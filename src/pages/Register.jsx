@@ -12,6 +12,8 @@ function Register() {
     e.preventDefault();
     // Basic form validation for testing
     if (name.trim() && email.trim() && password.trim()) {
+      // Set authentication flag for testing
+      localStorage.setItem('isAuth', 'true');
       // Redirect to dashboard after successful "registration"
       navigate('/dashboard');
     } else {
@@ -30,29 +32,29 @@ function Register() {
           <Typography variant="h5" fontWeight={900} color="primary" sx={{ mb: 2 }}>
             Register
           </Typography>
-        <TextField
-          label="Full Name"
-          fullWidth
-          sx={{ mb: 2 }}
-          value={name}
-          onChange={e => setName(e.target.value)}
-        />
-        <TextField
-          label="Email"
-          type="email"
-          fullWidth
-          sx={{ mb: 2 }}
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-        />
-        <TextField
-          label="Password"
-          type="password"
-          fullWidth
-          sx={{ mb: 2 }}
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-        />
+          <TextField
+            label="Full Name"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
+          <TextField
+            label="Email"
+            type="email"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+          <TextField
+            label="Password"
+            type="password"
+            fullWidth
+            sx={{ mb: 2 }}
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
           <Button variant="contained" color="primary" fullWidth size="large" type="submit" sx={{ fontWeight: 700 }}>
             Register
           </Button>
