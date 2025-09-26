@@ -63,6 +63,7 @@ export default function Deposits() {
     setSelectedMethod(method);
     setModalOpen(true);
   };
+  
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedMethod(null);
@@ -72,7 +73,7 @@ export default function Deposits() {
 
   return (
     <Container maxWidth="xl">
-      <Box p={{ xs: 1, sm: 3 }}>
+      <Box sx={{ p: { xs: 1, sm: 3 }, minHeight: '100vh' }}>
       {/* Header - Consistent with Dashboard */}
       <Box sx={{ 
         display: 'flex', 
@@ -387,7 +388,6 @@ export default function Deposits() {
           ) : null}
         </Box>
       </Modal>
-    </Box>
+      </Box>
     </Container>
   );
-}
