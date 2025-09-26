@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Typography, Box, Grid, Card, useTheme, Avatar, Button, Stack, Chip } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
@@ -55,29 +55,37 @@ export default function Dashboard() {
   const isResizing = useRef(false);
 
   // Mouse event handlers for resizing
-  const handleMouseDown = () => {
+  const handleMouseDown = useCallback(() => {
     isResizing.current = true;
-    document.body.style.cursor = 'ew-resize';
-  };
-  const handleMouseUp = () => {
+    if (typeof document !== 'undefined') {
+      document.body.style.cursor = 'ew-resize';
+    }
+  }, []);
+  
+  const handleMouseUp = useCallback(() => {
     isResizing.current = false;
-    document.body.style.cursor = '';
-  };
-  const handleMouseMove = (e) => {
-    if (isResizing.current) {
+    if (typeof document !== 'undefined') {
+      document.body.style.cursor = '';
+    }
+  }, []);
+  
+  const handleMouseMove = useCallback((e) => {
+    if (isResizing.current && typeof window !== 'undefined') {
       // Calculate new width, minimum 300px, maximum 100vw
       const newWidth = Math.max(300, Math.min(window.innerWidth, e.clientX - 50));
       setChartWidth(newWidth);
     }
-  };
-  React.useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
   }, []);
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [handleMouseMove, handleMouseUp]);
 
   return (
     <Box p={{ xs: 1, sm: 3 }}>
