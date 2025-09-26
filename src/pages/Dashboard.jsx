@@ -388,10 +388,8 @@ export default function Dashboard() {
               src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_crypto&symbol=${selectedPair}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
               width="100%"
               height="400"
-              allowtransparency="true"
               frameBorder="0"
               scrolling="no"
-              allowFullScreen
               style={{ borderRadius: 8 }}
             />
             <div
@@ -458,10 +456,8 @@ export default function Dashboard() {
               src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_forex&symbol=${selectedForex}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
               width="100%"
               height="400"
-              allowtransparency="true"
               frameBorder="0"
               scrolling="no"
-              allowFullScreen
               style={{ borderRadius: 8 }}
             />
             <div
@@ -528,10 +524,8 @@ export default function Dashboard() {
               src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_stock&symbol=${selectedStock}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
               width="100%"
               height="400"
-              allowtransparency="true"
               frameBorder="0"
               scrolling="no"
-              allowFullScreen
               style={{ borderRadius: 8 }}
             />
             <div
@@ -579,10 +573,8 @@ export default function Dashboard() {
             src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_12345&symbol=${selectedPair}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
             width="100%"
             height="500"
-            allowtransparency="true"
             frameBorder="0"
             scrolling="no"
-            allowFullScreen
             style={{ borderRadius: 8 }}
           />
           <div
