@@ -48,7 +48,8 @@ import {
   Warning,
   CheckCircle,
   Cancel,
-  AccessTime
+  AccessTime,
+  History
 } from '@mui/icons-material';
 
 // Trading assets - Crypto, Forex, and Stocks with TradingView symbols
@@ -1284,8 +1285,8 @@ export default function Trade() {
                             </Typography>
                           </Box>
                           <Chip
-                            label={trade.profit > 0 ? 'PROFIT' : 'LOSS'}
-                            color={trade.profit > 0 ? 'success' : 'error'}
+                            label={trade.pnl > 0 ? 'PROFIT' : 'LOSS'}
+                            color={trade.pnl > 0 ? 'success' : 'error'}
                             size="small"
                             sx={{ fontSize: '0.6rem', height: 20 }}
                           />
@@ -1296,11 +1297,11 @@ export default function Trade() {
                           </Typography>
                           <Typography
                             variant="caption"
-                            color={trade.profit > 0 ? 'success.main' : 'error.main'}
+                            color={trade.pnl > 0 ? 'success.main' : 'error.main'}
                             fontWeight={600}
                             sx={{ fontSize: '0.7rem' }}
                           >
-                            {trade.profit > 0 ? '+' : ''}${trade.profit.toFixed(2)}
+                            {trade.pnl > 0 ? '+' : ''}${trade.pnl.toFixed(2)}
                           </Typography>
                         </Box>
                       </Paper>
