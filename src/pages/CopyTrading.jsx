@@ -268,8 +268,8 @@ export default function CopyTrading() {
         </Box>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
           <Chip icon={<VerifiedUser />} label="KYC" color="primary" variant="outlined" />
-          <Button variant="contained" color="primary" startIcon={<ContentCopy />} size="small">
-            Copy Trading
+          <Button variant="contained" color="primary" startIcon={<Email />} size="small">
+            Mail Us
           </Button>
           <Button variant="contained" color="secondary" startIcon={<Settings />} size="small">
             Settings
