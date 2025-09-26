@@ -154,7 +154,21 @@ export default function Deposits() {
               <Typography variant="subtitle2" fontWeight={700}>Full Name: {user.name}</Typography>
               <Typography variant="subtitle2" fontWeight={700}>Email: {user.email}</Typography>
               <Typography variant="subtitle2" fontWeight={700}>Account Type: {user.accountType}</Typography>
-              <Typography variant="subtitle2" fontWeight={700}>Deposit Type: Other</Typography>
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>Deposit Type:</Typography>
+                <select style={{ width: '100%', padding: '10px', borderRadius: 6, border: '1px solid #444', background: '#181A20', color: '#fff', fontSize: '1rem' }}>
+                  <option value="">Select Deposit Type</option>
+                  <option value="Litecoin">Litecoin</option>
+                  <option value="Bank Transfer">Bank Transfer</option>
+                  <option value="Bitcoin Cash">Bitcoin Cash</option>
+                  <option value="USDT">USDT</option>
+                  <option value="PayPal">PayPal</option>
+                  <option value="Stellar">Stellar</option>
+                  <option value="Western Union">Western Union</option>
+                  <option value="Skrill">Skrill</option>
+                  <option value="MoneyGram">MoneyGram</option>
+                </select>
+              </Box>
               <TextField label="Amount" fullWidth sx={{ mb: 2 }} value={amount} onChange={e => setAmount(e.target.value)} />
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                 <Button variant="outlined" color="secondary" onClick={handleCloseModal}>Cancel</Button>
