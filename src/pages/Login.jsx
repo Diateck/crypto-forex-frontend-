@@ -12,6 +12,8 @@ export default function Login() {
     e.preventDefault();
     // Basic form validation for testing
     if (email.trim() && password.trim()) {
+      // Set authentication flag for testing
+      localStorage.setItem('isAuth', 'true');
       // Redirect to dashboard after successful "login"
       navigate('/dashboard');
     } else {
