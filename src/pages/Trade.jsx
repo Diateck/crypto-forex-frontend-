@@ -62,12 +62,12 @@ const tradingAssets = [
   { symbol: 'DOT/USDT', name: 'Polkadot', price: 8.5, change: 1.7, type: 'crypto', category: 'Cryptocurrency', tvSymbol: 'BINANCE:DOTUSDT' },
 
   // Forex
-  { symbol: 'EUR/USD', name: 'Euro vs US Dollar', price: 1.0850, change: 0.15, type: 'forex', category: 'Forex', tvSymbol: 'OANDA:EURUSD' },
-  { symbol: 'GBP/USD', name: 'British Pound vs US Dollar', price: 1.2750, change: -0.25, type: 'forex', category: 'Forex', tvSymbol: 'OANDA:GBPUSD' },
-  { symbol: 'USD/JPY', name: 'US Dollar vs Japanese Yen', price: 147.50, change: 0.35, type: 'forex', category: 'Forex', tvSymbol: 'OANDA:USDJPY' },
-  { symbol: 'USD/CHF', name: 'US Dollar vs Swiss Franc', price: 0.9050, change: -0.12, type: 'forex', category: 'Forex', tvSymbol: 'OANDA:USDCHF' },
-  { symbol: 'AUD/USD', name: 'Australian Dollar vs US Dollar', price: 0.6750, change: 0.45, type: 'forex', category: 'Forex', tvSymbol: 'OANDA:AUDUSD' },
-  { symbol: 'USD/CAD', name: 'US Dollar vs Canadian Dollar', price: 1.3450, change: -0.28, type: 'forex', category: 'Forex', tvSymbol: 'OANDA:USDCAD' },
+  { symbol: 'EUR/USD', name: 'Euro vs US Dollar', price: 1.0850, change: 0.15, type: 'forex', category: 'Forex', tvSymbol: 'FX:EURUSD' },
+  { symbol: 'GBP/USD', name: 'British Pound vs US Dollar', price: 1.2750, change: -0.25, type: 'forex', category: 'Forex', tvSymbol: 'FX:GBPUSD' },
+  { symbol: 'USD/JPY', name: 'US Dollar vs Japanese Yen', price: 147.50, change: 0.35, type: 'forex', category: 'Forex', tvSymbol: 'FX:USDJPY' },
+  { symbol: 'USD/CHF', name: 'US Dollar vs Swiss Franc', price: 0.9050, change: -0.12, type: 'forex', category: 'Forex', tvSymbol: 'FX:USDCHF' },
+  { symbol: 'AUD/USD', name: 'Australian Dollar vs US Dollar', price: 0.6750, change: 0.45, type: 'forex', category: 'Forex', tvSymbol: 'FX:AUDUSD' },
+  { symbol: 'USD/CAD', name: 'US Dollar vs Canadian Dollar', price: 1.3450, change: -0.28, type: 'forex', category: 'Forex', tvSymbol: 'FX:USDCAD' },
 
   // Stocks
   { symbol: 'AAPL', name: 'Apple Inc.', price: 175.50, change: 1.25, type: 'stock', category: 'Stocks', tvSymbol: 'NASDAQ:AAPL' },
@@ -139,6 +139,42 @@ const tradingSignals = [
     timeframe: '30M',
     timestamp: new Date(Date.now() - 300000),
     reason: 'Overbought conditions, potential reversal'
+  },
+  {
+    id: 'SIG006',
+    symbol: 'TSLA',
+    type: 'BUY',
+    strength: 'STRONG',
+    price: 243.50,
+    target: 260.00,
+    stopLoss: 235.00,
+    timeframe: '1D',
+    timestamp: new Date(Date.now() - 1800000),
+    reason: 'Strong upward trend, volume confirmation'
+  },
+  {
+    id: 'SIG007',
+    symbol: 'USD/JPY',
+    type: 'BUY',
+    strength: 'MODERATE',
+    price: 147.20,
+    target: 148.50,
+    stopLoss: 146.50,
+    timeframe: '4H',
+    timestamp: new Date(Date.now() - 900000),
+    reason: 'Bullish engulfing pattern, support level'
+  },
+  {
+    id: 'SIG008',
+    symbol: 'GOOGL',
+    type: 'SELL',
+    strength: 'MODERATE',
+    price: 139.80,
+    target: 135.00,
+    stopLoss: 142.00,
+    timeframe: '1D',
+    timestamp: new Date(Date.now() - 3600000),
+    reason: 'Resistance level, bearish indicators'
   }
 ];
 
@@ -175,6 +211,54 @@ const mockTradeHistory = [
     pnl: 250,
     status: 'CLOSED',
     timestamp: new Date(Date.now() - 600000)
+  },
+  {
+    id: 'T003',
+    symbol: 'EUR/USD',
+    type: 'BUY',
+    multiplier: 'X3',
+    amount: 150,
+    entryPrice: 1.0820,
+    exitPrice: 1.0850,
+    pnl: 67.5,
+    status: 'CLOSED',
+    timestamp: new Date(Date.now() - 900000)
+  },
+  {
+    id: 'T004',
+    symbol: 'AAPL',
+    type: 'BUY',
+    multiplier: 'X2',
+    amount: 200,
+    entryPrice: 172.50,
+    currentPrice: 175.50,
+    pnl: 60,
+    status: 'ACTIVE',
+    timestamp: new Date(Date.now() - 1200000)
+  },
+  {
+    id: 'T005',
+    symbol: 'GBP/USD',
+    type: 'SELL',
+    multiplier: 'X3',
+    amount: 180,
+    entryPrice: 1.2800,
+    exitPrice: 1.2750,
+    pnl: 135,
+    status: 'CLOSED',
+    timestamp: new Date(Date.now() - 1800000)
+  },
+  {
+    id: 'T006',
+    symbol: 'TSLA',
+    type: 'BUY',
+    multiplier: 'X5',
+    amount: 250,
+    entryPrice: 240.00,
+    exitPrice: 245.80,
+    pnl: 362.5,
+    status: 'CLOSED',
+    timestamp: new Date(Date.now() - 2400000)
   }
 ];
 
@@ -641,7 +725,16 @@ export default function Trade() {
                   color: theme.palette.text.primary
                 }}
               >
-                Live Trading Chart - {selectedAsset.symbol}
+                Live Trading Chart - {selectedAsset.symbol} 
+                <Chip 
+                  label={selectedAsset.type.toUpperCase()} 
+                  color={
+                    selectedAsset.type === 'crypto' ? 'primary' :
+                    selectedAsset.type === 'forex' ? 'secondary' : 'warning'
+                  }
+                  size="small" 
+                  sx={{ ml: 1, fontSize: '0.6rem', height: 20 }}
+                />
               </Typography>
               <Box sx={{ 
                 width: { xs: '100%', sm: chartWidth }, 
@@ -656,6 +749,7 @@ export default function Trade() {
                 boxShadow: 2
               }}>
                 <iframe
+                  key={selectedAsset.tvSymbol}
                   title="Live Trading Chart"
                   src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_trade&symbol=${selectedAsset.tvSymbol}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
                   width="100%"
@@ -1000,9 +1094,23 @@ export default function Trade() {
             <Card sx={{
               background: 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)',
               borderRadius: 3,
-              boxShadow: 6
+              boxShadow: 6,
+              display: 'flex',
+              alignItems: 'center',
+              px: { xs: 2, sm: 2.5, md: 3 },
+              py: { xs: 2, sm: 2.5, md: 3 },
+              minHeight: { xs: 110, sm: 120, md: 130 }
             }}>
-              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Box sx={{
+                mr: { xs: 1.5, sm: 2, md: 2.5 },
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <AccountBalanceWallet sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' }, color: 'primary.main' }} />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography
                   variant="h6"
                   fontWeight="bold"
@@ -1012,12 +1120,12 @@ export default function Trade() {
                 >
                   Account Balance
                 </Typography>
-                <Box sx={{ textAlign: 'center', py: 2 }}>
+                <Box sx={{ textAlign: 'center', py: 1 }}>
                   <Typography
                     variant="h4"
                     fontWeight="bold"
                     color="white"
-                    sx={{ fontSize: { xs: '1.8rem', sm: '2.125rem' } }}
+                    sx={{ fontSize: { xs: '1.5rem', sm: '1.8rem' } }}
                   >
                     ${accountBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </Typography>
@@ -1025,7 +1133,7 @@ export default function Trade() {
                     Available Balance
                   </Typography>
                 </Box>
-                <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', my: 2 }} />
+                <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', my: 1 }} />
                 <Stack direction="row" justifyContent="space-between">
                   <Typography variant="body2" color="rgba(255,255,255,0.7)">
                     Today's P&L
@@ -1034,16 +1142,30 @@ export default function Trade() {
                     +$320.50
                   </Typography>
                 </Stack>
-              </CardContent>
+              </Box>
             </Card>
 
             {/* Active Trades */}
             <Card sx={{
               background: 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)',
               borderRadius: 3,
-              boxShadow: 6
+              boxShadow: 6,
+              display: 'flex',
+              alignItems: 'center',
+              px: { xs: 2, sm: 2.5, md: 3 },
+              py: { xs: 2, sm: 2.5, md: 3 },
+              minHeight: { xs: 110, sm: 120, md: 130 }
             }}>
-              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Box sx={{
+                mr: { xs: 1.5, sm: 2, md: 2.5 },
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Timeline sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' }, color: 'primary.main' }} />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography
                   variant="h6"
                   fontWeight="bold"
@@ -1055,26 +1177,26 @@ export default function Trade() {
                 </Typography>
 
                 {activeTrades.length === 0 ? (
-                  <Typography variant="body2" color="rgba(255,255,255,0.7)" sx={{ textAlign: 'center', py: 3 }}>
+                  <Typography variant="body2" color="rgba(255,255,255,0.7)" sx={{ textAlign: 'center', py: 1 }}>
                     No active trades
                   </Typography>
                 ) : (
-                  <Stack spacing={2}>
-                    {activeTrades.map((trade) => (
+                  <Stack spacing={1}>
+                    {activeTrades.slice(0, 2).map((trade) => (
                       <Paper
                         key={trade.id}
                         sx={{
-                          p: 2,
+                          p: 1.5,
                           bgcolor: 'rgba(255,255,255,0.05)',
-                          borderRadius: 2
+                          borderRadius: 1
                         }}
                       >
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 0.5 }}>
                           <Box>
-                            <Typography variant="subtitle2" color="white" fontWeight={600}>
+                            <Typography variant="subtitle2" color="white" fontWeight={600} sx={{ fontSize: '0.8rem' }}>
                               {trade.symbol} {trade.multiplier}
                             </Typography>
-                            <Typography variant="caption" color="rgba(255,255,255,0.7)">
+                            <Typography variant="caption" color="rgba(255,255,255,0.7)" sx={{ fontSize: '0.7rem' }}>
                               {trade.type} • ${trade.amount}
                             </Typography>
                           </Box>
@@ -1082,11 +1204,11 @@ export default function Trade() {
                             label="ACTIVE"
                             color="primary"
                             size="small"
-                            sx={{ fontSize: '0.7rem' }}
+                            sx={{ fontSize: '0.6rem', height: 20 }}
                           />
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Typography variant="caption" color="rgba(255,255,255,0.7)">
+                          <Typography variant="caption" color="rgba(255,255,255,0.7)" sx={{ fontSize: '0.7rem' }}>
                             Entry: ${trade.entryPrice.toLocaleString()}
                           </Typography>
                           <Button
@@ -1094,7 +1216,7 @@ export default function Trade() {
                             variant="outlined"
                             color="error"
                             onClick={() => closeTrade(trade.id)}
-                            sx={{ fontSize: '0.7rem', py: 0.5 }}
+                            sx={{ fontSize: '0.6rem', py: 0.25, px: 1, minWidth: 'auto' }}
                           >
                             Close
                           </Button>
@@ -1103,16 +1225,30 @@ export default function Trade() {
                     ))}
                   </Stack>
                 )}
-              </CardContent>
+              </Box>
             </Card>
 
             {/* Recent Trades */}
             <Card sx={{
               background: 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)',
               borderRadius: 3,
-              boxShadow: 6
+              boxShadow: 6,
+              display: 'flex',
+              alignItems: 'center',
+              px: { xs: 2, sm: 2.5, md: 3 },
+              py: { xs: 2, sm: 2.5, md: 3 },
+              minHeight: { xs: 110, sm: 120, md: 130 }
             }}>
-              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Box sx={{
+                mr: { xs: 1.5, sm: 2, md: 2.5 },
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <History sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' }, color: 'primary.main' }} />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography
                   variant="h6"
                   fontWeight="bold"
@@ -1123,45 +1259,55 @@ export default function Trade() {
                   Recent Trades
                 </Typography>
 
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', p: 1 }}>
-                          Asset
-                        </TableCell>
-                        <TableCell sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', p: 1 }}>
-                          P&L
-                        </TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {tradeHistory.slice(0, 5).map((trade) => (
-                        <TableRow key={trade.id}>
-                          <TableCell sx={{ color: 'white', fontSize: '0.8rem', p: 1 }}>
-                            <Box>
-                              <Typography variant="caption" color="white" fontWeight={600}>
-                                {trade.symbol}
-                              </Typography>
-                              <Typography variant="caption" color="rgba(255,255,255,0.6)">
-                                {trade.multiplier} {trade.type}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell sx={{ fontSize: '0.8rem', p: 1 }}>
-                            <Typography
-                              variant="caption"
-                              sx={{ color: getPnlColor(trade.pnl), fontWeight: 600 }}
-                            >
-                              {trade.pnl >= 0 ? '+' : ''}${trade.pnl}
+                {tradeHistory.length === 0 ? (
+                  <Typography variant="body2" color="rgba(255,255,255,0.7)" sx={{ textAlign: 'center', py: 1 }}>
+                    No recent trades
+                  </Typography>
+                ) : (
+                  <Stack spacing={1}>
+                    {tradeHistory.slice(0, 2).map((trade) => (
+                      <Paper
+                        key={trade.id}
+                        sx={{
+                          p: 1.5,
+                          bgcolor: 'rgba(255,255,255,0.05)',
+                          borderRadius: 1
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 0.5 }}>
+                          <Box>
+                            <Typography variant="subtitle2" color="white" fontWeight={600} sx={{ fontSize: '0.8rem' }}>
+                              {trade.symbol} {trade.multiplier}
                             </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
+                            <Typography variant="caption" color="rgba(255,255,255,0.7)" sx={{ fontSize: '0.7rem' }}>
+                              {trade.type} • ${trade.amount}
+                            </Typography>
+                          </Box>
+                          <Chip
+                            label={trade.profit > 0 ? 'PROFIT' : 'LOSS'}
+                            color={trade.profit > 0 ? 'success' : 'error'}
+                            size="small"
+                            sx={{ fontSize: '0.6rem', height: 20 }}
+                          />
+                        </Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="caption" color="rgba(255,255,255,0.7)" sx={{ fontSize: '0.7rem' }}>
+                            Exit: ${trade.exitPrice.toLocaleString()}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color={trade.profit > 0 ? 'success.main' : 'error.main'}
+                            fontWeight={600}
+                            sx={{ fontSize: '0.7rem' }}
+                          >
+                            {trade.profit > 0 ? '+' : ''}${trade.profit.toFixed(2)}
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    ))}
+                  </Stack>
+                )}
+              </Box>
             </Card>
           </Stack>
         </Grid>
