@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { Typography, Box, Card, Button, Modal, TextField, Divider, Avatar, Stack, Chip } from '@mui/material';
+import { 
+  Typography, 
+  Box, 
+  Card, 
+  Button, 
+  Modal, 
+  TextField, 
+  Divider, 
+  Avatar, 
+  Stack, 
+  Chip,
+  Container 
+} from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import EmailIcon from '@mui/icons-material/Email';
@@ -59,7 +71,8 @@ export default function Deposits() {
   };
 
   return (
-    <Box p={{ xs: 1, sm: 3 }}>
+    <Container maxWidth="xl">
+      <Box p={{ xs: 1, sm: 3 }}>
       {/* Header - Consistent with Dashboard */}
       <Box sx={{ 
         display: 'flex', 
@@ -375,5 +388,6 @@ export default function Deposits() {
         </Box>
       </Modal>
     </Box>
+    </Container>
   );
 }
