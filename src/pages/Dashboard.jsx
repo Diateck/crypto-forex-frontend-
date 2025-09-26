@@ -102,7 +102,18 @@ export default function Dashboard() {
   return (
     <Box p={{ xs: 1, sm: 3 }}>
       {/* Header with site name, username and quick actions */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, bgcolor: '#232742', p: 2, borderRadius: 3, boxShadow: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        mb: 2, 
+        bgcolor: '#232742', 
+        p: 2, 
+        borderRadius: 3, 
+        boxShadow: 3,
+        flexDirection: { xs: 'column', md: 'row' },
+        gap: { xs: 2, md: 0 }
+      }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar sx={{ bgcolor: 'primary.main', width: 48, height: 48 }}>
             <PersonIcon fontSize="large" />
@@ -116,20 +127,50 @@ export default function Dashboard() {
             </Typography>
           </Box>
         </Box>
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
           <Chip icon={<VerifiedUserIcon />} label="KYC" color="primary" variant="outlined" />
-          <Button variant="contained" color="primary" startIcon={<EmailIcon />}>Mail Us</Button>
-          <Button variant="contained" color="secondary" startIcon={<SettingsIcon />}>Settings</Button>
+          <Button variant="contained" color="primary" startIcon={<EmailIcon />} size="small">
+            Mail Us
+          </Button>
+          <Button variant="contained" color="secondary" startIcon={<SettingsIcon />} size="small">
+            Settings
+          </Button>
         </Stack>
       </Box>
 
       {/* Ticker Bar */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, bgcolor: '#181A20', p: 1.5, borderRadius: 2, mb: 3, overflowX: 'auto', boxShadow: 1 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: { xs: 2, md: 3 }, 
+        bgcolor: '#181A20', 
+        p: 1.5, 
+        borderRadius: 2, 
+        mb: 3, 
+        overflowX: 'auto', 
+        boxShadow: 1,
+        '&::-webkit-scrollbar': { height: 6 },
+        '&::-webkit-scrollbar-track': { bgcolor: 'rgba(255,255,255,0.1)' },
+        '&::-webkit-scrollbar-thumb': { bgcolor: 'primary.main', borderRadius: 3 }
+      }}>
         {tickerData.map((item, idx) => (
-          <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 180 }}>
-            <Typography variant="subtitle2" color="text.secondary" fontWeight={600}>{item.label}</Typography>
-            <Typography variant="body1" color="#fff" fontWeight={700}>{item.value}</Typography>
-            <Typography variant="body2" color={item.color} fontWeight={700}>{item.change}</Typography>
+          <Box key={idx} sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1, 
+            minWidth: { xs: 150, sm: 180 },
+            flexDirection: { xs: 'column', sm: 'row' },
+            textAlign: { xs: 'center', sm: 'left' }
+          }}>
+            <Typography variant="subtitle2" color="text.secondary" fontWeight={600}>
+              {item.label}
+            </Typography>
+            <Typography variant="body1" color="#fff" fontWeight={700}>
+              {item.value}
+            </Typography>
+            <Typography variant="body2" color={item.color} fontWeight={700}>
+              {item.change}
+            </Typography>
           </Box>
         ))}
       </Box>
@@ -199,22 +240,51 @@ export default function Dashboard() {
       {/* Three Large, Vertically Arranged Live Charts: Crypto, Forex, Stock Market */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', width: '100%' }}>
         {/* Crypto Trading Chart */}
-        <Card sx={{ borderRadius: 3, boxShadow: 6, minHeight: 320, bgcolor: theme.palette.background.paper, width: '100%', maxWidth: 1200, p: 2, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
+        <Card sx={{ 
+          borderRadius: 3, 
+          boxShadow: 6, 
+          minHeight: 320, 
+          bgcolor: theme.palette.background.paper, 
+          width: '100%', 
+          maxWidth: 1200, 
+          p: { xs: 1, sm: 2 }, 
+          position: 'relative', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center' 
+        }}>
+          <Typography variant={{ xs: 'h6', sm: 'h5' }} fontWeight={700} sx={{ mb: 2, textAlign: 'center' }}>
             Crypto Trading Chart
           </Typography>
           <Box sx={{ mb: 2, width: '100%', display: 'flex', justifyContent: 'center' }}>
             <select
               value={selectedPair}
               onChange={e => setSelectedPair(e.target.value)}
-              style={{ padding: '8px 16px', fontSize: '1rem', borderRadius: 6, background: '#232742', color: '#fff', border: '1px solid #444' }}
+              style={{ 
+                padding: '8px 16px', 
+                fontSize: '1rem', 
+                borderRadius: 6, 
+                background: '#232742', 
+                color: '#fff', 
+                border: '1px solid #444',
+                width: '100%',
+                maxWidth: 300
+              }}
             >
               {cryptoPairs.map(pair => (
                 <option key={pair.value} value={pair.value}>{pair.label}</option>
               ))}
             </select>
           </Box>
-          <Box sx={{ width: chartWidth, minWidth: 300, maxWidth: '100%', transition: 'width 0.1s', position: 'relative', display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ 
+            width: { xs: '100%', sm: chartWidth }, 
+            minWidth: 300, 
+            maxWidth: '100%', 
+            transition: 'width 0.1s', 
+            position: 'relative', 
+            display: 'flex', 
+            justifyContent: 'center' 
+          }}>
             <iframe
               title="Crypto Trading Chart"
               src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_crypto&symbol=${selectedPair}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
@@ -226,7 +296,7 @@ export default function Dashboard() {
               allowFullScreen
               style={{ borderRadius: 8 }}
             ></iframe>
-            {/* Resizer bar */}
+            {/* Resizer bar - Hidden on mobile */}
             <div
               onMouseDown={handleMouseDown}
               style={{
@@ -239,7 +309,7 @@ export default function Dashboard() {
                 background: 'rgba(35,39,66,0.5)',
                 borderRadius: '0 8px 8px 0',
                 zIndex: 2,
-                display: 'flex',
+                display: window.innerWidth < 600 ? 'none' : 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
