@@ -187,28 +187,61 @@ export default function Dashboard() {
             </Card>
           </Grid>
         ))}
-        {/* Chart Placeholder */}
+      </Grid>
+
+      {/* Live Trading Chart & Notifications Side-by-Side */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={8}>
-          <Card sx={{ borderRadius: 3, boxShadow: 6, minHeight: 240, bgcolor: theme.palette.background.paper }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom fontWeight={600}>
-                Performance Chart
-              </Typography>
-              <Box sx={{ height: 180, width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={marketData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                    <XAxis dataKey="name" stroke="#888" />
-                    <YAxis stroke="#888" />
-                    <Tooltip contentStyle={{ background: '#23272F', border: 'none', color: '#fff' }} />
-                    <Line type="monotone" dataKey="value" stroke="#00B386" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardContent>
-          </Card>
+          {/* Crypto Pair Selector */}
+          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-start' }}>
+            <select
+              value={selectedPair}
+              onChange={e => setSelectedPair(e.target.value)}
+              style={{ padding: '8px 16px', fontSize: '1rem', borderRadius: 6, background: '#232742', color: '#fff', border: '1px solid #444' }}
+            >
+              {cryptoPairs.map(pair => (
+                <option key={pair.value} value={pair.value}>{pair.label}</option>
+              ))}
+            </select>
+          </Box>
+          {/* Live Trading Chart (TradingView Widget) with Resizer */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center' }}>
+            <div style={{ width: chartWidth, minWidth: 300, transition: 'width 0.1s', position: 'relative' }}>
+              <iframe
+                title="Live Trading Chart"
+                src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_12345&symbol=${selectedPair}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
+                width="100%"
+                height="500"
+                allowtransparency="true"
+                frameBorder="0"
+                scrolling="no"
+                allowFullScreen
+                style={{ borderRadius: 8 }}
+              ></iframe>
+              {/* Resizer bar */}
+              <div
+                onMouseDown={handleMouseDown}
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 0,
+                  width: 8,
+                  height: '100%',
+                  cursor: 'ew-resize',
+                  background: 'rgba(35,39,66,0.5)',
+                  borderRadius: '0 8px 8px 0',
+                  zIndex: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                title="Drag to resize chart"
+              >
+                <span style={{ width: 4, height: 40, background: '#888', borderRadius: 2 }}></span>
+              </div>
+            </div>
+          </Box>
         </Grid>
-        {/* Notifications */}
         <Grid item xs={12} md={4}>
           <Card sx={{ borderRadius: 3, boxShadow: 6, minHeight: 240, bgcolor: theme.palette.background.paper }}>
             <CardContent>
