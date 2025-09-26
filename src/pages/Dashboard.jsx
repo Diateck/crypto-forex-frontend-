@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Typography, Box, Grid, Card, CardContent, Divider, List, ListItem, ListItemText, useTheme, Avatar, Button, Stack, Chip } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
@@ -31,13 +32,6 @@ const marketData = [
   { name: 'Sat', value: 13000 },
   { name: 'Sun', value: 12900 },
 ];
-
-// Leverage options for the trading panel
-const leverageOptions = [
-  2, 3, 4, 5, 10, 25, 30, 40, 50, 60, 70, 80, 90, 100
-];
-
-
 
 const cardGradient = 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)';
 const topCards = [
@@ -112,11 +106,127 @@ export default function Dashboard() {
             <PersonIcon fontSize="large" />
           </Avatar>
           <Typography variant="h6" fontWeight={700} color="#fff">
-            Username: <span style={{ color: theme.palette.primary.main }}>precious</span>
+            Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
           </Typography>
         </Box>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Chip icon={<VerifiedUserIcon />} label="KYC" color="primary" variant="outlined" />
+          <Button variant="contained" color="primary" startIcon={<EmailIcon />}>Mail Us</Button>
+          <Button variant="contained" color="secondary" startIcon={<SettingsIcon />}>Settings</Button>
+        </Stack>
       </Box>
-      {/* ...existing dashboard content... */}
+
+      {/* Ticker Bar */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, bgcolor: '#181A20', p: 1.5, borderRadius: 2, mb: 3, overflowX: 'auto', boxShadow: 1 }}>
+        {tickerData.map((item, idx) => (
+          <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 180 }}>
+            <Typography variant="subtitle2" color="text.secondary" fontWeight={600}>{item.label}</Typography>
+            <Typography variant="body1" color="#fff" fontWeight={700}>{item.value}</Typography>
+            <Typography variant="body2" color={item.color} fontWeight={700}>{item.change}</Typography>
+          </Box>
+        ))}
+      </Box>
+
+      {/* Dashboard Cards - Top Row */}
+      <Grid container spacing={3} sx={{ mb: 0.5 }}>
+        {topCards.map((card) => (
+          <Grid item xs={12} sm={6} md={3} key={card.label}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                boxShadow: 6,
+                background: card.gradient,
+                color: '#fff',
+                minHeight: 120,
+                display: 'flex',
+                alignItems: 'center',
+                px: 2,
+                py: 2,
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <Box sx={{ mr: 2 }}>{card.icon}</Box>
+              <Box>
+                <Typography variant="h6" fontWeight={700} sx={{ color: '#fff' }}>{card.value}</Typography>
+                <Typography variant="subtitle2" fontWeight={500} sx={{ color: '#fff', opacity: 0.9 }}>{card.label}</Typography>
+                {card.chip && (
+                  <Box sx={{ mt: 1 }}>
+                    <Chip label="UNVERIFIED" color="default" size="small" sx={{ bgcolor: '#fff', color: '#f5576c', fontWeight: 700 }} />
+                  </Box>
+                )}
+              </Box>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+      {/* Dashboard Cards - Bottom Row */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        {bottomCards.map((card) => (
+          <Grid item xs={12} sm={6} md={3} key={card.label}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                boxShadow: 6,
+                background: card.gradient,
+                color: '#fff',
+                minHeight: 120,
+                display: 'flex',
+                alignItems: 'center',
+                px: 2,
+                py: 2,
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              <Box sx={{ mr: 2 }}>{card.icon}</Box>
+              <Box>
+                <Typography variant="h6" fontWeight={700} sx={{ color: '#fff' }}>{card.value}</Typography>
+                <Typography variant="subtitle2" fontWeight={500} sx={{ color: '#fff', opacity: 0.9 }}>{card.label}</Typography>
+              </Box>
+            </Card>
+          </Grid>
+        ))}
+        {/* Chart Placeholder */}
+        <Grid item xs={12} md={8}>
+          <Card sx={{ borderRadius: 3, boxShadow: 6, minHeight: 240, bgcolor: theme.palette.background.paper }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom fontWeight={600}>
+                Performance Chart
+              </Typography>
+              <Box sx={{ height: 180, width: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={marketData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                    <XAxis dataKey="name" stroke="#888" />
+                    <YAxis stroke="#888" />
+                    <Tooltip contentStyle={{ background: '#23272F', border: 'none', color: '#fff' }} />
+                    <Line type="monotone" dataKey="value" stroke="#00B386" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        {/* Notifications */}
+        <Grid item xs={12} md={4}>
+          <Card sx={{ borderRadius: 3, boxShadow: 6, minHeight: 240, bgcolor: theme.palette.background.paper }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom fontWeight={600}>
+                Recent Notifications
+              </Typography>
+              <Divider sx={{ mb: 1 }} />
+              <List>
+                {notifications.map((note, idx) => (
+                  <ListItem key={idx} disablePadding>
+                    <ListItemText primary={note} />
+                  </ListItem>
+                ))}
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       {/* Crypto Pair Selector */}
       <Box sx={{ mt: 4, mb: 2, display: 'flex', justifyContent: 'center' }}>
