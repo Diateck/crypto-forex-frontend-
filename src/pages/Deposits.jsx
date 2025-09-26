@@ -129,10 +129,14 @@ export default function Deposits() {
               <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>{selectedMethod.name} Deposit Details</Typography>
               <Divider sx={{ mb: 2 }} />
               <Typography sx={{ mb: 1 }}>Deposit Address:</Typography>
-              <Typography sx={{ mb: 1, wordBreak: 'break-all', color: theme.palette.primary.main }}>{selectedMethod.address}</Typography>
-              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
-                <img src={selectedMethod.qr} alt="Deposit QR" style={{ width: 120, height: 120 }} />
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                <Typography sx={{ wordBreak: 'break-all', color: theme.palette.primary.main, mr: 1 }}>{selectedMethod.address}</Typography>
+                <Button size="small" variant="outlined" onClick={() => {navigator.clipboard.writeText(selectedMethod.address)}}>Copy</Button>
               </Box>
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'center' }}>
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${selectedMethod.address}`} alt="Deposit QR" style={{ width: 120, height: 120 }} />
+              </Box>
+              <TextField label="Amount" fullWidth sx={{ mb: 2 }} value={amount} onChange={e => setAmount(e.target.value)} />
               <Box sx={{ mb: 2 }}>
                 <Typography sx={{ mb: 1 }}>Upload Payment Proof:</Typography>
                 <input type="file" accept="image/*" onChange={e => setProof(e.target.files[0])} />
