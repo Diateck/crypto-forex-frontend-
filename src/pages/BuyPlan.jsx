@@ -327,9 +327,6 @@ export default function BuyPlan() {
                         fontWeight: 'bold',
                         bgcolor: plan.name === 'Gold Plan' ? '#000' : '#fff',
                         color: plan.name === 'Gold Plan' ? '#FFD700' : plan.color,
-                        '&:hover': {
-                          bgcolor: plan.name === 'Gold Plan' ? '#333' : '#f0f0f0'
-                        },
                         boxShadow: 3,
                         '&:hover': {
                           boxShadow: 6,
