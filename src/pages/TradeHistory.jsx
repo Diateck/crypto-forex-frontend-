@@ -231,7 +231,7 @@ export default function AccountHistory() {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" gutterBottom fontWeight="bold" color="primary">
-            Account History
+            Trade History
           </Typography>
           <Typography variant="subtitle1" color="text.secondary">
             View your complete transaction and trading history
