@@ -227,7 +227,14 @@ export default function BuyPlan() {
                   />
                 )}
                 
-                <CardContent sx={{ p: { xs: 2, sm: 3 }, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <CardContent sx={{ 
+                  p: { xs: 2, sm: 3 }, 
+                  textAlign: 'center', 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-between' 
+                }}>
                   {/* Plan Header */}
                   <Box>
                     <Typography variant={{ xs: 'h5', sm: 'h4' }} fontWeight="bold" gutterBottom>
@@ -286,7 +293,7 @@ export default function BuyPlan() {
                   </Box>
 
                   {/* Features List - Condensed for square format */}
-                  <Box sx={{ mb: 2 }}>
+                  <Box sx={{ mb: 3, flexGrow: 1 }}>
                     <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
                       Key Features:
                     </Typography>
@@ -294,7 +301,7 @@ export default function BuyPlan() {
                       {plan.features.slice(0, 4).map((feature, index) => (
                         <Chip
                           key={index}
-                          label={feature.length > 20 ? feature.substring(0, 20) + '...' : feature}
+                          label={feature.length > 18 ? feature.substring(0, 15) + '...' : feature}
                           size="small"
                           sx={{
                             bgcolor: 'rgba(255,255,255,0.1)',
@@ -307,26 +314,32 @@ export default function BuyPlan() {
                     </Box>
                   </Box>
 
-                  {/* Invest Button */}
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    size="large"
-                    onClick={() => handleInvestClick(plan)}
-                    sx={{ 
-                      py: { xs: 1.5, sm: 2 },
-                      fontSize: { xs: '1rem', sm: '1.1rem' },
-                      fontWeight: 'bold',
-                      bgcolor: plan.name === 'Gold Plan' ? '#000' : '#fff',
-                      color: plan.name === 'Gold Plan' ? '#FFD700' : plan.color,
-                      '&:hover': {
-                        bgcolor: plan.name === 'Gold Plan' ? '#333' : '#f0f0f0'
-                      },
-                      mt: 'auto'
-                    }}
-                  >
-                    Invest Now
-                  </Button>
+                  {/* Invest Button - Always at bottom */}
+                  <Box sx={{ mt: 'auto' }}>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      size="large"
+                      onClick={() => handleInvestClick(plan)}
+                      sx={{ 
+                        py: { xs: 1.5, sm: 2 },
+                        fontSize: { xs: '1rem', sm: '1.1rem' },
+                        fontWeight: 'bold',
+                        bgcolor: plan.name === 'Gold Plan' ? '#000' : '#fff',
+                        color: plan.name === 'Gold Plan' ? '#FFD700' : plan.color,
+                        '&:hover': {
+                          bgcolor: plan.name === 'Gold Plan' ? '#333' : '#f0f0f0'
+                        },
+                        boxShadow: 3,
+                        '&:hover': {
+                          boxShadow: 6,
+                          bgcolor: plan.name === 'Gold Plan' ? '#333' : '#f0f0f0'
+                        }
+                      }}
+                    >
+                      Invest Now
+                    </Button>
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
