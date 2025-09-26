@@ -4,138 +4,179 @@ import {
   Box,
   Card,
   CardContent,
+  CardMedia,
   Grid,
   Button,
   Avatar,
   Stack,
   useTheme,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Divider,
+  Container,
+  Tab,
+  Tabs,
   Paper,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Container
+  IconButton,
+  Badge,
+  Divider
 } from '@mui/material';
 import {
   Person,
   Email,
   Settings,
   VerifiedUser,
-  Star,
+  FavoriteOutlined,
+  Favorite,
   TrendingUp,
-  Schedule,
+  Star,
+  Visibility,
+  ShoppingCart,
   AccountBalanceWallet,
-  Security,
-  Support,
-  Language,
-  Copyright
+  Timer,
+  LocalFireDepartment
 } from '@mui/icons-material';
 
-const investmentPlans = [
+// Trending NFT Collections Data
+const trendingNFTs = [
   {
     id: 1,
-    name: 'Bronze Plan',
-    type: 'regular',
-    roi: '500',
-    minAmount: 4000,
-    maxAmount: 10000,
-    duration: '2 weeks',
-    color: '#CD7F32',
-    gradient: 'linear-gradient(135deg, #CD7F32 0%, #A0522D 100%)',
-    features: [
-      'Daily ROI of 500%',
-      '24/7 Customer Support',
-      'Secure Investment',
-      'Quick Withdrawal',
-      'Investment Protection'
-    ]
+    name: "Crypto Punks #7804",
+    collection: "CryptoPunks",
+    price: "420.69",
+    currency: "ETH",
+    image: "https://via.placeholder.com/400x400/FF6B6B/FFFFFF?text=Crypto+Punk+%237804",
+    creator: "LarvaLabs",
+    views: "12.5k",
+    likes: 890,
+    rarity: "Legendary",
+    timeLeft: "2d 14h 23m"
   },
   {
     id: 2,
-    name: 'Gold Plan',
-    type: 'VIP',
-    roi: '750',
-    minAmount: 5200,
-    maxAmount: 20000,
-    duration: '2 weeks',
-    color: '#FFD700',
-    gradient: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-    features: [
-      'Daily ROI of 750%',
-      'VIP Customer Support',
-      'Priority Withdrawal',
-      'Advanced Security',
-      'Dedicated Account Manager',
-      'Investment Insurance'
-    ]
+    name: "Bored Ape #3749",
+    collection: "Bored Ape Yacht Club",
+    price: "85.2",
+    currency: "ETH",
+    image: "https://via.placeholder.com/400x400/4ECDC4/FFFFFF?text=Bored+Ape+%233749",
+    creator: "Yuga Labs",
+    views: "8.7k",
+    likes: 654,
+    rarity: "Rare",
+    timeLeft: "1d 8h 45m"
   },
   {
     id: 3,
-    name: 'Platinum Plan',
-    type: 'VIP',
-    roi: '1200',
-    minAmount: 10000,
-    maxAmount: 50000000,
-    duration: '7 Days',
-    color: '#E5E4E2',
-    gradient: 'linear-gradient(135deg, #E5E4E2 0%, #C0C0C0 100%)',
-    features: [
-      'Daily ROI of 1200%',
-      'Premium VIP Support',
-      'Instant Withdrawal',
-      'Maximum Security',
-      'Personal Investment Advisor',
-      'Full Investment Protection',
-      'Exclusive Trading Signals'
-    ]
+    name: "Azuki #9999",
+    collection: "Azuki",
+    price: "12.8",
+    currency: "ETH",
+    image: "https://via.placeholder.com/400x400/45B7D1/FFFFFF?text=Azuki+%239999",
+    creator: "Chiru Labs",
+    views: "6.2k",
+    likes: 432,
+    rarity: "Epic",
+    timeLeft: "5d 2h 17m"
+  },
+  {
+    id: 4,
+    name: "Moonbird #1337",
+    collection: "Moonbirds",
+    price: "18.5",
+    currency: "ETH",
+    image: "https://via.placeholder.com/400x400/96CEB4/FFFFFF?text=Moonbird+%231337",
+    creator: "PROOF Collective",
+    views: "4.8k",
+    likes: 321,
+    rarity: "Rare",
+    timeLeft: "3d 19h 8m"
+  },
+  {
+    id: 5,
+    name: "Doodle #6420",
+    collection: "Doodles",
+    price: "7.3",
+    currency: "ETH",
+    image: "https://via.placeholder.com/400x400/FECA57/FFFFFF?text=Doodle+%236420",
+    creator: "Doodles LLC",
+    views: "3.1k",
+    likes: 245,
+    rarity: "Common",
+    timeLeft: "6d 5h 42m"
+  },
+  {
+    id: 6,
+    name: "Clone X #4200",
+    collection: "Clone X",
+    price: "15.7",
+    currency: "ETH",
+    image: "https://via.placeholder.com/400x400/FF9FF3/FFFFFF?text=Clone+X+%234200",
+    creator: "RTFKT Studios",
+    views: "5.9k",
+    likes: 387,
+    rarity: "Epic",
+    timeLeft: "4d 11h 29m"
+  },
+  {
+    id: 7,
+    name: "Mutant Ape #8888",
+    collection: "Mutant Ape Yacht Club",
+    price: "24.6",
+    currency: "ETH",
+    image: "https://via.placeholder.com/400x400/54A0FF/FFFFFF?text=Mutant+Ape+%238888",
+    creator: "Yuga Labs",
+    views: "7.4k",
+    likes: 512,
+    rarity: "Legendary",
+    timeLeft: "2d 7h 15m"
+  },
+  {
+    id: 8,
+    name: "Art Blocks #156",
+    collection: "Art Blocks Curated",
+    price: "9.8",
+    currency: "ETH",
+    image: "https://via.placeholder.com/400x400/5F27CD/FFFFFF?text=Art+Blocks+%23156",
+    creator: "Art Blocks",
+    views: "2.7k",
+    likes: 189,
+    rarity: "Rare",
+    timeLeft: "8d 16h 33m"
   }
 ];
 
-const languages = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'zh', name: '中文', flag: '🇨🇳' },
-  { code: 'ja', name: '日本語', flag: '🇯🇵' },
-  { code: 'ko', name: '한국어', flag: '🇰🇷' },
-  { code: 'ru', name: 'Русский', flag: '🇷🇺' }
+const topCollections = [
+  { name: "CryptoPunks", volume: "2,847", change: "+12.5%" },
+  { name: "Bored Ape Yacht Club", volume: "1,923", change: "+8.7%" },
+  { name: "Azuki", volume: "1,456", change: "+15.2%" },
+  { name: "Moonbirds", volume: "892", change: "-3.1%" },
+  { name: "Doodles", volume: "674", change: "+5.8%" }
 ];
 
-export default function BuyPlan() {
+export default function NFTGallery() {
   const theme = useTheme();
-  const [investDialogOpen, setInvestDialogOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [investAmount, setInvestAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [tabValue, setTabValue] = useState(0);
+  const [likedNFTs, setLikedNFTs] = useState(new Set());
 
-  const handleInvestClick = (plan) => {
-    setSelectedPlan(plan);
-    setInvestDialogOpen(true);
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
   };
 
-  const handleConfirmInvestment = () => {
-    // Here you would implement the actual investment logic
-    console.log('Investment:', {
-      plan: selectedPlan,
-      amount: investAmount,
-      paymentMethod: paymentMethod
-    });
-    setInvestDialogOpen(false);
-    setInvestAmount('');
-    setPaymentMethod('');
+  const toggleLike = (nftId) => {
+    const newLikedNFTs = new Set(likedNFTs);
+    if (newLikedNFTs.has(nftId)) {
+      newLikedNFTs.delete(nftId);
+    } else {
+      newLikedNFTs.add(nftId);
+    }
+    setLikedNFTs(newLikedNFTs);
+  };
+
+  const getRarityColor = (rarity) => {
+    switch (rarity) {
+      case 'Legendary': return '#FFD700';
+      case 'Epic': return '#9C27B0';
+      case 'Rare': return '#2196F3';
+      default: return '#4CAF50';
+    }
   };
 
   return (
@@ -179,364 +220,331 @@ export default function BuyPlan() {
         </Box>
 
         {/* Page Title */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
           <Typography variant="h3" gutterBottom fontWeight="bold" color="primary">
-            Investment Plans
+            NFT Marketplace
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto' }}>
-            Choose from our premium investment plans designed to maximize your returns with guaranteed profits and secure transactions.
+            Discover, collect, and trade unique digital assets from top creators and collections.
           </Typography>
         </Box>
 
-        {/* Investment Plans */}
-        <Grid container spacing={3} sx={{ mb: 8, justifyContent: 'center' }}>
-          {investmentPlans.map((plan) => (
-            <Grid item xs={12} sm={6} lg={4} key={plan.id}>
-              <Card sx={{ 
-                height: '100%',
-                minHeight: 400,
-                maxHeight: 650,
-                position: 'relative',
-                background: plan.gradient,
-                color: plan.name === 'Gold Plan' ? '#000' : '#fff',
-                borderRadius: 3,
-                boxShadow: 6,
-                transition: 'transform 0.3s, boxShadow 0.3s',
-                '&:hover': {
-                  transform: 'translateY(-5px)',
-                  boxShadow: 12
-                },
-                border: plan.name === 'Gold Plan' ? '2px solid #FFD700' : 'none'
-              }}>
-                {plan.type === 'VIP' && (
-                  <Chip
-                    icon={<Star />}
-                    label="VIP"
-                    size="small"
-                    sx={{ 
-                      position: 'absolute', 
-                      top: 12, 
-                      right: 12,
-                      bgcolor: '#FF6B6B',
-                      color: '#fff',
-                      fontWeight: 'bold',
-                      zIndex: 1
-                    }}
-                  />
-                )}
-                
-                <CardContent sx={{ 
-                  p: 3,
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between'
-                }}>
-                  {/* Plan Header */}
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h5" fontWeight="bold" gutterBottom>
-                      {plan.name}
-                    </Typography>
-                    <Typography variant="subtitle1" sx={{ mb: 2, opacity: 0.9 }}>
-                      {plan.type.toUpperCase()}
-                    </Typography>
-
-                    {/* ROI Display */}
-                    <Box sx={{ 
-                      mb: 3, 
-                      p: 2, 
-                      bgcolor: 'rgba(0,0,0,0.15)', 
-                      borderRadius: 2,
-                      border: '1px solid rgba(255,255,255,0.3)'
-                    }}>
-                      <Typography variant="h2" fontWeight="bold" color="inherit">
-                        {plan.roi}%
-                      </Typography>
-                      <Typography variant="body1" fontWeight="600">
-                        Daily ROI
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  {/* Plan Details */}
-                  <Box sx={{ mb: 2 }}>
-                    <Box sx={{ 
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      mb: 1
-                    }}>
-                      <Typography variant="body2" fontWeight="600">Minimum:</Typography>
-                      <Typography variant="body2">${plan.minAmount.toLocaleString()}</Typography>
-                    </Box>
-                    <Box sx={{ 
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      mb: 1
-                    }}>
-                      <Typography variant="body2" fontWeight="600">Maximum:</Typography>
-                      <Typography variant="body2">${plan.maxAmount.toLocaleString()}</Typography>
-                    </Box>
-                    <Box sx={{ 
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      mb: 2
-                    }}>
-                      <Typography variant="body2" fontWeight="600">Duration:</Typography>
-                      <Typography variant="body2">{plan.duration}</Typography>
-                    </Box>
-                    
-                    {/* Features */}
-                    <Typography variant="body2" fontWeight="600" sx={{ mb: 1 }}>
-                      Key Features:
-                    </Typography>
-                    <Box sx={{ mb: 2 }}>
-                      {plan.features.slice(0, 3).map((feature, index) => (
-                        <Typography key={index} variant="body2" sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          mb: 0.5,
-                          fontSize: '0.85rem'
-                        }}>
-                          <VerifiedUser sx={{ fontSize: 14, mr: 1 }} />
-                          {feature}
-                        </Typography>
-                      ))}
-                    </Box>
-                  </Box>
-
-                  {/* Invest Button */}
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    size="large"
-                    onClick={() => handleInvestClick(plan)}
-                    sx={{ 
-                      py: 2,
-                      fontSize: '1.1rem',
-                      fontWeight: 'bold',
-                      bgcolor: plan.name === 'Gold Plan' ? '#000' : '#fff',
-                      color: plan.name === 'Gold Plan' ? '#FFD700' : plan.color,
-                      borderRadius: 2,
-                      textTransform: 'uppercase',
-                      letterSpacing: 1,
-                      '&:hover': {
-                        bgcolor: plan.name === 'Gold Plan' ? '#333' : '#f5f5f5',
-                        transform: 'scale(1.02)'
-                      }
-                    }}
-                  >
-                    Invest Now
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-
-        {/* Additional Content Section */}
-        <Paper sx={{ 
-          p: 4, 
-          mb: 6,
-          background: 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)',
-          color: '#fff',
-          borderRadius: 4
-        }}>
-          <Typography variant="h4" gutterBottom fontWeight="bold" textAlign="center" color="primary">
-            Why Choose Elon Investment Broker?
-          </Typography>
-          
-          <Grid container spacing={4} sx={{ mt: 2 }}>
-            <Grid item xs={12} md={4}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Security sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  Secure & Safe
-                </Typography>
-                <Typography color="rgba(255,255,255,0.8)">
-                  Your investments are protected with bank-level security and insurance coverage.
-                </Typography>
-              </Box>
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
-              <Box sx={{ textAlign: 'center' }}>
-                <TrendingUp sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  High Returns
-                </Typography>
-                <Typography color="rgba(255,255,255,0.8)">
-                  Guaranteed daily returns with our proven investment strategies and market expertise.
-                </Typography>
-              </Box>
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Support sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  24/7 Support
-                </Typography>
-                <Typography color="rgba(255,255,255,0.8)">
-                  Round-the-clock customer support to assist you with all your investment needs.
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
-        </Paper>
-
-        {/* Investment Dialog */}
-        <Dialog 
-          open={investDialogOpen} 
-          onClose={() => setInvestDialogOpen(false)} 
-          maxWidth="sm" 
-          fullWidth
-          PaperProps={{
-            sx: {
-              background: 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)',
+        {/* Stats Section */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ 
+              p: 3, 
+              textAlign: 'center', 
+              bgcolor: '#232742', 
               color: '#fff',
               borderRadius: 3
-            }
-          }}
-        >
-          <DialogTitle sx={{ color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <Typography variant="h5" fontWeight="bold">
-              Invest in {selectedPlan?.name}
-            </Typography>
-          </DialogTitle>
-          
-          <DialogContent sx={{ pt: 3 }}>
-            {selectedPlan && (
-              <Box>
-                <Paper sx={{ 
-                  p: 3, 
-                  mb: 3,
-                  background: selectedPlan.gradient,
-                  color: selectedPlan.name === 'Gold Plan' ? '#000' : '#fff'
-                }}>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    Plan Details
-                  </Typography>
-                  <Typography>ROI: {selectedPlan.roi}% Daily</Typography>
-                  <Typography>Duration: {selectedPlan.duration}</Typography>
-                  <Typography>
-                    Range: ${selectedPlan.minAmount.toLocaleString()} - ${selectedPlan.maxAmount.toLocaleString()}
-                  </Typography>
-                </Paper>
+            }}>
+              <Typography variant="h4" fontWeight="bold" color="primary">
+                12.8K
+              </Typography>
+              <Typography variant="body2" color="rgba(255,255,255,0.7)">
+                Total NFTs
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ 
+              p: 3, 
+              textAlign: 'center', 
+              bgcolor: '#232742', 
+              color: '#fff',
+              borderRadius: 3
+            }}>
+              <Typography variant="h4" fontWeight="bold" color="primary">
+                847
+              </Typography>
+              <Typography variant="body2" color="rgba(255,255,255,0.7)">
+                Collections
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ 
+              p: 3, 
+              textAlign: 'center', 
+              bgcolor: '#232742', 
+              color: '#fff',
+              borderRadius: 3
+            }}>
+              <Typography variant="h4" fontWeight="bold" color="primary">
+                2.3M
+              </Typography>
+              <Typography variant="body2" color="rgba(255,255,255,0.7)">
+                ETH Volume
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Paper sx={{ 
+              p: 3, 
+              textAlign: 'center', 
+              bgcolor: '#232742', 
+              color: '#fff',
+              borderRadius: 3
+            }}>
+              <Typography variant="h4" fontWeight="bold" color="primary">
+                45.2K
+              </Typography>
+              <Typography variant="body2" color="rgba(255,255,255,0.7)">
+                Active Users
+              </Typography>
+            </Paper>
+          </Grid>
+        </Grid>
 
-                <TextField
-                  fullWidth
-                  label="Investment Amount"
-                  type="number"
-                  value={investAmount}
-                  onChange={(e) => setInvestAmount(e.target.value)}
-                  sx={{ 
-                    mb: 3,
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                      '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                      '&:hover fieldset': { borderColor: 'primary.main' },
-                      '&.Mui-focused fieldset': { borderColor: 'primary.main' },
+        {/* Navigation Tabs */}
+        <Paper sx={{ mb: 4, bgcolor: '#232742', borderRadius: 3 }}>
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange} 
+            centered
+            sx={{
+              '& .MuiTab-root': { 
+                color: 'rgba(255,255,255,0.7)',
+                fontWeight: 600
+              },
+              '& .Mui-selected': { 
+                color: theme.palette.primary.main + ' !important'
+              }
+            }}
+          >
+            <Tab icon={<LocalFireDepartment />} label="Trending" />
+            <Tab icon={<TrendingUp />} label="Top Collections" />
+            <Tab icon={<Star />} label="Featured" />
+            <Tab icon={<Timer />} label="Live Auctions" />
+          </Tabs>
+        </Paper>
+
+        {/* Trending NFTs Grid */}
+        {tabValue === 0 && (
+          <>
+            <Typography variant="h4" fontWeight="bold" color="primary" sx={{ mb: 3, textAlign: 'center' }}>
+              🔥 Trending NFTs
+            </Typography>
+            <Grid container spacing={3} sx={{ mb: 6 }}>
+              {trendingNFTs.map((nft) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={nft.id}>
+                  <Card sx={{ 
+                    height: '100%',
+                    bgcolor: '#232742',
+                    color: '#fff',
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    transition: 'transform 0.3s, boxShadow 0.3s',
+                    '&:hover': {
+                      transform: 'translateY(-8px)',
+                      boxShadow: 8
                     },
-                    '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' },
-                    '& .MuiOutlinedInput-input': { color: '#fff' },
-                  }}
-                  InputProps={{
-                    startAdornment: <Typography sx={{ mr: 1, color: '#fff' }}>$</Typography>
-                  }}
-                />
+                    position: 'relative'
+                  }}>
+                    {/* Rarity Badge */}
+                    <Chip
+                      label={nft.rarity}
+                      size="small"
+                      sx={{
+                        position: 'absolute',
+                        top: 12,
+                        left: 12,
+                        bgcolor: getRarityColor(nft.rarity),
+                        color: '#000',
+                        fontWeight: 'bold',
+                        zIndex: 1
+                      }}
+                    />
+                    
+                    {/* Like Button */}
+                    <IconButton
+                      onClick={() => toggleLike(nft.id)}
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        bgcolor: 'rgba(0,0,0,0.5)',
+                        color: likedNFTs.has(nft.id) ? '#FF6B6B' : '#fff',
+                        zIndex: 1,
+                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
+                      }}
+                    >
+                      {likedNFTs.has(nft.id) ? <Favorite /> : <FavoriteOutlined />}
+                    </IconButton>
 
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                  <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>Payment Method</InputLabel>
-                  <Select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    sx={{
-                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                      '& .MuiSelect-select': { color: '#fff' },
-                      '& .MuiSvgIcon-root': { color: '#fff' }
-                    }}
-                  >
-                    <MenuItem value="bitcoin">Bitcoin (BTC)</MenuItem>
-                    <MenuItem value="ethereum">Ethereum (ETH)</MenuItem>
-                    <MenuItem value="usdt">Tether (USDT)</MenuItem>
-                    <MenuItem value="bank">Bank Transfer</MenuItem>
-                    <MenuItem value="card">Credit/Debit Card</MenuItem>
-                  </Select>
-                </FormControl>
+                    <CardMedia
+                      component="img"
+                      height="280"
+                      image={nft.image}
+                      alt={nft.name}
+                      sx={{ objectFit: 'cover' }}
+                    />
+                    
+                    <CardContent sx={{ p: 2 }}>
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="h6" fontWeight="bold" noWrap>
+                          {nft.name}
+                        </Typography>
+                        <Typography variant="body2" color="rgba(255,255,255,0.7)" noWrap>
+                          {nft.collection}
+                        </Typography>
+                      </Box>
+
+                      {/* Price Section */}
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        mb: 2,
+                        p: 1.5,
+                        bgcolor: 'rgba(0,179,134,0.1)',
+                        borderRadius: 2,
+                        border: '1px solid rgba(0,179,134,0.3)'
+                      }}>
+                        <Box>
+                          <Typography variant="body2" color="rgba(255,255,255,0.7)">
+                            Current Price
+                          </Typography>
+                          <Typography variant="h6" fontWeight="bold" color="primary">
+                            {nft.price} {nft.currency}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ textAlign: 'right' }}>
+                          <Typography variant="body2" color="rgba(255,255,255,0.7)">
+                            Time Left
+                          </Typography>
+                          <Typography variant="body2" color="#FF6B6B" fontWeight="600">
+                            {nft.timeLeft}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Stats */}
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between',
+                        mb: 2,
+                        fontSize: '0.85rem'
+                      }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Visibility sx={{ fontSize: 16 }} />
+                          <Typography variant="body2">{nft.views}</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Favorite sx={{ fontSize: 16, color: '#FF6B6B' }} />
+                          <Typography variant="body2">{nft.likes}</Typography>
+                        </Box>
+                      </Box>
+
+                      {/* Action Buttons */}
+                      <Stack direction="row" spacing={1}>
+                        <Button
+                          variant="contained"
+                          fullWidth
+                          size="small"
+                          startIcon={<ShoppingCart />}
+                          sx={{ 
+                            fontWeight: 600,
+                            textTransform: 'none'
+                          }}
+                        >
+                          Buy Now
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          fullWidth
+                          size="small"
+                          startIcon={<AccountBalanceWallet />}
+                          sx={{ 
+                            borderColor: 'primary.main',
+                            color: 'primary.main',
+                            fontWeight: 600,
+                            textTransform: 'none'
+                          }}
+                        >
+                          Place Bid
+                        </Button>
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </>
+        )}
+
+        {/* Top Collections */}
+        {tabValue === 1 && (
+          <Paper sx={{ 
+            p: 4, 
+            mb: 6,
+            bgcolor: '#232742',
+            color: '#fff',
+            borderRadius: 3
+          }}>
+            <Typography variant="h4" fontWeight="bold" color="primary" sx={{ mb: 3, textAlign: 'center' }}>
+              📊 Top Collections (24h Volume)
+            </Typography>
+            
+            {topCollections.map((collection, index) => (
+              <Box key={index}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  py: 2
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Typography variant="h6" color="primary" fontWeight="bold">
+                      #{index + 1}
+                    </Typography>
+                    <Typography variant="h6" fontWeight="600">
+                      {collection.name}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="h6" fontWeight="bold">
+                      {collection.volume} ETH
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color={collection.change.startsWith('+') ? '#4CAF50' : '#FF6B6B'}
+                      fontWeight="600"
+                    >
+                      {collection.change}
+                    </Typography>
+                  </Box>
+                </Box>
+                {index < topCollections.length - 1 && (
+                  <Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)' }} />
+                )}
               </Box>
-            )}
-          </DialogContent>
+            ))}
+          </Paper>
+        )}
 
-          <DialogActions sx={{ borderTop: '1px solid rgba(255,255,255,0.1)', pt: 2 }}>
-            <Button onClick={() => setInvestDialogOpen(false)} sx={{ color: 'rgba(255,255,255,0.7)' }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirmInvestment}
-              variant="contained"
-              disabled={!investAmount || !paymentMethod}
-              sx={{ fontWeight: 700 }}
-            >
-              Confirm Investment
-            </Button>
-          </DialogActions>
-        </Dialog>
+        {/* Featured & Live Auctions placeholders */}
+        {(tabValue === 2 || tabValue === 3) && (
+          <Paper sx={{ 
+            p: 6, 
+            textAlign: 'center',
+            bgcolor: '#232742',
+            color: '#fff',
+            borderRadius: 3
+          }}>
+            <Typography variant="h5" fontWeight="bold" color="primary" gutterBottom>
+              {tabValue === 2 ? '⭐ Featured NFTs' : '⏰ Live Auctions'}
+            </Typography>
+            <Typography variant="body1" color="rgba(255,255,255,0.7)">
+              {tabValue === 2 
+                ? 'Curated selection of premium NFTs coming soon!' 
+                : 'Real-time auction system launching soon!'
+              }
+            </Typography>
+          </Paper>
+        )}
       </Container>
-
-      {/* Footer */}
-      <Box sx={{ 
-        bgcolor: '#181A20', 
-        py: 4, 
-        mt: 6,
-        borderTop: '1px solid #23272F'
-      }}>
-        <Container maxWidth="xl">
-          {/* Language Selection */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                <Language sx={{ mr: 1, verticalAlign: 'middle' }} />
-                Language
-              </InputLabel>
-              <Select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                sx={{
-                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                  '& .MuiSelect-select': { color: '#fff' },
-                  '& .MuiSvgIcon-root': { color: '#fff' }
-                }}
-              >
-                {languages.map((lang) => (
-                  <MenuItem key={lang.code} value={lang.code}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <span>{lang.flag}</span>
-                      <span>{lang.name}</span>
-                    </Box>
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Divider sx={{ bgcolor: 'rgba(255,255,255,0.1)', mb: 3 }} />
-
-          {/* Copyright */}
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" color="rgba(255,255,255,0.6)" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-              <Copyright sx={{ fontSize: 16 }} />
-              {new Date().getFullYear()} Elon Investment Broker. All rights reserved.
-            </Typography>
-            <Typography variant="body2" color="rgba(255,255,255,0.5)" sx={{ mt: 1 }}>
-              Licensed & Regulated Financial Services Provider
-            </Typography>
-          </Box>
-        </Container>
-      </Box>
     </Box>
   );
 }
