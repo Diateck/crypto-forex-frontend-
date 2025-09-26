@@ -116,7 +116,7 @@ function AppContent() {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700, letterSpacing: 1 }}>
-            Interspace Broker Dashboard
+            Elon Investment Broker
           </Typography>
         </Toolbar>
       </AppBar>
