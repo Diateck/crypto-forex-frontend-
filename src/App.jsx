@@ -36,7 +36,6 @@ import BuyPlan from './pages/BuyPlan';
 import NFTGallery from './pages/NFTGallery';
 import SubscribeSignals from './pages/SubscribeSignals';
 import ApplyLoans from './pages/ApplyLoans';
-import TradingHistory from './pages/TradingHistory';
 import VerifyAccount from './pages/VerifyAccount';
 import AccountHistory from './pages/AccountHistory';
 import News from './pages/News';
@@ -81,7 +80,6 @@ const pages = [
   { path: '/dashboard/nft-gallery', label: 'NFT Gallery', icon: <ImageIcon /> },
   { path: '/dashboard/subscribe-signals', label: 'Subscribe Signals', icon: <SignalCellularAltIcon /> },
   { path: '/dashboard/loans/apply', label: 'Apply for Loans', icon: <MonetizationOnIcon /> },
-  { path: '/dashboard/tradinghistory', label: 'Trading History', icon: <ShowChartIcon /> },
   { path: '/dashboard/verify-account', label: 'Verify Account', icon: <VerifiedUserIcon /> },
   { path: '/dashboard/accounthistory', label: 'Account History', icon: <AccountBoxIcon /> },
   { path: '/dashboard/news', label: 'News', icon: <NewspaperIcon /> },
@@ -212,7 +210,6 @@ function AppContent() {
           <Route path="/dashboard/nft-gallery" element={<RequireAuth><NFTGallery /></RequireAuth>} />
           <Route path="/dashboard/subscribe-signals" element={<RequireAuth><SubscribeSignals /></RequireAuth>} />
           <Route path="/dashboard/loans/apply" element={<RequireAuth><ApplyLoans /></RequireAuth>} />
-          <Route path="/dashboard/tradinghistory" element={<RequireAuth><TradingHistory /></RequireAuth>} />
           <Route path="/dashboard/verify-account" element={<RequireAuth><VerifyAccount /></RequireAuth>} />
           <Route path="/dashboard/accounthistory" element={<RequireAuth><AccountHistory /></RequireAuth>} />
           <Route path="/dashboard/news" element={<RequireAuth><News /></RequireAuth>} />
