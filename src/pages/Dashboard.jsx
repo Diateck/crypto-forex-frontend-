@@ -69,6 +69,8 @@ export default function Dashboard() {
   ];
 
   const [selectedPair, setSelectedPair] = useState(cryptoPairs[0].value);
+  const [selectedForex, setSelectedForex] = useState('OANDA:EURUSD');
+  const [selectedStock, setSelectedStock] = useState('NASDAQ:AAPL');
   const [chartWidth, setChartWidth] = useState(900);
   const isResizing = useRef(false);
 
