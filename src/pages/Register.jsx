@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
 import { Box, Card, Typography, TextField, Button } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    // Basic form validation for testing
+    if (name.trim() && email.trim() && password.trim()) {
+      // Redirect to dashboard after successful "registration"
+      navigate('/dashboard');
+    } else {
+      alert('Please fill in all fields');
+    }
+  };
   return (
     <Box minHeight="100vh" display="flex" alignItems="center" justifyContent="center" bgcolor="#181A20">
       <Box sx={{ position: 'absolute', top: 32, left: 0, right: 0, textAlign: 'center' }}>
@@ -14,9 +26,10 @@ function Register() {
         </Typography>
       </Box>
       <Card sx={{ p: 4, borderRadius: 3, boxShadow: 3, minWidth: 320, maxWidth: 400, width: '100%' }}>
-        <Typography variant="h5" fontWeight={900} color="primary" sx={{ mb: 2 }}>
-          Register
-        </Typography>
+        <form onSubmit={handleRegister}>
+          <Typography variant="h5" fontWeight={900} color="primary" sx={{ mb: 2 }}>
+            Register
+          </Typography>
         <TextField
           label="Full Name"
           fullWidth
@@ -40,15 +53,16 @@ function Register() {
           value={password}
           onChange={e => setPassword(e.target.value)}
         />
-        <Button variant="contained" color="primary" fullWidth size="large" sx={{ fontWeight: 700 }}>
-          Register
-        </Button>
-        <Typography sx={{ mt: 2, textAlign: 'center' }}>
-          Already have an account?{' '}
-          <Link to="/login" style={{ color: '#1976d2', textDecoration: 'none', fontWeight: 700 }}>
-            Login
-          </Link>
-        </Typography>
+          <Button variant="contained" color="primary" fullWidth size="large" type="submit" sx={{ fontWeight: 700 }}>
+            Register
+          </Button>
+          <Typography sx={{ mt: 2, textAlign: 'center' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: '#1976d2', textDecoration: 'none', fontWeight: 700 }}>
+              Login
+            </Link>
+          </Typography>
+        </form>
       </Card>
     </Box>
   );
