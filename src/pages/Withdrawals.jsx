@@ -44,7 +44,7 @@ export default function Withdrawals() {
 
   return (
     <Container maxWidth="xl">
-      <Box p={{ xs: 1, sm: 3 }}>
+      <Box sx={{ p: { xs: 1, sm: 3 }, minHeight: '100vh' }}>
       {/* Professional Header - same as Dashboard */}
       <Box sx={{ 
         display: 'flex', 
@@ -230,7 +230,7 @@ export default function Withdrawals() {
           </Button>
         </Card>
       </Box>
-    </Box>
+      </Box>
     </Container>
   );
 }
