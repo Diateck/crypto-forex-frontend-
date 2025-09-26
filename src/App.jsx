@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemText, CssBaseline, Box, ThemeProvider, createTheme, ListItemIcon, IconButton } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useLocation } from 'react-router-dom';
@@ -72,8 +72,6 @@ const darkTheme = createTheme({
 
 const pages = [
   { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon /> },
-  { path: '/register', label: 'Register', icon: <PersonAddIcon /> },
-  { path: '/login', label: 'Login', icon: <LoginIcon /> },
   { path: '/dashboard/deposits', label: 'Deposits', icon: <AccountBalanceWalletIcon /> },
   { path: '/dashboard/withdrawals', label: 'Withdrawals', icon: <OutboxIcon /> },
   { path: '/dashboard/trade', label: 'Trade', icon: <ShowChartIcon /> },
@@ -122,6 +120,7 @@ function AppContent() {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
         <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
         </Routes>
@@ -202,6 +201,7 @@ function AppContent() {
       <Box component="main" sx={{ flexGrow: 1, bgcolor: 'background.default', p: { xs: 1, sm: 3 } }}>
         <Toolbar />
         <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/dashboard/deposits" element={<RequireAuth><Deposits /></RequireAuth>} />
           <Route path="/dashboard/withdrawals" element={<RequireAuth><Withdrawals /></RequireAuth>} />
