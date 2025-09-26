@@ -32,7 +32,7 @@ import Withdrawals from './pages/Withdrawals';
 import Trade from './pages/Trade';
 import TradeHistory from './pages/TradeHistory';
 import CopyTrading from './pages/CopyTrading';
-import InvestmentPlan from './pages/InvestmentPlan';
+import BuyPlan from './pages/BuyPlan';
 import NFTGallery from './pages/NFTGallery';
 import SubscribeSignals from './pages/SubscribeSignals';
 import ApplyLoans from './pages/ApplyLoans';
@@ -76,7 +76,7 @@ const pages = [
   { path: '/dashboard/trade', label: 'Trade', icon: <ShowChartIcon /> },
   { path: '/dashboard/trades/history', label: 'Trade History', icon: <HistoryIcon /> },
   { path: '/dashboard/copy-trading', label: 'Copy Trading', icon: <ContentCopyIcon /> },
-  { path: '/dashboard/buy-plan', label: 'Buy Plan', icon: <ShoppingCartIcon /> },
+  { path: '/dashboard/buy-plan', label: 'Investment Plan', icon: <ShoppingCartIcon /> },
   { path: '/dashboard/nft-gallery', label: 'NFT Gallery', icon: <ImageIcon /> },
   { path: '/dashboard/subscribe-signals', label: 'Subscribe Signals', icon: <SignalCellularAltIcon /> },
   { path: '/dashboard/loans/apply', label: 'Apply for Loans', icon: <MonetizationOnIcon /> },
@@ -206,7 +206,7 @@ function AppContent() {
           <Route path="/dashboard/trade" element={<RequireAuth><Trade /></RequireAuth>} />
           <Route path="/dashboard/trades/history" element={<RequireAuth><TradeHistory /></RequireAuth>} />
           <Route path="/dashboard/copy-trading" element={<RequireAuth><CopyTrading /></RequireAuth>} />
-          <Route path="/dashboard/buy-plan" element={<RequireAuth><InvestmentPlan /></RequireAuth>} />
+          <Route path="/dashboard/buy-plan" element={<RequireAuth><BuyPlan /></RequireAuth>} />
           <Route path="/dashboard/nft-gallery" element={<RequireAuth><NFTGallery /></RequireAuth>} />
           <Route path="/dashboard/subscribe-signals" element={<RequireAuth><SubscribeSignals /></RequireAuth>} />
           <Route path="/dashboard/loans/apply" element={<RequireAuth><ApplyLoans /></RequireAuth>} />
