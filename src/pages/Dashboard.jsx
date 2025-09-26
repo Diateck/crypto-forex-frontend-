@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Typography, Box, Grid, Card, CardContent, Divider, List, ListItem, ListItemText, useTheme, Avatar, Button, Stack, Chip } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
@@ -63,6 +63,46 @@ const notifications = [
 
 export default function Dashboard() {
   const theme = useTheme();
+  // List of crypto pairs for selection
+  const cryptoPairs = [
+    { label: 'BTC/USDT', value: 'BINANCE:BTCUSDT' },
+    { label: 'ETH/USDT', value: 'BINANCE:ETHUSDT' },
+    { label: 'BNB/USDT', value: 'BINANCE:BNBUSDT' },
+    { label: 'SOL/USDT', value: 'BINANCE:SOLUSDT' },
+    { label: 'XRP/USDT', value: 'BINANCE:XRPUSDT' },
+    { label: 'DOGE/USDT', value: 'BINANCE:DOGEUSDT' },
+    { label: 'ADA/USDT', value: 'BINANCE:ADAUSDT' },
+  ];
+
+  const [selectedPair, setSelectedPair] = useState(cryptoPairs[0].value);
+  const [chartWidth, setChartWidth] = useState(900);
+  const isResizing = useRef(false);
+
+  // Mouse event handlers for resizing
+  const handleMouseDown = () => {
+    isResizing.current = true;
+    document.body.style.cursor = 'ew-resize';
+  };
+  const handleMouseUp = () => {
+    isResizing.current = false;
+    document.body.style.cursor = '';
+  };
+  const handleMouseMove = (e) => {
+    if (isResizing.current) {
+      // Calculate new width, minimum 300px, maximum 100vw
+      const newWidth = Math.max(300, Math.min(window.innerWidth, e.clientX - 50));
+      setChartWidth(newWidth);
+    }
+  };
+  React.useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
   return (
     <Box p={{ xs: 1, sm: 3 }}>
       {/* Header with username and quick actions */}
@@ -72,127 +112,62 @@ export default function Dashboard() {
             <PersonIcon fontSize="large" />
           </Avatar>
           <Typography variant="h6" fontWeight={700} color="#fff">
-            Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
+            Username: <span style={{ color: theme.palette.primary.main }}>precious</span>
           </Typography>
         </Box>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Chip icon={<VerifiedUserIcon />} label="KYC" color="primary" variant="outlined" />
-          <Button variant="contained" color="primary" startIcon={<EmailIcon />}>Mail Us</Button>
-          <Button variant="contained" color="secondary" startIcon={<SettingsIcon />}>Settings</Button>
-        </Stack>
+      </Box>
+      {/* ...existing dashboard content... */}
+
+      {/* Crypto Pair Selector */}
+      <Box sx={{ mt: 4, mb: 2, display: 'flex', justifyContent: 'center' }}>
+        <select
+          value={selectedPair}
+          onChange={e => setSelectedPair(e.target.value)}
+          style={{ padding: '8px 16px', fontSize: '1rem', borderRadius: 6, background: '#232742', color: '#fff', border: '1px solid #444' }}
+        >
+          {cryptoPairs.map(pair => (
+            <option key={pair.value} value={pair.value}>{pair.label}</option>
+          ))}
+        </select>
       </Box>
 
-      {/* Ticker Bar */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, bgcolor: '#181A20', p: 1.5, borderRadius: 2, mb: 3, overflowX: 'auto', boxShadow: 1 }}>
-        {tickerData.map((item, idx) => (
-          <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 180 }}>
-            <Typography variant="subtitle2" color="text.secondary" fontWeight={600}>{item.label}</Typography>
-            <Typography variant="body1" color="#fff" fontWeight={700}>{item.value}</Typography>
-            <Typography variant="body2" color={item.color} fontWeight={700}>{item.change}</Typography>
-          </Box>
-        ))}
+      {/* Live Trading Chart (TradingView Widget) with Resizer */}
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div style={{ width: chartWidth, minWidth: 300, transition: 'width 0.1s', position: 'relative' }}>
+          <iframe
+            title="Live Trading Chart"
+            src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_12345&symbol=${selectedPair}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
+            width="100%"
+            height="500"
+            allowtransparency="true"
+            frameBorder="0"
+            scrolling="no"
+            allowFullScreen
+            style={{ borderRadius: 8 }}
+          ></iframe>
+          {/* Resizer bar */}
+          <div
+            onMouseDown={handleMouseDown}
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              width: 8,
+              height: '100%',
+              cursor: 'ew-resize',
+              background: 'rgba(35,39,66,0.5)',
+              borderRadius: '0 8px 8px 0',
+              zIndex: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            title="Drag to resize chart"
+          >
+            <span style={{ width: 4, height: 40, background: '#888', borderRadius: 2 }}></span>
+          </div>
+        </div>
       </Box>
-
-      {/* Dashboard Cards - Top Row */}
-      <Grid container spacing={3} sx={{ mb: 0.5 }}>
-        {topCards.map((card) => (
-          <Grid item xs={12} sm={6} md={3} key={card.label}>
-            <Card
-              sx={{
-                borderRadius: 3,
-                boxShadow: 6,
-                background: card.gradient,
-                color: '#fff',
-                minHeight: 120,
-                display: 'flex',
-                alignItems: 'center',
-                px: 2,
-                py: 2,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <Box sx={{ mr: 2 }}>{card.icon}</Box>
-              <Box>
-                <Typography variant="h6" fontWeight={700} sx={{ color: '#fff' }}>{card.value}</Typography>
-                <Typography variant="subtitle2" fontWeight={500} sx={{ color: '#fff', opacity: 0.9 }}>{card.label}</Typography>
-                {card.chip && (
-                  <Box sx={{ mt: 1 }}>
-                    <Chip label="UNVERIFIED" color="default" size="small" sx={{ bgcolor: '#fff', color: '#f5576c', fontWeight: 700 }} />
-                  </Box>
-                )}
-              </Box>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      {/* Dashboard Cards - Bottom Row */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        {bottomCards.map((card) => (
-          <Grid item xs={12} sm={6} md={3} key={card.label}>
-            <Card
-              sx={{
-                borderRadius: 3,
-                boxShadow: 6,
-                background: card.gradient,
-                color: '#fff',
-                minHeight: 120,
-                display: 'flex',
-                alignItems: 'center',
-                px: 2,
-                py: 2,
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <Box sx={{ mr: 2 }}>{card.icon}</Box>
-              <Box>
-                <Typography variant="h6" fontWeight={700} sx={{ color: '#fff' }}>{card.value}</Typography>
-                <Typography variant="subtitle2" fontWeight={500} sx={{ color: '#fff', opacity: 0.9 }}>{card.label}</Typography>
-              </Box>
-            </Card>
-          </Grid>
-        ))}
-        {/* Chart Placeholder */}
-        <Grid item xs={12} md={8}>
-          <Card sx={{ borderRadius: 3, boxShadow: 6, minHeight: 240, bgcolor: theme.palette.background.paper }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom fontWeight={600}>
-                Performance Chart
-              </Typography>
-              <Box sx={{ height: 180, width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={marketData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                    <XAxis dataKey="name" stroke="#888" />
-                    <YAxis stroke="#888" />
-                    <Tooltip contentStyle={{ background: '#23272F', border: 'none', color: '#fff' }} />
-                    <Line type="monotone" dataKey="value" stroke="#00B386" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        {/* Notifications */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ borderRadius: 3, boxShadow: 6, minHeight: 240, bgcolor: theme.palette.background.paper }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom fontWeight={600}>
-                Recent Notifications
-              </Typography>
-              <Divider sx={{ mb: 1 }} />
-              <List>
-                {notifications.map((note, idx) => (
-                  <ListItem key={idx} disablePadding>
-                    <ListItemText primary={note} />
-                  </ListItem>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
     </Box>
   );
 }
