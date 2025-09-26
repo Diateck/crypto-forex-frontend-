@@ -1,6 +1,18 @@
 
 import React, { useState } from 'react';
-import { Typography, Box, Button, TextField, Divider, MenuItem, Card, Avatar, Stack, Chip } from '@mui/material';
+import { 
+  Typography, 
+  Box, 
+  Button, 
+  TextField, 
+  Divider, 
+  MenuItem, 
+  Card, 
+  Avatar, 
+  Stack, 
+  Chip,
+  Container 
+} from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import EmailIcon from '@mui/icons-material/Email';
@@ -31,7 +43,8 @@ export default function Withdrawals() {
   const [walletAddress, setWalletAddress] = useState('');
 
   return (
-    <Box p={{ xs: 1, sm: 3 }}>
+    <Container maxWidth="xl">
+      <Box p={{ xs: 1, sm: 3 }}>
       {/* Professional Header - same as Dashboard */}
       <Box sx={{ 
         display: 'flex', 
@@ -218,5 +231,6 @@ export default function Withdrawals() {
         </Card>
       </Box>
     </Box>
+    </Container>
   );
 }
