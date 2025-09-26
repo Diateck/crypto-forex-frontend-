@@ -486,14 +486,15 @@ export default function Trade() {
           </Box>
         </Box>
         <Stack
-          direction={{ xs: 'row', sm: 'row' }}
+          direction="row"
           spacing={{ xs: 1, sm: 1.5, md: 2 }}
           alignItems="center"
           sx={{
             width: { xs: '100%', sm: 'auto' },
             justifyContent: { xs: 'center', sm: 'flex-end' },
             flexWrap: 'wrap',
-            gap: { xs: 1, sm: 1.5 }
+            gap: { xs: 1, sm: 1.5 },
+            minWidth: 0
           }}
         >
           <Chip
@@ -551,9 +552,10 @@ export default function Trade() {
         background: 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)',
         borderRadius: 3,
         boxShadow: 6,
-        mb: 3
+        mb: 3,
+        overflow: 'visible'
       }}>
-        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3 }, maxHeight: '400px', overflowY: 'auto' }}>
           <Typography
             variant="h6"
             fontWeight="bold"
@@ -572,7 +574,7 @@ export default function Trade() {
                   Cryptocurrency
                 </Typography>
                 <Stack spacing={1}>
-                  {tradingAssets.filter(asset => asset.type === 'crypto').slice(0, 3).map((asset) => (
+                  {tradingAssets.filter(asset => asset.type === 'crypto').map((asset) => (
                     <Box
                       key={asset.symbol}
                       sx={{
@@ -615,7 +617,7 @@ export default function Trade() {
                   Forex
                 </Typography>
                 <Stack spacing={1}>
-                  {tradingAssets.filter(asset => asset.type === 'forex').slice(0, 3).map((asset) => (
+                  {tradingAssets.filter(asset => asset.type === 'forex').map((asset) => (
                     <Box
                       key={asset.symbol}
                       sx={{
@@ -658,7 +660,7 @@ export default function Trade() {
                   Stocks
                 </Typography>
                 <Stack spacing={1}>
-                  {tradingAssets.filter(asset => asset.type === 'stock').slice(0, 3).map((asset) => (
+                  {tradingAssets.filter(asset => asset.type === 'stock').map((asset) => (
                     <Box
                       key={asset.symbol}
                       sx={{
@@ -1100,7 +1102,8 @@ export default function Trade() {
               alignItems: 'center',
               px: { xs: 2, sm: 2.5, md: 3 },
               py: { xs: 2, sm: 2.5, md: 3 },
-              minHeight: { xs: 110, sm: 120, md: 130 }
+              minHeight: { xs: 110, sm: 120, md: 130 },
+              flexDirection: { xs: 'row', sm: 'row' }
             }}>
               <Box sx={{
                 mr: { xs: 1.5, sm: 2, md: 2.5 },
@@ -1155,7 +1158,8 @@ export default function Trade() {
               alignItems: 'center',
               px: { xs: 2, sm: 2.5, md: 3 },
               py: { xs: 2, sm: 2.5, md: 3 },
-              minHeight: { xs: 110, sm: 120, md: 130 }
+              minHeight: { xs: 110, sm: 120, md: 130 },
+              flexDirection: { xs: 'row', sm: 'row' }
             }}>
               <Box sx={{
                 mr: { xs: 1.5, sm: 2, md: 2.5 },
@@ -1238,7 +1242,8 @@ export default function Trade() {
               alignItems: 'center',
               px: { xs: 2, sm: 2.5, md: 3 },
               py: { xs: 2, sm: 2.5, md: 3 },
-              minHeight: { xs: 110, sm: 120, md: 130 }
+              minHeight: { xs: 110, sm: 120, md: 130 },
+              flexDirection: { xs: 'row', sm: 'row' }
             }}>
               <Box sx={{
                 mr: { xs: 1.5, sm: 2, md: 2.5 },
