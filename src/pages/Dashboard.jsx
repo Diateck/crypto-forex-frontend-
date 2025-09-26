@@ -1,11 +1,12 @@
-
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Typography, Box, Grid, Card, useTheme, Avatar, Button, Stack, Chip } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import SettingsIcon from '@mui/icons-material/Settings';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
+import OutboxIcon from '@mui/icons-material/Outbox';
 import HistoryIcon from '@mui/icons-material/History';
 import GroupIcon from '@mui/icons-material/Group';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
@@ -18,6 +19,17 @@ const tickerData = [
   { label: 'EUR/USD', value: '1.18099', change: '-0.00059 (-0.05%)', color: 'error.main' },
   { label: 'BTC/USD', value: '116,747', change: '+270.00 (+0.23%)', color: 'success.main' },
   { label: 'ETH/USD', value: '4,620.8', change: '+28.50', color: 'success.main' },
+];
+
+// Example market data for the chart
+const marketData = [
+  { name: 'Mon', value: 12000 },
+  { name: 'Tue', value: 12500 },
+  { name: 'Wed', value: 12300 },
+  { name: 'Thu', value: 12800 },
+  { name: 'Fri', value: 12700 },
+  { name: 'Sat', value: 13000 },
+  { name: 'Sun', value: 12900 },
 ];
 
 const cardGradient = 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)';
@@ -54,14 +66,10 @@ export default function Dashboard() {
   const [chartWidth, setChartWidth] = useState(900);
   const isResizing = useRef(false);
 
-  // Mouse event handlers for resizing
   const handleMouseDown = useCallback(() => {
     isResizing.current = true;
-    if (typeof document !== 'undefined') {
-      document.body.style.cursor = 'ew-resize';
-    }
+    document.body.style.cursor = 'ew-resize';
   }, []);
-  
   const handleMouseUp = useCallback(() => {
     isResizing.current = false;
     if (typeof document !== 'undefined') {
@@ -71,12 +79,12 @@ export default function Dashboard() {
   
   const handleMouseMove = useCallback((e) => {
     if (isResizing.current && typeof window !== 'undefined') {
-      // Calculate new width, minimum 300px, maximum 100vw
       const newWidth = Math.max(300, Math.min(window.innerWidth, e.clientX - 50));
       setChartWidth(newWidth);
     }
   }, []);
-  React.useEffect(() => {
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
@@ -270,6 +278,7 @@ export default function Dashboard() {
           </Grid>
         ))}
       </Grid>
+
       {/* Dashboard Cards - Bottom Row */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {bottomCards.map((card) => (
@@ -318,7 +327,7 @@ export default function Dashboard() {
         ))}
       </Grid>
 
-      {/* Three Large, Vertically Arranged Live Charts: Crypto, Forex, Stock Market */}
+      {/* Three Large, Vertically Arranged Live Charts */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', width: '100%' }}>
         {/* Crypto Trading Chart */}
         <Card sx={{ 
@@ -379,12 +388,12 @@ export default function Dashboard() {
               src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_crypto&symbol=${selectedPair}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
               width="100%"
               height="400"
-              allowTransparency="true"
+              allowtransparency="true"
               frameBorder="0"
               scrolling="no"
+              allowFullScreen
               style={{ borderRadius: 8 }}
             />
-            {/* Resizer bar - Hidden on mobile */}
             <div
               onMouseDown={handleMouseDown}
               style={{
@@ -403,7 +412,7 @@ export default function Dashboard() {
               }}
               title="Drag to resize chart"
             >
-              <span style={{ width: 4, height: 40, background: '#888', borderRadius: 2 }}></span>
+              <span style={{ width: 4, height: 40, background: '#888', borderRadius: 2 }} />
             </div>
           </Box>
         </Card>
@@ -434,7 +443,7 @@ export default function Dashboard() {
           </Typography>
           <Box sx={{ mb: 2, width: '100%', display: 'flex', justifyContent: 'center' }}>
             <select
-              value={selectedForex || 'OANDA:EURUSD'}
+              value={selectedForex}
               onChange={e => setSelectedForex(e.target.value)}
               style={{ padding: '8px 16px', fontSize: '1rem', borderRadius: 6, background: '#232742', color: '#fff', border: '1px solid #444' }}
             >
@@ -446,15 +455,15 @@ export default function Dashboard() {
           <Box sx={{ width: chartWidth, minWidth: 300, maxWidth: '100%', transition: 'width 0.1s', position: 'relative', display: 'flex', justifyContent: 'center' }}>
             <iframe
               title="Forex Trading Chart"
-              src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_forex&symbol=${selectedForex || 'OANDA:EURUSD'}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
+              src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_forex&symbol=${selectedForex}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
               width="100%"
               height="400"
-              allowTransparency="true"
+              allowtransparency="true"
               frameBorder="0"
               scrolling="no"
+              allowFullScreen
               style={{ borderRadius: 8 }}
             />
-            {/* Resizer bar */}
             <div
               onMouseDown={handleMouseDown}
               style={{
@@ -473,7 +482,7 @@ export default function Dashboard() {
               }}
               title="Drag to resize chart"
             >
-              <span style={{ width: 4, height: 40, background: '#888', borderRadius: 2 }}></span>
+              <span style={{ width: 4, height: 40, background: '#888', borderRadius: 2 }} />
             </div>
           </Box>
         </Card>
@@ -504,7 +513,7 @@ export default function Dashboard() {
           </Typography>
           <Box sx={{ mb: 2, width: '100%', display: 'flex', justifyContent: 'center' }}>
             <select
-              value={selectedStock || 'NASDAQ:AAPL'}
+              value={selectedStock}
               onChange={e => setSelectedStock(e.target.value)}
               style={{ padding: '8px 16px', fontSize: '1rem', borderRadius: 6, background: '#232742', color: '#fff', border: '1px solid #444' }}
             >
@@ -516,15 +525,15 @@ export default function Dashboard() {
           <Box sx={{ width: chartWidth, minWidth: 300, maxWidth: '100%', transition: 'width 0.1s', position: 'relative', display: 'flex', justifyContent: 'center' }}>
             <iframe
               title="Stock Market Data Chart"
-              src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_stock&symbol=${selectedStock || 'NASDAQ:AAPL'}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
+              src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_stock&symbol=${selectedStock}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
               width="100%"
               height="400"
-              allowTransparency="true"
+              allowtransparency="true"
               frameBorder="0"
               scrolling="no"
+              allowFullScreen
               style={{ borderRadius: 8 }}
             />
-            {/* Resizer bar */}
             <div
               onMouseDown={handleMouseDown}
               style={{
@@ -543,7 +552,7 @@ export default function Dashboard() {
               }}
               title="Drag to resize chart"
             >
-              <span style={{ width: 4, height: 40, background: '#888', borderRadius: 2 }}></span>
+              <span style={{ width: 4, height: 40, background: '#888', borderRadius: 2 }} />
             </div>
           </Box>
         </Card>
@@ -562,7 +571,7 @@ export default function Dashboard() {
         </select>
       </Box>
 
-      {/* Live Trading Chart (TradingView Widget) with Resizer */}
+      {/* Live Trading Chart */}
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <div style={{ width: chartWidth, minWidth: 300, transition: 'width 0.1s', position: 'relative' }}>
           <iframe
@@ -570,12 +579,12 @@ export default function Dashboard() {
             src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_12345&symbol=${selectedPair}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
             width="100%"
             height="500"
-            allowTransparency="true"
+            allowtransparency="true"
             frameBorder="0"
             scrolling="no"
+            allowFullScreen
             style={{ borderRadius: 8 }}
           />
-          {/* Resizer bar */}
           <div
             onMouseDown={handleMouseDown}
             style={{
@@ -594,7 +603,7 @@ export default function Dashboard() {
             }}
             title="Drag to resize chart"
           >
-            <span style={{ width: 4, height: 40, background: '#888', borderRadius: 2 }}></span>
+            <span style={{ width: 4, height: 40, background: '#888', borderRadius: 2 }} />
           </div>
         </div>
       </Box>
