@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemText, CssBaseline, Box, ThemeProvider, createTheme, ListItemIcon, IconButton } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useLocation } from 'react-router-dom';
@@ -96,6 +96,17 @@ const pages = [
 
 
 
+function RequireAuth({ children }) {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const isAuth = localStorage.getItem('isAuth');
+    if (!isAuth) {
+      navigate('/login');
+    }
+  }, [navigate]);
+  return children;
+}
+
 function AppContent() {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -173,28 +184,28 @@ function AppContent() {
       <Box component="main" sx={{ flexGrow: 1, bgcolor: 'background.default', p: { xs: 1, sm: 3 } }}>
         <Toolbar />
         <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard/deposits" element={<Deposits />} />
-          <Route path="/dashboard/withdrawals" element={<Withdrawals />} />
-          <Route path="/dashboard/trade" element={<Trade />} />
-          <Route path="/dashboard/trades/history" element={<TradeHistory />} />
-          <Route path="/dashboard/copy-trading" element={<CopyTrading />} />
-          <Route path="/dashboard/buy-plan" element={<BuyPlan />} />
-          <Route path="/dashboard/nft-gallery" element={<NFTGallery />} />
-          <Route path="/dashboard/subscribe-signals" element={<SubscribeSignals />} />
-          <Route path="/dashboard/loans/apply" element={<ApplyLoans />} />
-          <Route path="/dashboard/tradinghistory" element={<TradingHistory />} />
-          <Route path="/dashboard/verify-account" element={<VerifyAccount />} />
-          <Route path="/dashboard/accounthistory" element={<AccountHistory />} />
-          <Route path="/dashboard/news" element={<News />} />
-          <Route path="/dashboard/account-settings" element={<AccountSettings />} />
-          <Route path="/dashboard/referuser" element={<ReferUser />} />
-          <Route path="/dashboard/technical" element={<Technical />} />
-          <Route path="/dashboard/chart" element={<Chart />} />
-          <Route path="/dashboard/calendar" element={<Calendar />} />
-          <Route path="*" element={<Dashboard />} />
+          <Route path="/dashboard/deposits" element={<RequireAuth><Deposits /></RequireAuth>} />
+          <Route path="/dashboard/withdrawals" element={<RequireAuth><Withdrawals /></RequireAuth>} />
+          <Route path="/dashboard/trade" element={<RequireAuth><Trade /></RequireAuth>} />
+          <Route path="/dashboard/trades/history" element={<RequireAuth><TradeHistory /></RequireAuth>} />
+          <Route path="/dashboard/copy-trading" element={<RequireAuth><CopyTrading /></RequireAuth>} />
+          <Route path="/dashboard/buy-plan" element={<RequireAuth><BuyPlan /></RequireAuth>} />
+          <Route path="/dashboard/nft-gallery" element={<RequireAuth><NFTGallery /></RequireAuth>} />
+          <Route path="/dashboard/subscribe-signals" element={<RequireAuth><SubscribeSignals /></RequireAuth>} />
+          <Route path="/dashboard/loans/apply" element={<RequireAuth><ApplyLoans /></RequireAuth>} />
+          <Route path="/dashboard/tradinghistory" element={<RequireAuth><TradingHistory /></RequireAuth>} />
+          <Route path="/dashboard/verify-account" element={<RequireAuth><VerifyAccount /></RequireAuth>} />
+          <Route path="/dashboard/accounthistory" element={<RequireAuth><AccountHistory /></RequireAuth>} />
+          <Route path="/dashboard/news" element={<RequireAuth><News /></RequireAuth>} />
+          <Route path="/dashboard/account-settings" element={<RequireAuth><AccountSettings /></RequireAuth>} />
+          <Route path="/dashboard/referuser" element={<RequireAuth><ReferUser /></RequireAuth>} />
+          <Route path="/dashboard/technical" element={<RequireAuth><Technical /></RequireAuth>} />
+          <Route path="/dashboard/chart" element={<RequireAuth><Chart /></RequireAuth>} />
+          <Route path="/dashboard/calendar" element={<RequireAuth><Calendar /></RequireAuth>} />
+          <Route path="*" element={<RequireAuth><Dashboard /></RequireAuth>} />
         </Routes>
       </Box>
     </Box>
