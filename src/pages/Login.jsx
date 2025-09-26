@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-import { Typography, Box, Card, TextField, Button } from '@mui/material';
-
+export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   return (
