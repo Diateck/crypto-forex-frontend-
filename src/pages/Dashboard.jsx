@@ -1,13 +1,11 @@
 
 import React, { useState, useRef } from 'react';
-import { Typography, Box, Grid, Card, CardContent, Divider, List, ListItem, ListItemText, useTheme, Avatar, Button, Stack, Chip } from '@mui/material';
+import { Typography, Box, Grid, Card, useTheme, Avatar, Button, Stack, Chip } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ShowChartIcon from '@mui/icons-material/ShowChart';
-import OutboxIcon from '@mui/icons-material/Outbox';
 import HistoryIcon from '@mui/icons-material/History';
 import GroupIcon from '@mui/icons-material/Group';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
@@ -20,17 +18,6 @@ const tickerData = [
   { label: 'EUR/USD', value: '1.18099', change: '-0.00059 (-0.05%)', color: 'error.main' },
   { label: 'BTC/USD', value: '116,747', change: '+270.00 (+0.23%)', color: 'success.main' },
   { label: 'ETH/USD', value: '4,620.8', change: '+28.50', color: 'success.main' },
-];
-
-// Example market data for the chart
-const marketData = [
-  { name: 'Mon', value: 12000 },
-  { name: 'Tue', value: 12500 },
-  { name: 'Wed', value: 12300 },
-  { name: 'Thu', value: 12800 },
-  { name: 'Fri', value: 12700 },
-  { name: 'Sat', value: 13000 },
-  { name: 'Sun', value: 12900 },
 ];
 
 const cardGradient = 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)';
@@ -46,13 +33,6 @@ const bottomCards = [
   { label: 'Open Trades', value: '0', icon: <FolderOpenIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />, gradient: cardGradient },
   { label: 'Closed Trades', value: '0', icon: <HistoryIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />, gradient: cardGradient },
   { label: 'Win/Loss Ratio', value: '0', icon: <EmojiEventsIcon sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }} />, gradient: cardGradient },
-];
-
-const notifications = [
-  'Deposit of $1,000 completed',
-  'Trade #1234 closed with +5% profit',
-  'Withdrawal of $500 processed',
-  'New signal available: EUR/USD',
 ];
 
 export default function Dashboard() {
@@ -391,12 +371,11 @@ export default function Dashboard() {
               src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_crypto&symbol=${selectedPair}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
               width="100%"
               height="400"
-              allowtransparency="true"
+              allowTransparency="true"
               frameBorder="0"
               scrolling="no"
-              allowFullScreen
               style={{ borderRadius: 8 }}
-            ></iframe>
+            />
             {/* Resizer bar - Hidden on mobile */}
             <div
               onMouseDown={handleMouseDown}
@@ -410,7 +389,7 @@ export default function Dashboard() {
                 background: 'rgba(35,39,66,0.5)',
                 borderRadius: '0 8px 8px 0',
                 zIndex: 2,
-                display: window.innerWidth < 600 ? 'none' : 'flex',
+                display: typeof window !== 'undefined' && window.innerWidth < 600 ? 'none' : 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -462,12 +441,11 @@ export default function Dashboard() {
               src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_forex&symbol=${selectedForex || 'OANDA:EURUSD'}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
               width="100%"
               height="400"
-              allowtransparency="true"
+              allowTransparency="true"
               frameBorder="0"
               scrolling="no"
-              allowFullScreen
               style={{ borderRadius: 8 }}
-            ></iframe>
+            />
             {/* Resizer bar */}
             <div
               onMouseDown={handleMouseDown}
@@ -533,12 +511,11 @@ export default function Dashboard() {
               src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_stock&symbol=${selectedStock || 'NASDAQ:AAPL'}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
               width="100%"
               height="400"
-              allowtransparency="true"
+              allowTransparency="true"
               frameBorder="0"
               scrolling="no"
-              allowFullScreen
               style={{ borderRadius: 8 }}
-            ></iframe>
+            />
             {/* Resizer bar */}
             <div
               onMouseDown={handleMouseDown}
@@ -585,12 +562,11 @@ export default function Dashboard() {
             src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_12345&symbol=${selectedPair}&interval=1&theme=dark&style=1&locale=en&toolbarbg=232742&studies=[]&hideideas=1`}
             width="100%"
             height="500"
-            allowtransparency="true"
+            allowTransparency="true"
             frameBorder="0"
             scrolling="no"
-            allowFullScreen
             style={{ borderRadius: 8 }}
-          ></iframe>
+          />
           {/* Resizer bar */}
           <div
             onMouseDown={handleMouseDown}
