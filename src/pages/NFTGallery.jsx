@@ -43,7 +43,7 @@ const trendingNFTs = [
     collection: "CryptoPunks",
     price: "420.69",
     currency: "ETH",
-    image: "https://via.placeholder.com/400x400/FF6B6B/FFFFFF?text=Crypto+Punk+%237804",
+    image: "https://images.unsplash.com/photo-1634704784915-aacf363b021f?w=400&h=400&fit=crop&crop=center",
     creator: "LarvaLabs",
     views: "12.5k",
     likes: 890,
@@ -56,7 +56,7 @@ const trendingNFTs = [
     collection: "Bored Ape Yacht Club",
     price: "85.2",
     currency: "ETH",
-    image: "https://via.placeholder.com/400x400/4ECDC4/FFFFFF?text=Bored+Ape+%233749",
+    image: "https://images.unsplash.com/photo-1617791160588-241658c0f566?w=400&h=400&fit=crop&crop=center",
     creator: "Yuga Labs",
     views: "8.7k",
     likes: 654,
@@ -69,7 +69,7 @@ const trendingNFTs = [
     collection: "Azuki",
     price: "12.8",
     currency: "ETH",
-    image: "https://via.placeholder.com/400x400/45B7D1/FFFFFF?text=Azuki+%239999",
+    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=400&fit=crop&crop=center",
     creator: "Chiru Labs",
     views: "6.2k",
     likes: 432,
@@ -82,7 +82,7 @@ const trendingNFTs = [
     collection: "Moonbirds",
     price: "18.5",
     currency: "ETH",
-    image: "https://via.placeholder.com/400x400/96CEB4/FFFFFF?text=Moonbird+%231337",
+    image: "https://images.unsplash.com/photo-1635322966219-b75ed372eb01?w=400&h=400&fit=crop&crop=center",
     creator: "PROOF Collective",
     views: "4.8k",
     likes: 321,
@@ -95,7 +95,7 @@ const trendingNFTs = [
     collection: "Doodles",
     price: "7.3",
     currency: "ETH",
-    image: "https://via.placeholder.com/400x400/FECA57/FFFFFF?text=Doodle+%236420",
+    image: "https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?w=400&h=400&fit=crop&crop=center",
     creator: "Doodles LLC",
     views: "3.1k",
     likes: 245,
@@ -108,7 +108,7 @@ const trendingNFTs = [
     collection: "Clone X",
     price: "15.7",
     currency: "ETH",
-    image: "https://via.placeholder.com/400x400/FF9FF3/FFFFFF?text=Clone+X+%234200",
+    image: "https://images.unsplash.com/photo-1640161704729-cbe966a08476?w=400&h=400&fit=crop&crop=center",
     creator: "RTFKT Studios",
     views: "5.9k",
     likes: 387,
@@ -121,7 +121,7 @@ const trendingNFTs = [
     collection: "Mutant Ape Yacht Club",
     price: "24.6",
     currency: "ETH",
-    image: "https://via.placeholder.com/400x400/54A0FF/FFFFFF?text=Mutant+Ape+%238888",
+    image: "https://images.unsplash.com/photo-1635322966219-b75ed372eb01?w=400&h=400&fit=crop&crop=center",
     creator: "Yuga Labs",
     views: "7.4k",
     likes: 512,
@@ -134,7 +134,7 @@ const trendingNFTs = [
     collection: "Art Blocks Curated",
     price: "9.8",
     currency: "ETH",
-    image: "https://via.placeholder.com/400x400/5F27CD/FFFFFF?text=Art+Blocks+%23156",
+    image: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=400&fit=crop&crop=center",
     creator: "Art Blocks",
     views: "2.7k",
     likes: 189,
@@ -155,6 +155,7 @@ export default function NFTGallery() {
   const theme = useTheme();
   const [tabValue, setTabValue] = useState(0);
   const [likedNFTs, setLikedNFTs] = useState(new Set());
+  const [imageErrors, setImageErrors] = useState(new Set());
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -168,6 +169,20 @@ export default function NFTGallery() {
       newLikedNFTs.add(nftId);
     }
     setLikedNFTs(newLikedNFTs);
+  };
+
+  const handleImageError = (nftId) => {
+    const newImageErrors = new Set(imageErrors);
+    newImageErrors.add(nftId);
+    setImageErrors(newImageErrors);
+  };
+
+  const getImageSrc = (nft) => {
+    if (imageErrors.has(nft.id)) {
+      // Fallback to a different image service
+      return `https://source.unsplash.com/400x400?abstract&sig=${nft.id}`;
+    }
+    return nft.image;
   };
 
   const getRarityColor = (rarity) => {
@@ -373,13 +388,44 @@ export default function NFTGallery() {
                       {likedNFTs.has(nft.id) ? <Favorite /> : <FavoriteOutlined />}
                     </IconButton>
 
-                    <CardMedia
-                      component="img"
-                      height="280"
-                      image={nft.image}
-                      alt={nft.name}
-                      sx={{ objectFit: 'cover' }}
-                    />
+                    <Box sx={{ position: 'relative', height: 280, overflow: 'hidden' }}>
+                      <CardMedia
+                        component="img"
+                        height="280"
+                        image={getImageSrc(nft)}
+                        alt={nft.name}
+                        onError={() => handleImageError(nft.id)}
+                        sx={{ 
+                          objectFit: 'cover',
+                          width: '100%',
+                          height: '100%',
+                          bgcolor: 'rgba(255,255,255,0.05)',
+                          transition: 'transform 0.3s ease',
+                          '&:hover': {
+                            transform: 'scale(1.05)'
+                          }
+                        }}
+                      />
+                      {imageErrors.has(nft.id) && (
+                        <Box sx={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          bgcolor: 'rgba(35, 39, 66, 0.9)',
+                          flexDirection: 'column'
+                        }}>
+                          <Typography sx={{ fontSize: '3rem', mb: 1 }}>🎨</Typography>
+                          <Typography variant="body2" color="rgba(255,255,255,0.7)">
+                            NFT Artwork
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
                     
                     <CardContent sx={{ p: 2 }}>
                       <Box sx={{ mb: 2 }}>
