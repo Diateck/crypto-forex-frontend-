@@ -437,99 +437,93 @@ export default function ApplyLoans() {
           </Stack>
         </Box>
 
-        <Grid container spacing={4}>
+        <Grid container spacing={{ xs: 3, lg: 4 }}>
           {/* Left Column - Loan Application Form */}
           <Grid item xs={12} lg={8}>
             <Card sx={{
               bgcolor: '#232742',
               color: '#fff',
-              borderRadius: 3,
+              borderRadius: { xs: 2, sm: 3 },
               boxShadow: 6,
-              mb: 4
+              mb: { xs: 3, sm: 4 },
+              border: '1px solid rgba(255,255,255,0.1)'
             }}>
-              <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-                <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom>
-                  Apply for a Loan
-                </Typography>
-                <Typography variant="body1" color="rgba(255,255,255,0.7)" sx={{ mb: 4 }}>
-                  Complete the form below to apply for a loan. All fields marked with * are required.
-                </Typography>
+              <CardContent sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
+                <Box sx={{ textAlign: 'center', mb: { xs: 4, sm: 5 } }}>
+                  <Typography variant="h4" fontWeight="bold" color="primary" gutterBottom sx={{
+                    fontSize: { xs: '1.8rem', sm: '2.1rem', md: '2.5rem' }
+                  }}>
+                    Apply for a Loan
+                  </Typography>
+                  <Typography variant="body1" color="rgba(255,255,255,0.8)" sx={{ 
+                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                    lineHeight: 1.6,
+                    maxWidth: 600,
+                    mx: 'auto'
+                  }}>
+                    Complete the form below to apply for a loan. All fields marked with * are required 
+                    for processing your application.
+                  </Typography>
+                </Box>
 
-                <Grid container spacing={3}>
-                  {/* Loan Amount */}
-                  <Grid item xs={12} md={6}>
+                <Grid container spacing={{ xs: 3, md: 4 }}>
+                  {/* Loan Amount - Full width on mobile for better visibility */}
+                  <Grid item xs={12} lg={6}>
                     <TextField
                       fullWidth
                       label="Loan Amount ($) *"
                       type="number"
                       value={formData.loanAmount}
                       onChange={handleInputChange('loanAmount')}
+                      placeholder="Enter desired loan amount"
                       InputProps={{
-                        sx: { color: '#fff' }
+                        sx: { 
+                          color: '#fff',
+                          height: { xs: 60, sm: 64 },
+                          fontSize: { xs: '1rem', sm: '1.1rem' }
+                        }
+                      }}
+                      InputLabelProps={{
+                        sx: {
+                          fontSize: { xs: '1rem', sm: '1.1rem' },
+                          fontWeight: 500
+                        }
                       }}
                       sx={{
                         '& .MuiOutlinedInput-root': {
-                          '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                          '&:hover fieldset': { borderColor: 'primary.main' },
-                          '&.Mui-focused fieldset': { borderColor: 'primary.main' }
+                          '& fieldset': { 
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 2
+                          },
+                          '&:hover fieldset': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '&.Mui-focused fieldset': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          }
                         },
-                        '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
-                        '& .MuiInputLabel-root.Mui-focused': { color: 'primary.main' }
+                        '& .MuiInputLabel-root': { 
+                          color: 'rgba(255,255,255,0.8)',
+                          fontWeight: 500
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': { 
+                          color: 'primary.main',
+                          fontWeight: 600
+                        }
                       }}
                     />
                   </Grid>
 
-                  {/* Credit Facility */}
-                  <Grid item xs={12} md={6}>
+                  {/* Duration - Full width on mobile */}
+                  <Grid item xs={12} lg={6}>
                     <FormControl fullWidth>
-                      <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                        Credit Facility *
-                      </InputLabel>
-                      <Select
-                        value={formData.creditFacility}
-                        onChange={handleInputChange('creditFacility')}
-                        label="Credit Facility *"
-                        sx={{
-                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                          '& .MuiSelect-select': { color: '#fff' },
-                          '& .MuiSvgIcon-root': { color: '#fff' }
-                        }}
-                        MenuProps={{
-                          PaperProps: {
-                            sx: {
-                              bgcolor: '#232742',
-                              color: '#fff',
-                              maxHeight: 300
-                            }
-                          }
-                        }}
-                      >
-                        <MenuItem disabled sx={{ fontWeight: 600, color: 'primary.main' }}>
-                          Select Loan/Credit Facility
-                        </MenuItem>
-                        {loanFacilities.map((facility) => (
-                          <MenuItem key={facility.value} value={facility.value}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {facility.icon}
-                              <Box>
-                                <Typography>{facility.label}</Typography>
-                                <Typography variant="caption" color="rgba(255,255,255,0.6)">
-                                  {facility.description}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-
-                  {/* Duration */}
-                  <Grid item xs={12} md={6}>
-                    <FormControl fullWidth>
-                      <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                      <InputLabel sx={{ 
+                        color: 'rgba(255,255,255,0.8)',
+                        fontSize: { xs: '1rem', sm: '1.1rem' },
+                        fontWeight: 500
+                      }}>
                         Duration (Months) *
                       </InputLabel>
                       <Select
@@ -537,17 +531,36 @@ export default function ApplyLoans() {
                         onChange={handleInputChange('duration')}
                         label="Duration (Months) *"
                         sx={{
-                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                          '& .MuiSelect-select': { color: '#fff' },
+                          height: { xs: 60, sm: 64 },
+                          '& .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 2
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '& .MuiSelect-select': { 
+                            color: '#fff',
+                            fontSize: { xs: '1rem', sm: '1.1rem' },
+                            display: 'flex',
+                            alignItems: 'center'
+                          },
                           '& .MuiSvgIcon-root': { color: '#fff' }
                         }}
                         MenuProps={{
                           PaperProps: {
                             sx: {
                               bgcolor: '#232742',
-                              color: '#fff'
+                              color: '#fff',
+                              '& .MuiMenuItem-root': {
+                                fontSize: { xs: '1rem', sm: '1.1rem' },
+                                py: 1.5
+                              }
                             }
                           }
                         }}
@@ -561,10 +574,102 @@ export default function ApplyLoans() {
                     </FormControl>
                   </Grid>
 
-                  {/* Monthly Net Income */}
-                  <Grid item xs={12} md={6}>
+                  {/* Credit Facility - Full width for better readability */}
+                  <Grid item xs={12}>
                     <FormControl fullWidth>
-                      <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                      <InputLabel sx={{ 
+                        color: 'rgba(255,255,255,0.8)',
+                        fontSize: { xs: '1rem', sm: '1.1rem' },
+                        fontWeight: 500
+                      }}>
+                        Credit Facility Type *
+                      </InputLabel>
+                      <Select
+                        value={formData.creditFacility}
+                        onChange={handleInputChange('creditFacility')}
+                        label="Credit Facility Type *"
+                        sx={{
+                          height: { xs: 64, sm: 68 },
+                          '& .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 2
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '& .MuiSelect-select': { 
+                            color: '#fff',
+                            fontSize: { xs: '1rem', sm: '1.1rem' },
+                            display: 'flex',
+                            alignItems: 'center'
+                          },
+                          '& .MuiSvgIcon-root': { color: '#fff' }
+                        }}
+                        MenuProps={{
+                          PaperProps: {
+                            sx: {
+                              bgcolor: '#232742',
+                              color: '#fff',
+                              maxHeight: 350,
+                              '& .MuiMenuItem-root': {
+                                py: 2,
+                                borderBottom: '1px solid rgba(255,255,255,0.1)'
+                              }
+                            }
+                          }
+                        }}
+                      >
+                        <MenuItem disabled sx={{ 
+                          fontWeight: 700, 
+                          color: 'primary.main',
+                          fontSize: '1.1rem',
+                          py: 2
+                        }}>
+                          Choose Your Loan/Credit Facility
+                        </MenuItem>
+                        {loanFacilities.map((facility) => (
+                          <MenuItem key={facility.value} value={facility.value}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+                              <Box sx={{ color: 'primary.main', flexShrink: 0 }}>
+                                {facility.icon}
+                              </Box>
+                              <Box sx={{ flex: 1 }}>
+                                <Typography sx={{ 
+                                  fontWeight: 600,
+                                  fontSize: { xs: '0.95rem', sm: '1rem' },
+                                  lineHeight: 1.3
+                                }}>
+                                  {facility.label}
+                                </Typography>
+                                <Typography variant="caption" sx={{ 
+                                  color: 'rgba(255,255,255,0.7)',
+                                  fontSize: { xs: '0.8rem', sm: '0.85rem' },
+                                  display: 'block',
+                                  mt: 0.5
+                                }}>
+                                  {facility.description}
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  {/* Monthly Net Income - Full width on mobile */}
+                  <Grid item xs={12} lg={6}>
+                    <FormControl fullWidth>
+                      <InputLabel sx={{ 
+                        color: 'rgba(255,255,255,0.8)',
+                        fontSize: { xs: '1rem', sm: '1.1rem' },
+                        fontWeight: 500
+                      }}>
                         Monthly Net Income ($) *
                       </InputLabel>
                       <Select
@@ -572,34 +677,59 @@ export default function ApplyLoans() {
                         onChange={handleInputChange('monthlyIncome')}
                         label="Monthly Net Income ($) *"
                         sx={{
-                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                          '& .MuiSelect-select': { color: '#fff' },
+                          height: { xs: 60, sm: 64 },
+                          '& .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 2
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '& .MuiSelect-select': { 
+                            color: '#fff',
+                            fontSize: { xs: '1rem', sm: '1.1rem' },
+                            display: 'flex',
+                            alignItems: 'center'
+                          },
                           '& .MuiSvgIcon-root': { color: '#fff' }
                         }}
                         MenuProps={{
                           PaperProps: {
                             sx: {
                               bgcolor: '#232742',
-                              color: '#fff'
+                              color: '#fff',
+                              '& .MuiMenuItem-root': {
+                                fontSize: { xs: '1rem', sm: '1.1rem' },
+                                py: 1.5
+                              }
                             }
                           }
                         }}
                       >
                         {incomeRanges.map((range) => (
                           <MenuItem key={range.value} value={range.value}>
-                            {range.label}
+                            <Typography sx={{ fontWeight: 500 }}>
+                              {range.label}
+                            </Typography>
                           </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
                   </Grid>
 
-                  {/* Purpose of Loan */}
-                  <Grid item xs={12} md={6}>
+                  {/* Purpose of Loan - Full width on mobile */}
+                  <Grid item xs={12} lg={6}>
                     <FormControl fullWidth>
-                      <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                      <InputLabel sx={{ 
+                        color: 'rgba(255,255,255,0.8)',
+                        fontSize: { xs: '1rem', sm: '1.1rem' },
+                        fontWeight: 500
+                      }}>
                         Purpose of Loan *
                       </InputLabel>
                       <Select
@@ -607,17 +737,38 @@ export default function ApplyLoans() {
                         onChange={handleInputChange('purpose')}
                         label="Purpose of Loan *"
                         sx={{
-                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                          '& .MuiSelect-select': { color: '#fff' },
+                          height: { xs: 60, sm: 64 },
+                          '& .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 2
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '& .MuiSelect-select': { 
+                            color: '#fff',
+                            fontSize: { xs: '1rem', sm: '1.1rem' },
+                            display: 'flex',
+                            alignItems: 'center'
+                          },
                           '& .MuiSvgIcon-root': { color: '#fff' }
                         }}
                         MenuProps={{
                           PaperProps: {
                             sx: {
                               bgcolor: '#232742',
-                              color: '#fff'
+                              color: '#fff',
+                              maxHeight: 300,
+                              '& .MuiMenuItem-root': {
+                                fontSize: { xs: '0.95rem', sm: '1rem' },
+                                py: 1.5,
+                                fontWeight: 500
+                              }
                             }
                           }
                         }}
@@ -633,83 +784,78 @@ export default function ApplyLoans() {
 
                   {/* Additional Information Section */}
                   <Grid item xs={12}>
-                    <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', my: 2 }} />
-                    <Typography variant="h6" color="primary" gutterBottom>
-                      Additional Information (Optional)
+                    <Divider sx={{ bgcolor: 'rgba(255,255,255,0.2)', my: { xs: 3, sm: 4 } }} />
+                    <Typography variant="h5" color="primary" gutterBottom sx={{ 
+                      fontWeight: 700,
+                      fontSize: { xs: '1.2rem', sm: '1.4rem' },
+                      mb: { xs: 2, sm: 3 }
+                    }}>
+                      Personal Information (Optional)
+                    </Typography>
+                    <Typography variant="body2" color="rgba(255,255,255,0.7)" sx={{ 
+                      mb: { xs: 2, sm: 3 },
+                      fontSize: { xs: '0.9rem', sm: '1rem' }
+                    }}>
+                      Providing additional information helps us process your application faster
                     </Typography>
                   </Grid>
 
-                  {/* Applicant Name */}
-                  <Grid item xs={12} md={6}>
+                  {/* Applicant Name - Full width on mobile */}
+                  <Grid item xs={12} lg={6}>
                     <TextField
                       fullWidth
                       label="Full Name"
                       value={formData.applicantName}
                       onChange={handleInputChange('applicantName')}
+                      placeholder="Enter your full legal name"
                       InputProps={{
-                        sx: { color: '#fff' }
+                        sx: { 
+                          color: '#fff',
+                          height: { xs: 60, sm: 64 },
+                          fontSize: { xs: '1rem', sm: '1.1rem' }
+                        }
+                      }}
+                      InputLabelProps={{
+                        sx: {
+                          fontSize: { xs: '1rem', sm: '1.1rem' },
+                          fontWeight: 500
+                        }
                       }}
                       sx={{
                         '& .MuiOutlinedInput-root': {
-                          '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                          '&:hover fieldset': { borderColor: 'primary.main' },
-                          '&.Mui-focused fieldset': { borderColor: 'primary.main' }
+                          '& fieldset': { 
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 2
+                          },
+                          '&:hover fieldset': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '&.Mui-focused fieldset': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          }
                         },
-                        '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
-                        '& .MuiInputLabel-root.Mui-focused': { color: 'primary.main' }
+                        '& .MuiInputLabel-root': { 
+                          color: 'rgba(255,255,255,0.8)',
+                          fontWeight: 500
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': { 
+                          color: 'primary.main',
+                          fontWeight: 600
+                        }
                       }}
                     />
                   </Grid>
 
-                  {/* Email */}
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Email Address"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange('email')}
-                      InputProps={{
-                        sx: { color: '#fff' }
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                          '&:hover fieldset': { borderColor: 'primary.main' },
-                          '&.Mui-focused fieldset': { borderColor: 'primary.main' }
-                        },
-                        '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
-                        '& .MuiInputLabel-root.Mui-focused': { color: 'primary.main' }
-                      }}
-                    />
-                  </Grid>
-
-                  {/* Phone */}
-                  <Grid item xs={12} md={6}>
-                    <TextField
-                      fullWidth
-                      label="Phone Number"
-                      value={formData.phone}
-                      onChange={handleInputChange('phone')}
-                      InputProps={{
-                        sx: { color: '#fff' }
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                          '&:hover fieldset': { borderColor: 'primary.main' },
-                          '&.Mui-focused fieldset': { borderColor: 'primary.main' }
-                        },
-                        '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
-                        '& .MuiInputLabel-root.Mui-focused': { color: 'primary.main' }
-                      }}
-                    />
-                  </Grid>
-
-                  {/* Employment Status */}
-                  <Grid item xs={12} md={6}>
+                  {/* Employment Status - Full width on mobile */}
+                  <Grid item xs={12} lg={6}>
                     <FormControl fullWidth>
-                      <InputLabel sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                      <InputLabel sx={{ 
+                        color: 'rgba(255,255,255,0.8)',
+                        fontSize: { xs: '1rem', sm: '1.1rem' },
+                        fontWeight: 500
+                      }}>
                         Employment Status
                       </InputLabel>
                       <Select
@@ -717,52 +863,199 @@ export default function ApplyLoans() {
                         onChange={handleInputChange('employmentStatus')}
                         label="Employment Status"
                         sx={{
-                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.23)' },
-                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                          '& .MuiSelect-select': { color: '#fff' },
+                          height: { xs: 60, sm: 64 },
+                          '& .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 2
+                          },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '& .MuiSelect-select': { 
+                            color: '#fff',
+                            fontSize: { xs: '1rem', sm: '1.1rem' },
+                            display: 'flex',
+                            alignItems: 'center'
+                          },
                           '& .MuiSvgIcon-root': { color: '#fff' }
                         }}
                         MenuProps={{
                           PaperProps: {
                             sx: {
                               bgcolor: '#232742',
-                              color: '#fff'
+                              color: '#fff',
+                              '& .MuiMenuItem-root': {
+                                fontSize: { xs: '1rem', sm: '1.1rem' },
+                                py: 1.5,
+                                fontWeight: 500
+                              }
                             }
                           }
                         }}
                       >
-                        <MenuItem value="employed">Employed</MenuItem>
+                        <MenuItem value="employed">Employed Full-time</MenuItem>
                         <MenuItem value="self-employed">Self-Employed</MenuItem>
                         <MenuItem value="business-owner">Business Owner</MenuItem>
-                        <MenuItem value="freelancer">Freelancer</MenuItem>
+                        <MenuItem value="freelancer">Freelancer/Contractor</MenuItem>
                         <MenuItem value="retired">Retired</MenuItem>
                         <MenuItem value="student">Student</MenuItem>
                       </Select>
                     </FormControl>
                   </Grid>
 
-                  {/* Submit Button */}
-                  <Grid item xs={12}>
-                    <Button
-                      variant="contained"
-                      size="large"
+                  {/* Email - Full width on mobile */}
+                  <Grid item xs={12} lg={6}>
+                    <TextField
                       fullWidth
-                      onClick={handleSubmitApplication}
-                      sx={{
-                        mt: 3,
-                        py: 2,
-                        fontSize: '1.1rem',
-                        fontWeight: 700,
-                        bgcolor: 'primary.main',
-                        borderRadius: 2,
-                        '&:hover': {
-                          bgcolor: 'primary.dark'
+                      label="Email Address"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange('email')}
+                      placeholder="Enter your email address"
+                      InputProps={{
+                        sx: { 
+                          color: '#fff',
+                          height: { xs: 60, sm: 64 },
+                          fontSize: { xs: '1rem', sm: '1.1rem' }
                         }
                       }}
-                    >
-                      Submit Application
-                    </Button>
+                      InputLabelProps={{
+                        sx: {
+                          fontSize: { xs: '1rem', sm: '1.1rem' },
+                          fontWeight: 500
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { 
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 2
+                          },
+                          '&:hover fieldset': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '&.Mui-focused fieldset': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          }
+                        },
+                        '& .MuiInputLabel-root': { 
+                          color: 'rgba(255,255,255,0.8)',
+                          fontWeight: 500
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': { 
+                          color: 'primary.main',
+                          fontWeight: 600
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  {/* Phone - Full width on mobile */}
+                  <Grid item xs={12} lg={6}>
+                    <TextField
+                      fullWidth
+                      label="Phone Number"
+                      value={formData.phone}
+                      onChange={handleInputChange('phone')}
+                      placeholder="Enter your phone number"
+                      InputProps={{
+                        sx: { 
+                          color: '#fff',
+                          height: { xs: 60, sm: 64 },
+                          fontSize: { xs: '1rem', sm: '1.1rem' }
+                        }
+                      }}
+                      InputLabelProps={{
+                        sx: {
+                          fontSize: { xs: '1rem', sm: '1.1rem' },
+                          fontWeight: 500
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { 
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderWidth: 2
+                          },
+                          '&:hover fieldset': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          },
+                          '&.Mui-focused fieldset': { 
+                            borderColor: 'primary.main',
+                            borderWidth: 2
+                          }
+                        },
+                        '& .MuiInputLabel-root': { 
+                          color: 'rgba(255,255,255,0.8)',
+                          fontWeight: 500
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': { 
+                          color: 'primary.main',
+                          fontWeight: 600
+                        }
+                      }}
+                    />
+                  </Grid>
+
+                  {/* Submit Button */}
+                  <Grid item xs={12}>
+                    <Box sx={{ 
+                      mt: { xs: 3, sm: 4 },
+                      p: { xs: 2, sm: 3 },
+                      bgcolor: 'rgba(0, 179, 134, 0.1)',
+                      borderRadius: 3,
+                      border: '2px dashed rgba(0, 179, 134, 0.3)',
+                      textAlign: 'center'
+                    }}>
+                      <Typography variant="body2" color="rgba(255,255,255,0.8)" sx={{ 
+                        mb: 3,
+                        fontSize: { xs: '0.9rem', sm: '1rem' }
+                      }}>
+                        Ready to submit your loan application? Please review all information before proceeding.
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        size="large"
+                        fullWidth
+                        onClick={handleSubmitApplication}
+                        startIcon={<Assignment />}
+                        sx={{
+                          py: { xs: 2, sm: 2.5 },
+                          fontSize: { xs: '1.1rem', sm: '1.2rem' },
+                          fontWeight: 700,
+                          bgcolor: 'primary.main',
+                          borderRadius: 3,
+                          textTransform: 'none',
+                          boxShadow: '0 8px 20px rgba(0, 179, 134, 0.3)',
+                          minHeight: { xs: 56, sm: 64 },
+                          '&:hover': {
+                            bgcolor: 'primary.dark',
+                            boxShadow: '0 12px 25px rgba(0, 179, 134, 0.4)',
+                            transform: 'translateY(-2px)'
+                          },
+                          '& .MuiButton-startIcon': {
+                            fontSize: { xs: '1.2rem', sm: '1.4rem' }
+                          }
+                        }}
+                      >
+                        Submit Loan Application
+                      </Button>
+                      <Typography variant="caption" color="rgba(255,255,255,0.6)" sx={{ 
+                        mt: 2,
+                        display: 'block',
+                        fontSize: { xs: '0.75rem', sm: '0.8rem' }
+                      }}>
+                        Processing time: 24-48 hours • Secure & Confidential
+                      </Typography>
+                    </Box>
                   </Grid>
                 </Grid>
               </CardContent>
