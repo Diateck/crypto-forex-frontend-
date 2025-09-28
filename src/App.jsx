@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemText, CssBaseline, Box, ThemeProvider, createTheme, ListItemIcon, IconButton } from '@mui/material';
+import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemText, CssBaseline, Box, ThemeProvider, createTheme, ListItemIcon, IconButton, Collapse } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useLocation } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -24,6 +24,10 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import BuildIcon from '@mui/icons-material/Build';
 import InsertChartIcon from '@mui/icons-material/InsertChart';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import LogoutIcon from '@mui/icons-material/Logout';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -84,10 +88,23 @@ const pages = [
   { path: '/dashboard/accounthistory', label: 'Account History', icon: <AccountBoxIcon /> },
   { path: '/dashboard/news', label: 'News', icon: <NewspaperIcon /> },
   { path: '/dashboard/account-settings', label: 'Account Settings', icon: <SettingsIcon /> },
-  { path: '/dashboard/referuser', label: 'Refer User', icon: <GroupAddIcon /> },
-  { path: '/dashboard/technical', label: 'Technical', icon: <BuildIcon /> },
+  { path: '/dashboard/referuser', label: 'Referrals', icon: <GroupAddIcon /> },
+  { 
+    label: 'Live Analysis', 
+    icon: <TrendingUpIcon />, 
+    isParent: true,
+    children: [
+      { path: '/dashboard/technical', label: 'Technical Analysis', icon: <BuildIcon /> },
+      { path: '/dashboard/calendar', label: 'Market Calendar', icon: <CalendarMonthIcon /> },
+    ]
+  },
   { path: '/dashboard/chart', label: 'Chart', icon: <InsertChartIcon /> },
-  { path: '/dashboard/calendar', label: 'Calendar', icon: <CalendarMonthIcon /> },
+  { 
+    action: 'logout', 
+    label: 'Logout', 
+    icon: <LogoutIcon />,
+    isAction: true
+  },
 ];
 
 
@@ -106,9 +123,33 @@ function RequireAuth({ children }) {
 
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [openMenus, setOpenMenus] = useState({});
+  
   const handleDrawerOpen = () => setDrawerOpen(true);
   const handleDrawerClose = () => setDrawerOpen(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAuth');
+    localStorage.removeItem('user');
+    setDrawerOpen(false);
+    navigate('/login');
+  };
+
+  const handleMenuClick = (page) => {
+    if (page.isAction && page.action === 'logout') {
+      handleLogout();
+    } else if (page.isParent) {
+      setOpenMenus(prev => ({
+        ...prev,
+        [page.label]: !prev[page.label]
+      }));
+    } else if (page.path) {
+      navigate(page.path);
+      setDrawerOpen(false);
+    }
+  };
 
   // Check if current route is login or register
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
@@ -164,34 +205,90 @@ function AppContent() {
         <Toolbar />
         <Box sx={{ overflow: 'auto', pt: 2 }}>
           <List>
-            {pages.map((page) => {
-              const isActive = location.pathname === page.path;
-              return (
-                <ListItem
-                  button
-                  key={page.path}
-                  component={Link}
-                  to={page.path}
-                  onClick={handleDrawerClose}
-                  sx={{
-                    borderRadius: 2,
-                    mb: 1,
-                    mx: 1,
-                    color: '#fff',
-                    fontWeight: isActive ? 700 : 400,
-                    bgcolor: isActive ? 'primary.main' : 'transparent',
-                    '&:hover': {
-                      bgcolor: 'primary.main',
+            {pages.map((page, index) => {
+              if (page.isParent) {
+                return (
+                  <div key={page.label}>
+                    <ListItem
+                      button
+                      onClick={() => handleMenuClick(page)}
+                      sx={{
+                        borderRadius: 2,
+                        mb: 1,
+                        mx: 1,
+                        color: '#fff',
+                        '&:hover': {
+                          bgcolor: 'primary.main',
+                          color: '#fff',
+                        },
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <ListItemIcon sx={{ color: '#fff', minWidth: 36 }}>{page.icon}</ListItemIcon>
+                      <ListItemText primary={page.label} />
+                      {openMenus[page.label] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    </ListItem>
+                    <Collapse in={openMenus[page.label]} timeout="auto" unmountOnExit>
+                      <List component="div" disablePadding>
+                        {page.children?.map((child) => {
+                          const isActive = location.pathname === child.path;
+                          return (
+                            <ListItem
+                              button
+                              key={child.path}
+                              onClick={() => handleMenuClick(child)}
+                              sx={{
+                                borderRadius: 2,
+                                mb: 1,
+                                mx: 1,
+                                ml: 4,
+                                color: '#fff',
+                                fontWeight: isActive ? 700 : 400,
+                                bgcolor: isActive ? 'primary.main' : 'transparent',
+                                '&:hover': {
+                                  bgcolor: 'primary.main',
+                                  color: '#fff',
+                                },
+                                boxShadow: isActive ? 2 : 0,
+                                transition: 'all 0.2s',
+                              }}
+                            >
+                              <ListItemIcon sx={{ color: '#fff', minWidth: 36 }}>{child.icon}</ListItemIcon>
+                              <ListItemText primary={child.label} sx={{ '.MuiTypography-root': { fontWeight: isActive ? 700 : 400 } }} />
+                            </ListItem>
+                          );
+                        })}
+                      </List>
+                    </Collapse>
+                  </div>
+                );
+              } else {
+                const isActive = location.pathname === page.path;
+                return (
+                  <ListItem
+                    button
+                    key={page.path || page.label}
+                    onClick={() => handleMenuClick(page)}
+                    sx={{
+                      borderRadius: 2,
+                      mb: 1,
+                      mx: 1,
                       color: '#fff',
-                    },
-                    boxShadow: isActive ? 2 : 0,
-                    transition: 'all 0.2s',
-                  }}
-                >
-                  <ListItemIcon sx={{ color: '#fff', minWidth: 36 }}>{page.icon}</ListItemIcon>
-                  <ListItemText primary={page.label} sx={{ '.MuiTypography-root': { fontWeight: isActive ? 700 : 400 } }} />
-                </ListItem>
-              );
+                      fontWeight: isActive ? 700 : 400,
+                      bgcolor: isActive ? 'primary.main' : 'transparent',
+                      '&:hover': {
+                        bgcolor: 'primary.main',
+                        color: '#fff',
+                      },
+                      boxShadow: isActive ? 2 : 0,
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <ListItemIcon sx={{ color: '#fff', minWidth: 36 }}>{page.icon}</ListItemIcon>
+                    <ListItemText primary={page.label} sx={{ '.MuiTypography-root': { fontWeight: isActive ? 700 : 400 } }} />
+                  </ListItem>
+                );
+              }
             })}
           </List>
         </Box>
