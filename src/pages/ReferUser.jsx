@@ -81,8 +81,8 @@ import {
 
 // Mock referral data
 const mockReferralData = {
-  referralId: 'fiseyanu',
-  referralLink: 'https://interspacebroker.com/ref/fiseyanu',
+  referralId: 'theophilus',
+  referralLink: 'https://elonbroker.com/ref/theophilus',
   totalReferrals: 12,
   activeReferrals: 8,
   totalCommissions: 2850.75,
