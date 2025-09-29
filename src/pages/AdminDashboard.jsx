@@ -1059,6 +1059,403 @@ function WithdrawalManagement() {
   );
 }
 
+// Trading Management Component
+function TradingManagement() {
+  const theme = useTheme();
+  const [allTrades, setAllTrades] = useState([]);
+  const [selectedTrade, setSelectedTrade] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+  const [stats, setStats] = useState({
+    totalTrades: 0,
+    activeTrades: 0,
+    completedTrades: 0,
+    totalVolume: 0,
+    todayTrades: 0
+  });
+
+  // Load all trades from localStorage
+  useEffect(() => {
+    loadAllTrades();
+    const interval = setInterval(loadAllTrades, 5000); // Refresh every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadAllTrades = () => {
+    try {
+      const trades = JSON.parse(localStorage.getItem('allUserTrades') || '[]');
+      setAllTrades(trades.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+      
+      // Calculate statistics
+      const today = new Date().toDateString();
+      const todayTrades = trades.filter(t => new Date(t.timestamp).toDateString() === today);
+      const activeTrades = trades.filter(t => t.status === 'ACTIVE' || t.status === 'pending');
+      const completedTrades = trades.filter(t => t.status === 'CLOSED');
+      const totalVolume = trades.reduce((sum, t) => sum + (t.amount || 0), 0);
+      
+      setStats({
+        totalTrades: trades.length,
+        activeTrades: activeTrades.length,
+        completedTrades: completedTrades.length,
+        totalVolume: totalVolume,
+        todayTrades: todayTrades.length
+      });
+    } catch (error) {
+      console.error('Error loading trades:', error);
+      showNotification('Error loading trades data', 'error');
+    }
+  };
+
+  const showNotification = (message, severity = 'info') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const getTradeStatusColor = (status) => {
+    switch (status) {
+      case 'ACTIVE':
+      case 'pending':
+        return 'primary';
+      case 'CLOSED':
+        return 'success';
+      case 'cancelled':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const getTradeTypeColor = (type) => {
+    return type === 'BUY' ? 'success' : 'error';
+  };
+
+  const formatPnL = (pnl) => {
+    if (!pnl && pnl !== 0) return 'N/A';
+    const value = parseFloat(pnl);
+    return `${value >= 0 ? '+' : ''}$${value.toFixed(2)}`;
+  };
+
+  const getPnLColor = (pnl) => {
+    if (!pnl && pnl !== 0) return 'text.secondary';
+    return parseFloat(pnl) >= 0 ? 'success.main' : 'error.main';
+  };
+
+  return (
+    <Box>
+      {/* Trading Statistics */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Paper sx={{ p: 2, bgcolor: '#232742', textAlign: 'center' }}>
+            <Typography variant="h6" fontWeight={600} sx={{ color: '#4caf50', mb: 1 }}>
+              Total Trades
+            </Typography>
+            <Typography variant="h4" fontWeight={700} sx={{ color: '#fff' }}>
+              {stats.totalTrades}
+            </Typography>
+          </Paper>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Paper sx={{ p: 2, bgcolor: '#232742', textAlign: 'center' }}>
+            <Typography variant="h6" fontWeight={600} sx={{ color: '#2196f3', mb: 1 }}>
+              Active
+            </Typography>
+            <Typography variant="h4" fontWeight={700} sx={{ color: '#fff' }}>
+              {stats.activeTrades}
+            </Typography>
+          </Paper>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Paper sx={{ p: 2, bgcolor: '#232742', textAlign: 'center' }}>
+            <Typography variant="h6" fontWeight={600} sx={{ color: '#ff9800', mb: 1 }}>
+              Completed
+            </Typography>
+            <Typography variant="h4" fontWeight={700} sx={{ color: '#fff' }}>
+              {stats.completedTrades}
+            </Typography>
+          </Paper>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Paper sx={{ p: 2, bgcolor: '#232742', textAlign: 'center' }}>
+            <Typography variant="h6" fontWeight={600} sx={{ color: '#e91e63', mb: 1 }}>
+              Total Volume
+            </Typography>
+            <Typography variant="h4" fontWeight={700} sx={{ color: '#fff' }}>
+              ${stats.totalVolume.toLocaleString()}
+            </Typography>
+          </Paper>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Paper sx={{ p: 2, bgcolor: '#232742', textAlign: 'center' }}>
+            <Typography variant="h6" fontWeight={600} sx={{ color: '#9c27b0', mb: 1 }}>
+              Today's Trades
+            </Typography>
+            <Typography variant="h4" fontWeight={700} sx={{ color: '#fff' }}>
+              {stats.todayTrades}
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Header */}
+      <Paper sx={{ p: 2, bgcolor: '#1a1d2b', mb: 2 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="h5" fontWeight={700} sx={{ color: '#fff' }}>
+            🔄 Trading Management ({allTrades.length} total trades)
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<RefreshIcon />}
+            onClick={loadAllTrades}
+            disabled={loading}
+            sx={{ bgcolor: '#1976d2' }}
+          >
+            Refresh
+          </Button>
+        </Box>
+      </Paper>
+
+      {/* Trades Table */}
+      <Paper sx={{ bgcolor: '#1a1d2b' }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ bgcolor: '#232742' }}>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Trade ID</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>User</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Asset</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Type</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Amount</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Multiplier</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Entry Price</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Exit Price</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>P&L</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Status</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Date</TableCell>
+                <TableCell sx={{ color: '#fff', fontWeight: 600 }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {allTrades.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={12} align="center" sx={{ color: 'rgba(255,255,255,0.7)', py: 4 }}>
+                    No trades found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                allTrades.map((trade) => (
+                  <TableRow key={trade.id} sx={{ bgcolor: '#0a0e1a' }}>
+                    <TableCell sx={{ color: '#fff', fontSize: '0.75rem' }}>
+                      {trade.id?.substring(0, 8)}...
+                    </TableCell>
+                    <TableCell sx={{ color: '#fff' }}>
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {trade.userName || 'Unknown User'}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                          {trade.userEmail}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ color: '#fff' }}>
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {trade.symbol}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                          {trade.assetName}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={trade.type} 
+                        color={getTradeTypeColor(trade.type)}
+                        size="small"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 600 }}>
+                      ${trade.amount?.toLocaleString()}
+                    </TableCell>
+                    <TableCell sx={{ color: '#fff' }}>
+                      <Chip 
+                        label={trade.multiplierLabel || `X${trade.multiplier}`}
+                        color="secondary"
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell sx={{ color: '#fff' }}>
+                      ${trade.entryPrice?.toLocaleString()}
+                    </TableCell>
+                    <TableCell sx={{ color: '#fff' }}>
+                      {trade.exitPrice ? `$${trade.exitPrice.toLocaleString()}` : 'N/A'}
+                    </TableCell>
+                    <TableCell sx={{ color: getPnLColor(trade.pnl), fontWeight: 600 }}>
+                      {formatPnL(trade.pnl)}
+                    </TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={trade.status} 
+                        color={getTradeStatusColor(trade.status)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                      {new Date(trade.timestamp).toLocaleDateString()}
+                      <br />
+                      {new Date(trade.timestamp).toLocaleTimeString()}
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="View Details">
+                        <IconButton
+                          size="small"
+                          onClick={() => setSelectedTrade(trade)}
+                          sx={{ color: '#1976d2' }}
+                        >
+                          <ViewIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+
+      {/* Trade Details Dialog */}
+      {selectedTrade && (
+        <Dialog
+          open={!!selectedTrade}
+          onClose={() => setSelectedTrade(null)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: { bgcolor: '#232742', color: '#fff' }
+          }}
+        >
+          <DialogTitle sx={{ bgcolor: '#1a1d2b', color: '#fff' }}>
+            <Box display="flex" alignItems="center" gap={1}>
+              <TrendingIcon />
+              Trade Details - {selectedTrade.symbol}
+            </Box>
+          </DialogTitle>
+          <DialogContent sx={{ bgcolor: '#232742' }}>
+            <Box sx={{ pt: 2 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Trade ID</Typography>
+                  <Typography variant="body2">{selectedTrade.id}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Status</Typography>
+                  <Chip 
+                    label={selectedTrade.status} 
+                    color={getTradeStatusColor(selectedTrade.status)}
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">User</Typography>
+                  <Typography variant="body2">{selectedTrade.userName}</Typography>
+                  <Typography variant="caption" color="textSecondary">{selectedTrade.userEmail}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Asset</Typography>
+                  <Typography variant="body2">{selectedTrade.symbol} - {selectedTrade.assetName}</Typography>
+                  <Typography variant="caption" color="textSecondary">{selectedTrade.assetCategory}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Trade Type</Typography>
+                  <Chip 
+                    label={selectedTrade.type} 
+                    color={getTradeTypeColor(selectedTrade.type)}
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Amount</Typography>
+                  <Typography variant="body2">${selectedTrade.amount?.toLocaleString()}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Multiplier</Typography>
+                  <Typography variant="body2">{selectedTrade.multiplierLabel || `X${selectedTrade.multiplier}`}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Entry Price</Typography>
+                  <Typography variant="body2">${selectedTrade.entryPrice?.toLocaleString()}</Typography>
+                </Grid>
+                {selectedTrade.exitPrice && (
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="textSecondary">Exit Price</Typography>
+                    <Typography variant="body2">${selectedTrade.exitPrice.toLocaleString()}</Typography>
+                  </Grid>
+                )}
+                {selectedTrade.pnl !== undefined && (
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="textSecondary">Profit/Loss</Typography>
+                    <Typography variant="body2" sx={{ color: getPnLColor(selectedTrade.pnl), fontWeight: 600 }}>
+                      {formatPnL(selectedTrade.pnl)}
+                    </Typography>
+                  </Grid>
+                )}
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Open Time</Typography>
+                  <Typography variant="body2">{new Date(selectedTrade.timestamp).toLocaleString()}</Typography>
+                </Grid>
+                {selectedTrade.closedAt && (
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="textSecondary">Close Time</Typography>
+                    <Typography variant="body2">{new Date(selectedTrade.closedAt).toLocaleString()}</Typography>
+                  </Grid>
+                )}
+                {selectedTrade.potentialProfit && (
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="textSecondary">Potential Profit</Typography>
+                    <Typography variant="body2">${selectedTrade.potentialProfit.toLocaleString()}</Typography>
+                  </Grid>
+                )}
+                {selectedTrade.riskRewardRatio && (
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="textSecondary">Risk/Reward Ratio</Typography>
+                    <Typography variant="body2">{selectedTrade.riskRewardRatio}:1</Typography>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ bgcolor: '#232742' }}>
+            <Button onClick={() => setSelectedTrade(null)} color="inherit">
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={() => setNotification({ ...notification, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={() => setNotification({ ...notification, open: false })} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+}
+
 export default function AdminDashboard() {
   const [currentTab, setCurrentTab] = useState(0);
 
@@ -1134,21 +1531,27 @@ export default function AdminDashboard() {
               sx={{ minHeight: 72 }}
             />
             <Tab 
+              icon={<TrendingIcon />} 
+              label="Trading Management" 
+              {...a11yProps(3)} 
+              sx={{ minHeight: 72 }}
+            />
+            <Tab 
               icon={<ContactMailIcon />} 
               label="Contact Management" 
-              {...a11yProps(3)} 
+              {...a11yProps(4)} 
               sx={{ minHeight: 72 }}
             />
             <Tab 
               icon={<PeopleIcon />} 
               label="User Management" 
-              {...a11yProps(4)} 
+              {...a11yProps(5)} 
               sx={{ minHeight: 72 }}
             />
             <Tab 
               icon={<SettingsIcon />} 
               label="System Settings" 
-              {...a11yProps(5)} 
+              {...a11yProps(6)} 
               sx={{ minHeight: 72 }}
             />
           </Tabs>
@@ -1179,7 +1582,14 @@ export default function AdminDashboard() {
                   Active Trades
                 </Typography>
                 <Typography variant="h3" fontWeight={700} sx={{ color: '#fff' }}>
-                  89
+                  {(() => {
+                    try {
+                      const trades = JSON.parse(localStorage.getItem('allUserTrades') || '[]');
+                      return trades.filter(t => t.status === 'ACTIVE' || t.status === 'pending').length;
+                    } catch {
+                      return '89';
+                    }
+                  })()}
                 </Typography>
               </Paper>
               
@@ -1213,10 +1623,14 @@ export default function AdminDashboard() {
         </TabPanel>
 
         <TabPanel value={currentTab} index={3}>
-          <AdminContactManager onSave={handleContactInfoSave} />
+          <TradingManagement />
         </TabPanel>
 
         <TabPanel value={currentTab} index={4}>
+          <AdminContactManager onSave={handleContactInfoSave} />
+        </TabPanel>
+
+        <TabPanel value={currentTab} index={5}>
           <Paper sx={{ p: 3, bgcolor: '#1a1d2b', color: '#fff' }}>
             <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
               👥 User Management
@@ -1227,7 +1641,7 @@ export default function AdminDashboard() {
           </Paper>
         </TabPanel>
 
-        <TabPanel value={currentTab} index={5}>
+        <TabPanel value={currentTab} index={6}>
           <Paper sx={{ p: 3, bgcolor: '#1a1d2b', color: '#fff' }}>
             <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
               ⚙️ System Settings
