@@ -245,4 +245,32 @@ export const marketAPI = {
   getNews: (category) => apiService.get('/market/news', { category })
 };
 
+// Contact Management API endpoints
+export const contactAPI = {
+  // Get current contact information
+  getContactInfo: () => apiService.get('/admin/contact-info'),
+  
+  // Update contact information (admin only)
+  updateContactInfo: (contactData) => apiService.put('/admin/contact-info', contactData),
+  
+  // Get default contact information
+  getDefaultContactInfo: () => {
+    return Promise.resolve({
+      companyName: 'Elon Investment Broker',
+      supportEmail: 'support@eloninvestmentbroker.com',
+      salesEmail: 'sales@eloninvestmentbroker.com',
+      phone: '+1 (555) 123-4567',
+      whatsapp: '+1 (555) 123-4567',
+      telegram: '@eloninvestmentbroker',
+      address: '123 Financial District, New York, NY 10004',
+      businessHours: 'Monday - Friday: 9:00 AM - 6:00 PM (EST)',
+      responseTime: 'We typically respond within 2-4 hours during business hours',
+      emergencySupport: '24/7 for critical trading issues'
+    });
+  },
+
+  // Submit contact form (public)
+  submitContactForm: (formData) => apiService.post('/contact/submit', formData)
+};
+
 export default apiService;

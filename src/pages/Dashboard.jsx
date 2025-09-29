@@ -16,10 +16,14 @@ import PendingIcon from '@mui/icons-material/Pending';
 import { useUser } from '../contexts/UserContext';
 import { marketAPI } from '../services/api';
 import useLiveDashboard from '../hooks/useLiveDashboard';
+import ContactModal from '../components/ContactModal';
 
 export default function Dashboard() {
   const theme = useTheme();
   const { user, userStats, loading, error, backendStatus } = useUser();
+  
+  // Contact Modal State
+  const [contactModalOpen, setContactModalOpen] = useState(false);
   
   // Live Dashboard Hook for real-time updates
   const {
@@ -409,6 +413,7 @@ export default function Dashboard() {
                 color="primary" 
                 startIcon={<EmailIcon sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }} />} 
                 size="small"
+                onClick={() => setContactModalOpen(true)}
                 sx={{ 
                   fontSize: { xs: '0.75rem', sm: '0.875rem' },
                   height: { xs: 32, sm: 36 },
@@ -1012,6 +1017,12 @@ export default function Dashboard() {
       </Box>
         </>
       )}
+
+      {/* Contact Modal */}
+      <ContactModal
+        open={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
+      />
     </Box>
   );
 }
