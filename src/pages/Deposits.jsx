@@ -871,7 +871,7 @@ export default function Deposits() {
                   mb: 1
                 }}
               >
-                Full Name: {user.name}
+                Full Name: {user?.username || 'Theophilus Crown'}
               </Typography>
               <Typography 
                 variant="subtitle2" 
@@ -881,7 +881,7 @@ export default function Deposits() {
                   mb: 1
                 }}
               >
-                Email: {user.email}
+                Email: {user?.email || 'theophiluscrown693@gmail.com'}
               </Typography>
               <Typography 
                 variant="subtitle2" 
@@ -891,7 +891,7 @@ export default function Deposits() {
                   mb: 2
                 }}
               >
-                Account Type: {user.accountType}
+                Account Type: Deposit Type
               </Typography>
               
               <FormControl fullWidth sx={{ mb: 2 }}>
