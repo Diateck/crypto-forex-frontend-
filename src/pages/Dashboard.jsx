@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Typography, Box, Grid, Card, useTheme, Avatar, Button, Stack, Chip } from '@mui/material';
+import { Typography, Box, Grid, Card, useTheme, Avatar, Button, Stack, Chip, CircularProgress, Alert } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -12,43 +12,92 @@ import GroupIcon from '@mui/icons-material/Group';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-
-// Sample ticker data
-const tickerData = [
-  { label: 'Nasdaq 100', value: '24,344.8', change: '+98.90 (+0.41%)', color: 'success.main' },
-  { label: 'EUR/USD', value: '1.18099', change: '-0.00059 (-0.05%)', color: 'error.main' },
-  { label: 'BTC/USD', value: '116,747', change: '+270.00 (+0.23%)', color: 'success.main' },
-  { label: 'ETH/USD', value: '4,620.8', change: '+28.50', color: 'success.main' },
-];
-
-// Example market data for the chart
-const marketData = [
-  { name: 'Mon', value: 12000 },
-  { name: 'Tue', value: 12500 },
-  { name: 'Wed', value: 12300 },
-  { name: 'Thu', value: 12800 },
-  { name: 'Fri', value: 12700 },
-  { name: 'Sat', value: 13000 },
-  { name: 'Sun', value: 12900 },
-];
-
-const cardGradient = 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)';
-const topCards = [
-  { label: 'Total Balance', value: '$0.00', icon: <AccountBalanceWalletIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, gradient: cardGradient },
-  { label: 'Profit', value: '$0.00', icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, gradient: cardGradient },
-  { label: 'Total Bonus', value: '$0.00', icon: <GroupIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, gradient: cardGradient },
-  { label: 'Account Status', value: 'UNVERIFIED', icon: <VerifiedUserIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, gradient: cardGradient, chip: true },
-];
-
-const bottomCards = [
-  { label: 'Total Trades', value: '0', icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, gradient: cardGradient },
-  { label: 'Open Trades', value: '0', icon: <FolderOpenIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, gradient: cardGradient },
-  { label: 'Closed Trades', value: '0', icon: <HistoryIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, gradient: cardGradient },
-  { label: 'Win/Loss Ratio', value: '0', icon: <EmojiEventsIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, gradient: cardGradient },
-];
+import { useUser } from '../contexts/UserContext';
+import { marketAPI } from '../services/api';
 
 export default function Dashboard() {
   const theme = useTheme();
+  const { user, userStats, loading, error, backendStatus } = useUser();
+  
+  // Market data state
+  const [tickerData, setTickerData] = useState([]);
+  const [marketData, setMarketData] = useState([]);
+
+  // Load market data
+  useEffect(() => {
+    const loadMarketData = async () => {
+      try {
+        const [tickerResponse, chartResponse] = await Promise.all([
+          marketAPI.getTickerData(),
+          marketAPI.getChartData()
+        ]);
+        setTickerData(tickerResponse);
+        setMarketData(chartResponse);
+      } catch (error) {
+        console.error('Error loading market data:', error);
+      }
+    };
+
+    loadMarketData();
+  }, []);
+
+  // Dynamic card data based on user stats
+  const cardGradient = 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)';
+  
+  const topCards = userStats ? [
+    { 
+      label: 'Total Balance', 
+      value: `$${userStats.totalBalance?.toLocaleString() || '0.00'}`, 
+      icon: <AccountBalanceWalletIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
+      gradient: cardGradient 
+    },
+    { 
+      label: 'Profit', 
+      value: `$${userStats.profit?.toLocaleString() || '0.00'}`, 
+      icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
+      gradient: cardGradient 
+    },
+    { 
+      label: 'Total Bonus', 
+      value: `$${userStats.totalBonus?.toLocaleString() || '0.00'}`, 
+      icon: <GroupIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
+      gradient: cardGradient 
+    },
+    { 
+      label: 'Account Status', 
+      value: (userStats.accountStatus || 'UNVERIFIED').toUpperCase(), 
+      icon: <VerifiedUserIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
+      gradient: cardGradient, 
+      chip: true 
+    },
+  ] : [];
+
+  const bottomCards = userStats ? [
+    { 
+      label: 'Total Trades', 
+      value: userStats.totalTrades?.toString() || '0', 
+      icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
+      gradient: cardGradient 
+    },
+    { 
+      label: 'Open Trades', 
+      value: userStats.openTrades?.toString() || '0', 
+      icon: <FolderOpenIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
+      gradient: cardGradient 
+    },
+    { 
+      label: 'Closed Trades', 
+      value: userStats.closedTrades?.toString() || '0', 
+      icon: <HistoryIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
+      gradient: cardGradient 
+    },
+    { 
+      label: 'Win/Loss Ratio', 
+      value: userStats.winLossRatio ? `${(userStats.winLossRatio * 100).toFixed(1)}%` : '0%', 
+      icon: <EmojiEventsIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
+      gradient: cardGradient 
+    },
+  ] : [];
   // List of crypto pairs for selection
   const cryptoPairs = [
     { label: 'BTC/USDT', value: 'BINANCE:BTCUSDT' },
@@ -101,103 +150,131 @@ export default function Dashboard() {
       minHeight: '100vh',
       bgcolor: theme.palette.background.default
     }}>
-      {/* Header with site name, username and quick actions */}
-      <Box sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', 
-        mb: 2, 
-        bgcolor: '#232742', 
-        p: { xs: 1.5, sm: 2, md: 2.5 }, 
-        borderRadius: 3, 
-        boxShadow: 3,
-        flexDirection: { xs: 'column', sm: 'row' },
-        gap: { xs: 1.5, sm: 2, md: 0 },
-        minHeight: { xs: 'auto', sm: 80 }
-      }}>
-        <Box sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: { xs: 1, sm: 1.5, md: 2 },
-          width: { xs: '100%', sm: 'auto' },
-          justifyContent: { xs: 'center', sm: 'flex-start' }
-        }}>
-          <Avatar sx={{ 
-            bgcolor: 'primary.main', 
-            width: { xs: 36, sm: 42, md: 48 }, 
-            height: { xs: 36, sm: 42, md: 48 },
-            flexShrink: 0
-          }}>
-            <PersonIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.8rem' } }} />
-          </Avatar>
-          <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
-            <Typography 
-              variant="h5"
-              fontWeight={900} 
-              color={theme.palette.primary.main}
-              sx={{ 
-                fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' },
-                lineHeight: 1.2
-              }}
-            >
-              Elon Investment Broker
-            </Typography>
-            <Typography 
-              variant="h6"
-              fontWeight={700} 
-              color="#fff"
-              sx={{ 
-                fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1.25rem' },
-                lineHeight: 1.2,
-                mt: 0.25
-              }}
-            >
-              Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
-            </Typography>
-          </Box>
+      {/* Loading State */}
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <CircularProgress />
         </Box>
-        <Stack 
-          direction={{ xs: 'row', sm: 'row' }} 
-          spacing={{ xs: 1, sm: 1.5, md: 2 }} 
-          alignItems="center"
-          sx={{ 
-            width: { xs: '100%', sm: 'auto' },
-            justifyContent: { xs: 'center', sm: 'flex-end' },
-            flexWrap: 'wrap',
-            gap: { xs: 1, sm: 1.5 }
-          }}
-        >
-          <Chip 
-            icon={<VerifiedUserIcon />} 
-            label="KYC" 
-            color="primary" 
-            variant="outlined" 
-            size="small"
-            sx={{ 
-              height: { xs: 28, sm: 32 },
-              fontSize: { xs: '0.7rem', sm: '0.8125rem' },
-              fontWeight: 600,
-              '& .MuiChip-icon': {
-                fontSize: { xs: '0.9rem', sm: '1rem' }
-              }
-            }}
-          />
-          <Button 
-            variant="contained" 
-            color="primary" 
-            startIcon={<EmailIcon sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }} />} 
-            size="small"
-            sx={{ 
-              fontSize: { xs: '0.75rem', sm: '0.875rem' },
-              height: { xs: 32, sm: 36 },
-              px: { xs: 1.5, sm: 2, md: 3 },
-              fontWeight: 600,
-              minWidth: { xs: 'auto', sm: 80 },
-              whiteSpace: 'nowrap'
-            }}
-          >
-            Mail Us
-          </Button>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Main Content */}
+      {!loading && user && (
+        <>
+          {/* Header with site name, username and quick actions */}
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            mb: 2, 
+            bgcolor: '#232742', 
+            p: { xs: 1.5, sm: 2, md: 2.5 }, 
+            borderRadius: 3, 
+            boxShadow: 3,
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 1.5, sm: 2, md: 0 },
+            minHeight: { xs: 'auto', sm: 80 }
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: { xs: 1, sm: 1.5, md: 2 },
+              width: { xs: '100%', sm: 'auto' },
+              justifyContent: { xs: 'center', sm: 'flex-start' }
+            }}>
+              <Avatar sx={{ 
+                bgcolor: 'primary.main', 
+                width: { xs: 36, sm: 42, md: 48 }, 
+                height: { xs: 36, sm: 42, md: 48 },
+                flexShrink: 0
+              }}>
+                <PersonIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.8rem' } }} />
+              </Avatar>
+              <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
+                <Typography 
+                  variant="h5"
+                  fontWeight={900} 
+                  color={theme.palette.primary.main}
+                  sx={{ 
+                    fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' },
+                    lineHeight: 1.2
+                  }}
+                >
+                  Elon Investment Broker
+                </Typography>
+                <Typography 
+                  variant="h6"
+                  fontWeight={700} 
+                  color="#fff"
+                  sx={{ 
+                    fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1.25rem' },
+                    lineHeight: 1.2,
+                    mt: 0.25
+                  }}
+                >
+                  Username: <span style={{ color: theme.palette.primary.main }}>{user.username || 'User'}</span>
+                </Typography>
+              </Box>
+            </Box>
+            <Stack 
+              direction={{ xs: 'row', sm: 'row' }} 
+              spacing={{ xs: 1, sm: 1.5, md: 2 }} 
+              alignItems="center"
+              sx={{ 
+                width: { xs: '100%', sm: 'auto' },
+                justifyContent: { xs: 'center', sm: 'flex-end' },
+                flexWrap: 'wrap',
+                gap: { xs: 1, sm: 1.5 }
+              }}
+            >
+              <Chip 
+                icon={<VerifiedUserIcon />} 
+                label={user.kycStatus === 'verified' ? 'KYC Verified' : 'KYC Pending'} 
+                color={user.kycStatus === 'verified' ? 'success' : 'warning'} 
+                variant="outlined" 
+                size="small"
+                sx={{ 
+                  height: { xs: 28, sm: 32 },
+                  fontSize: { xs: '0.7rem', sm: '0.8125rem' },
+                  fontWeight: 600,
+                  '& .MuiChip-icon': {
+                    fontSize: { xs: '0.9rem', sm: '1rem' }
+                  }
+                }}
+              />
+              <Chip 
+                label={backendStatus === 'connected' ? 'Live Data' : 'Demo Mode'} 
+                color={backendStatus === 'connected' ? 'success' : 'info'} 
+                variant="filled" 
+                size="small"
+                sx={{ 
+                  height: { xs: 28, sm: 32 },
+                  fontSize: { xs: '0.7rem', sm: '0.8125rem' },
+                  fontWeight: 600
+                }}
+              />
+              <Button 
+                variant="contained" 
+                color="primary" 
+                startIcon={<EmailIcon sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }} />} 
+                size="small"
+                sx={{ 
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  height: { xs: 32, sm: 36 },
+                  px: { xs: 1.5, sm: 2, md: 3 },
+                  fontWeight: 600,
+                  minWidth: { xs: 'auto', sm: 80 },
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Mail Us
+              </Button>
           <Button 
             variant="contained" 
             color="secondary" 
@@ -786,6 +863,8 @@ export default function Dashboard() {
           </Button>
         </Stack>
       </Box>
+        </>
+      )}
     </Box>
   );
 }
