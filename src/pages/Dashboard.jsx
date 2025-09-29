@@ -82,10 +82,10 @@ export default function Dashboard() {
     }
   }, [backendStatus]);
 
-  // Dynamic card data based on user stats with fallback
+  // Dynamic card data based on live dashboard data
   const cardGradient = 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)';
   
-  // Provide fallback data when backend is unavailable or userStats is null
+  // Use live dashboard data when available, fallback to userStats, then fallback data
   const fallbackStats = {
     totalBalance: 0,
     profit: 0,
@@ -97,33 +97,42 @@ export default function Dashboard() {
     winLossRatio: 0
   };
 
-  const currentStats = userStats || fallbackStats;
+  // Priority: Live Dashboard Data → UserStats → Fallback Data
+  const currentStats = dashboardData.isLive ? dashboardData : (userStats || fallbackStats);
   
   const topCards = [
     { 
       label: 'Total Balance', 
       value: `$${currentStats.totalBalance?.toLocaleString() || '0.00'}`, 
       icon: <AccountBalanceWalletIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
-      gradient: cardGradient 
+      gradient: cardGradient,
+      isLive: dashboardData.isLive,
+      refreshAction: updateBalance
     },
     { 
       label: 'Profit', 
       value: `$${currentStats.profit?.toLocaleString() || '0.00'}`, 
       icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
-      gradient: cardGradient 
+      gradient: cardGradient,
+      isLive: dashboardData.isLive,
+      refreshAction: updateTrading
     },
     { 
       label: 'Total Bonus', 
       value: `$${currentStats.totalBonus?.toLocaleString() || '0.00'}`, 
       icon: <GroupIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
-      gradient: cardGradient 
+      gradient: cardGradient,
+      isLive: dashboardData.isLive,
+      refreshAction: updateBonus
     },
     { 
       label: 'Account Status', 
       value: (currentStats.accountStatus || 'UNVERIFIED').toUpperCase(), 
       icon: <VerifiedUserIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient, 
-      chip: true 
+      chip: true,
+      isLive: dashboardData.isLive,
+      refreshAction: updateKYC
     },
   ];
 
@@ -132,25 +141,33 @@ export default function Dashboard() {
       label: 'Total Trades', 
       value: currentStats.totalTrades?.toString() || '0', 
       icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
-      gradient: cardGradient 
+      gradient: cardGradient,
+      isLive: dashboardData.isLive,
+      refreshAction: updateTrading
     },
     { 
       label: 'Open Trades', 
       value: currentStats.openTrades?.toString() || '0', 
       icon: <FolderOpenIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
-      gradient: cardGradient 
+      gradient: cardGradient,
+      isLive: dashboardData.isLive,
+      refreshAction: updateTrading
     },
     { 
       label: 'Closed Trades', 
       value: currentStats.closedTrades?.toString() || '0', 
       icon: <HistoryIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
-      gradient: cardGradient 
+      gradient: cardGradient,
+      isLive: dashboardData.isLive,
+      refreshAction: updateTrading
     },
     { 
       label: 'Win/Loss Ratio', 
       value: currentStats.winLossRatio ? `${(currentStats.winLossRatio * 100).toFixed(1)}%` : '0%', 
       icon: <EmojiEventsIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
-      gradient: cardGradient 
+      gradient: cardGradient,
+      isLive: dashboardData.isLive,
+      refreshAction: updateTrading
     },
   ];
   // List of crypto pairs for selection
@@ -304,8 +321,8 @@ export default function Dashboard() {
                 }}
               />
               <Chip 
-                label={backendStatus === 'connected' ? 'Live Data' : 'Demo Mode'} 
-                color={backendStatus === 'connected' ? 'success' : 'info'} 
+                label={dashboardData.isLive ? 'Live Dashboard' : (backendStatus === 'connected' ? 'Live Data' : 'Demo Mode')} 
+                color={dashboardData.isLive ? 'success' : (backendStatus === 'connected' ? 'success' : 'info')} 
                 variant="filled" 
                 size="small"
                 sx={{ 
