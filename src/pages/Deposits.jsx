@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, 
   Box, 
@@ -17,12 +17,86 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  FormHelperText
+  FormHelperText,
+  LinearProgress
 } from '@mui/material';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useTheme } from '@mui/material/styles';
+import { useUser } from '../contexts/UserContext';
+
+// Backend API configuration - Ready for backend integration
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+const depositsAPI = {
+  // Submit deposit request to backend
+  submitDeposit: async (depositData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/deposits/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(depositData)
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      // Fallback to localStorage for now
+      return { success: false, error: 'API connection failed' };
+    }
+  },
+
+  // Get user's deposit history
+  getDepositHistory: async (userId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/deposits/history/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      return { success: false, error: 'API connection failed' };
+    }
+  },
+
+  // Get available payment methods
+  getPaymentMethods: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/deposits/payment-methods`);
+      return await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      return { success: false, error: 'API connection failed' };
+    }
+  },
+
+  // Upload payment proof file
+  uploadPaymentProof: async (file, depositId) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('depositId', depositId);
+      
+      const response = await fetch(`${API_BASE_URL}/deposits/upload-proof`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: formData
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      return { success: false, error: 'File upload failed' };
+    }
+  }
+};
 
 // Default deposit methods
 const defaultDepositMethods = [
@@ -71,8 +145,9 @@ const otherDepositMethods = [
 
 export default function Deposits() {
   const theme = useTheme();
+  const { user } = useUser();
   
-  // State management
+  // Enhanced state management for backend integration
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [depositForm, setDepositForm] = useState({
@@ -87,7 +162,52 @@ export default function Deposits() {
     message: '',
     severity: 'info'
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    page: false,
+    submit: false,
+    upload: false
+  });
+  const [depositMethods, setDepositMethods] = useState(defaultDepositMethods);
+  const [depositHistory, setDepositHistory] = useState([]);
+
+  // Load initial data on component mount
+  useEffect(() => {
+    loadInitialData();
+  }, [user?.id]);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(prev => ({ ...prev, page: true }));
+      
+      // Try to load from backend first, fallback to localStorage
+      const [methodsResult, historyResult] = await Promise.all([
+        depositsAPI.getPaymentMethods(),
+        user?.id ? depositsAPI.getDepositHistory(user.id) : Promise.resolve({ success: false })
+      ]);
+      
+      // Handle payment methods
+      if (methodsResult.success) {
+        setDepositMethods(methodsResult.data || defaultDepositMethods);
+      } else {
+        setDepositMethods(defaultDepositMethods);
+      }
+      
+      // Handle deposit history
+      if (historyResult.success) {
+        setDepositHistory(historyResult.data || []);
+      } else {
+        // Fallback to localStorage
+        const localHistory = JSON.parse(localStorage.getItem('userDeposits') || '[]');
+        setDepositHistory(localHistory);
+      }
+      
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      showNotification('Error loading data. Using local data.', 'warning');
+    } finally {
+      setLoading(prev => ({ ...prev, page: false }));
+    }
+  };
 
   const showNotification = (message, severity = 'info') => {
     setNotification({ open: true, message, severity });
@@ -147,43 +267,122 @@ export default function Deposits() {
     }
     
     try {
-      setLoading(true);
+      setLoading(prev => ({ ...prev, submit: true }));
       
-      // Prepare deposit data for admin approval
+      // Prepare comprehensive deposit data for backend
       const depositData = {
-        id: Date.now().toString(),
-        userId: 'user123',
-        userName: 'Theophilus Crown',
-        userEmail: 'theophiluscrown693@gmail.com',
+        // User Information
+        userId: user?.id || 'demo_user_123',
+        userName: user?.username || user?.name || 'Theophilus Crown',
+        userEmail: user?.email || 'theophiluscrown693@gmail.com',
+        
+        // Deposit Details
         amount: parseFloat(depositForm.amount),
         method: selectedMethod === 'other' ? depositForm.depositType : selectedMethod.name,
         currency: selectedMethod === 'other' ? 'USD' : selectedMethod.currency,
         walletAddress: selectedMethod === 'other' ? null : selectedMethod.address,
         notes: depositForm.notes,
-        proofFile: depositForm.proofFile?.name || null,
+        
+        // File and Status
+        proofFile: depositForm.proofFile,
         status: 'pending',
         submittedAt: new Date().toISOString(),
-        type: 'deposit'
+        type: 'deposit',
+        
+        // Additional metadata for backend
+        ipAddress: null, // Will be set by backend
+        userAgent: navigator.userAgent,
+        sessionId: localStorage.getItem('sessionId') || null,
+        
+        // Method-specific data
+        methodDetails: selectedMethod === 'other' ? {
+          requestedMethod: depositForm.depositType,
+          requiresManualProcessing: true
+        } : {
+          cryptoAddress: selectedMethod.address,
+          minAmount: selectedMethod.minAmount,
+          maxAmount: selectedMethod.maxAmount,
+          processingTime: selectedMethod.processingTime
+        }
       };
+
+      // Step 1: Try to submit to backend API first
+      let backendSuccess = false;
+      let backendResponse = null;
       
-      // Store in localStorage for admin to see
-      const existingDeposits = JSON.parse(localStorage.getItem('pendingDeposits') || '[]');
-      existingDeposits.push(depositData);
-      localStorage.setItem('pendingDeposits', JSON.stringify(existingDeposits));
+      try {
+        backendResponse = await depositsAPI.submitDeposit(depositData);
+        
+        if (backendResponse.success) {
+          backendSuccess = true;
+          
+          // Step 2: If backend submission successful and there's a file, upload it
+          if (depositForm.proofFile && backendResponse.depositId) {
+            setLoading(prev => ({ ...prev, upload: true }));
+            
+            const uploadResult = await depositsAPI.uploadPaymentProof(
+              depositForm.proofFile, 
+              backendResponse.depositId
+            );
+            
+            if (!uploadResult.success) {
+              console.warn('File upload failed, but deposit was submitted:', uploadResult.error);
+              showNotification('Deposit submitted but file upload failed. Please contact support.', 'warning');
+            }
+          }
+          
+          showNotification(
+            backendResponse.message || 'Deposit submitted successfully! You will receive email confirmation.',
+            'success'
+          );
+          
+        } else {
+          throw new Error(backendResponse.message || 'Backend submission failed');
+        }
+        
+      } catch (apiError) {
+        console.warn('Backend API failed, using localStorage fallback:', apiError);
+        backendSuccess = false;
+      }
       
-      // Also store in user's deposit history
-      const userDeposits = JSON.parse(localStorage.getItem('userDeposits') || '[]');
-      userDeposits.push(depositData);
-      localStorage.setItem('userDeposits', JSON.stringify(userDeposits));
+      // Step 3: Fallback to localStorage if backend fails (for development/demo)
+      if (!backendSuccess) {
+        const localDepositData = {
+          ...depositData,
+          id: `local_${Date.now()}`,
+          proofFileName: depositForm.proofFile?.name || null,
+          backendStatus: 'offline',
+          localSubmission: true
+        };
+        
+        // Store for admin dashboard
+        const existingDeposits = JSON.parse(localStorage.getItem('pendingDeposits') || '[]');
+        existingDeposits.push(localDepositData);
+        localStorage.setItem('pendingDeposits', JSON.stringify(existingDeposits));
+        
+        // Store in user's deposit history
+        const userDeposits = JSON.parse(localStorage.getItem('userDeposits') || '[]');
+        userDeposits.push(localDepositData);
+        localStorage.setItem('userDeposits', JSON.stringify(userDeposits));
+        
+        showNotification(
+          'Deposit submitted successfully! Waiting for admin approval.',
+          'success'
+        );
+      }
       
-      showNotification('Deposit submitted successfully! Waiting for admin approval.', 'success');
+      // Step 4: Close modal and refresh data
       handleCloseModal();
+      await loadInitialData(); // Refresh deposit history
       
     } catch (error) {
       console.error('Error submitting deposit:', error);
-      showNotification('Error submitting deposit. Please try again.', 'error');
+      showNotification(
+        'Error submitting deposit. Please try again or contact support.',
+        'error'
+      );
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, submit: false, upload: false }));
     }
   };
 
@@ -213,6 +412,21 @@ export default function Deposits() {
 
   return (
     <Container maxWidth="xl">
+      {loading.page && (
+        <LinearProgress 
+          sx={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            zIndex: 9999,
+            '& .MuiLinearProgress-bar': {
+              backgroundColor: '#4CAF50'
+            }
+          }} 
+        />
+      )}
+      
       <Box sx={{ 
         p: { xs: 1, sm: 2, md: 3 }, 
         minHeight: '100vh',
@@ -524,7 +738,7 @@ export default function Deposits() {
                 <input 
                   type="file" 
                   accept="image/*,.pdf" 
-                  onChange={handleFileUpload}
+                  onChange={handleFileChange}
                   style={{ 
                     width: '100%',
                     padding: '10px',
@@ -573,11 +787,11 @@ export default function Deposits() {
                   variant="contained" 
                   color="primary" 
                   onClick={submitDeposit}
-                  disabled={loading}
+                  disabled={loading.submit || loading.upload}
                   fullWidth
                   sx={{ fontWeight: 600, py: { xs: 1, sm: 1.25 } }}
                 >
-                  {loading ? 'Submitting...' : 'Submit for Approval'}
+                  {loading.submit ? (loading.upload ? 'Uploading...' : 'Submitting...') : 'Submit for Approval'}
                 </Button>
               </Box>
             </>
@@ -686,11 +900,11 @@ export default function Deposits() {
                   variant="contained" 
                   color="secondary" 
                   onClick={submitDeposit}
-                  disabled={loading}
+                  disabled={loading.submit || loading.upload}
                   fullWidth
                   sx={{ fontWeight: 600, py: { xs: 1, sm: 1.25 } }}
                 >
-                  {loading ? 'Submitting...' : 'Submit Request'}
+                  {loading.submit ? (loading.upload ? 'Uploading...' : 'Submitting...') : 'Submit Request'}
                 </Button>
               </Box>
             </>
