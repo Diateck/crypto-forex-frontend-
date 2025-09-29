@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Typography, 
   Box, 
@@ -17,15 +17,10 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import EmailIcon from '@mui/icons-material/Email';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useTheme } from '@mui/material/styles';
+import { financialAPI, marketAPI } from '../services/api';
 
-const tickerData = [
-  { label: 'Nasdaq 100', value: '24,344.8', change: '+98.90 (+0.41%)', color: 'success.main' },
-  { label: 'EUR/USD', value: '1.18099', change: '-0.00059 (-0.05%)', color: 'error.main' },
-  { label: 'BTC/USD', value: '116,747', change: '+270.00 (+0.23%)', color: 'success.main' },
-  { label: 'ETH/USD', value: '4,620.8', change: '+28.50', color: 'success.main' },
-];
-
-const depositMethods = [
+// Default deposit methods (fallback)
+const defaultDepositMethods = [
   {
     name: 'Bitcoin',
     address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
@@ -52,12 +47,56 @@ export default function Deposits() {
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [amount, setAmount] = useState('');
   const [proof, setProof] = useState(null);
+  const [tickerData, setTickerData] = useState([]);
+  const [depositMethods, setDepositMethods] = useState(defaultDepositMethods);
+  const [loading, setLoading] = useState(true);
 
   const user = {
     name: 'Theophilus Crown',
     email: 'theophiluscrown693@gmail.com',
     accountType: 'Deposit Type',
   };
+
+  // Load ticker data and deposit methods from API
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        
+        const [tickerResponse, methodsResponse] = await Promise.all([
+          marketAPI.getTickerData(),
+          financialAPI.getPaymentMethods()
+        ]);
+        
+        // Handle ticker data
+        if (tickerResponse.success) {
+          setTickerData(tickerResponse.data);
+        } else {
+          setTickerData([
+            { label: 'BTC/USD', value: '65,432.10', change: '+1,247.50 (+1.94%)', color: 'success.main' },
+            { label: 'ETH/USD', value: '3,890.75', change: '-85.25 (-2.14%)', color: 'error.main' },
+            { label: 'EUR/USD', value: '1.1809', change: '-0.0023 (-0.19%)', color: 'error.main' },
+          ]);
+        }
+        
+        // Handle deposit methods
+        if (methodsResponse.success) {
+          setDepositMethods(methodsResponse.data);
+        }
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setTickerData([
+          { label: 'BTC/USD', value: '65,432.10', change: '+1,247.50 (+1.94%)', color: 'success.main' },
+          { label: 'ETH/USD', value: '3,890.75', change: '-85.25 (-2.14%)', color: 'error.main' },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   const handleOpenModal = (method) => {
     setSelectedMethod(method);

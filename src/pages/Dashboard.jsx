@@ -31,14 +31,27 @@ export default function Dashboard() {
           marketAPI.getTickerData(),
           marketAPI.getChartData()
         ]);
-        setTickerData(tickerResponse);
-        setMarketData(chartResponse);
+        
+        // Handle API response format (success/fallback)
+        const tickerResult = tickerResponse.success ? tickerResponse.data : tickerResponse.data || [];
+        const chartResult = chartResponse.success ? chartResponse.data : chartResponse.data || [];
+        
+        setTickerData(Array.isArray(tickerResult) ? tickerResult : []);
+        setMarketData(Array.isArray(chartResult) ? chartResult : []);
       } catch (error) {
         console.error('Error loading market data:', error);
+        // Set fallback empty arrays
+        setTickerData([]);
+        setMarketData([]);
       }
     };
 
     loadMarketData();
+    
+    // Set up interval for live updates
+    const interval = setInterval(loadMarketData, 30000); // Update every 30 seconds
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Dynamic card data based on user stats

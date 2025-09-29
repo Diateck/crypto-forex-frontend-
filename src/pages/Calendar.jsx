@@ -32,6 +32,7 @@ import {
   NavigateBefore,
   NavigateNext
 } from '@mui/icons-material';
+import { marketAPI } from '../services/api';
 
 const StyledCard = styled(Card)(({ theme }) => ({
   backgroundColor: '#181A20',
@@ -86,56 +87,29 @@ export default function Calendar() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch live economic events from API
+  // Fetch economic events from API
   const fetchEconomicEvents = async (date) => {
     setLoading(true);
     setError(null);
     
     try {
-      // Using a free economic calendar API (you can replace with your preferred API)
       const dateStr = date.toISOString().split('T')[0];
       
-      // For demo purposes, I'm using a mock API structure that mimics real economic calendar APIs
-      // In production, you would use services like:
-      // - ForexFactory API
-      // - Investing.com API
-      // - Alpha Vantage Economic Events
-      // - FMP Economic Calendar API
+      // Try to get events from backend API
+      const response = await marketAPI.getNews('economic-calendar');
       
-      const response = await fetch(`https://api.example-economic-calendar.com/events?date=${dateStr}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': 'Bearer YOUR_API_KEY', // Add your API key here
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch economic events');
+      if (response.success) {
+        const eventData = response.data;
+        setEvents(Array.isArray(eventData) ? eventData : []);
+      } else {
+        // Use fallback data if API fails
+        setEvents(getSampleEventsForDate(date));
+        setError('Using demo data - API unavailable');
       }
-
-      const data = await response.json();
-      
-      // Transform API data to our format
-      const transformedEvents = data.events?.map(event => ({
-        id: event.id,
-        time: event.time,
-        country: event.country,
-        flag: getCountryFlag(event.country),
-        event: event.name,
-        impact: event.impact.toLowerCase(),
-        forecast: event.forecast,
-        previous: event.previous,
-        actual: event.actual,
-        currency: event.currency,
-        description: event.description || getEventDescription(event.name)
-      })) || [];
-
-      setEvents(transformedEvents);
       
     } catch (err) {
       console.error('Error fetching economic events:', err);
-      setError('Failed to load live economic events');
+      setError('Failed to load economic events');
       
       // Fallback to sample data when API fails
       setEvents(getSampleEventsForDate(date));
@@ -324,53 +298,53 @@ export default function Calendar() {
     }
   };
 
-  // Fetch live market news
+  // Fetch market news from API
   const fetchMarketNews = async () => {
     try {
-      // In production, you would use real news APIs like:
-      // - Alpha Vantage News API
-      // - NewsAPI
-      // - Financial Modeling Prep News
-      // - Benzinga News API
+      const response = await marketAPI.getNews('market');
       
-      // For now, we'll use dynamic sample data that changes based on current time
-      const currentHour = new Date().getHours();
-      return [
-        {
-          id: 1,
-          title: currentHour < 12 ? 'Asian Markets Open Higher on Fed Hopes' : 'US Markets Rally on Economic Data',
-          summary: currentHour < 12 ? 
-            'Asian equity markets surge as investors anticipate dovish Fed policy.' :
-            'Strong economic indicators boost investor confidence in US markets.',
-          time: currentHour < 12 ? '1 hour ago' : '30 minutes ago',
-          impact: 'high',
-          markets: ['USD', 'SPX', 'GOLD']
-        },
-        {
-          id: 2,
-          title: 'ECB Officials Signal Rate Pause',
-          summary: 'European Central Bank members suggest holding rates steady amid economic uncertainty.',
-          time: '2 hours ago',
-          impact: 'medium',
-          markets: ['EUR', 'DAX', 'BONDS']
-        },
-        {
-          id: 3,
-          title: 'Oil Prices Fluctuate on Inventory Data',
-          summary: 'Crude oil markets react to weekly inventory reports and demand forecasts.',
-          time: '3 hours ago',
-          impact: 'medium',
-          markets: ['WTI', 'BRENT', 'CAD']
-        },
-        {
-          id: 4,
-          title: 'Crypto Market Shows Mixed Signals',
-          summary: 'Bitcoin consolidates while altcoins show varied performance across the board.',
-          time: '4 hours ago',
-          impact: 'high',
-          markets: ['BTC', 'ETH', 'CRYPTO']
-        }
-      ];
+      if (response.success) {
+        return response.data;
+      } else {
+        // Fallback to sample data
+        const currentHour = new Date().getHours();
+        return [
+          {
+            id: 1,
+            title: currentHour < 12 ? 'Asian Markets Open Higher on Fed Hopes' : 'US Markets Rally on Economic Data',
+            summary: currentHour < 12 ? 
+              'Asian equity markets surge as investors anticipate dovish Fed policy.' :
+              'Strong economic indicators boost investor confidence in US markets.',
+            time: currentHour < 12 ? '1 hour ago' : '30 minutes ago',
+            impact: 'high',
+            markets: ['USD', 'SPX', 'GOLD']
+          },
+          {
+            id: 2,
+            title: 'ECB Officials Signal Rate Pause',
+            summary: 'European Central Bank members suggest holding rates steady amid economic uncertainty.',
+            time: '2 hours ago',
+            impact: 'medium',
+            markets: ['EUR', 'DAX', 'BONDS']
+          },
+          {
+            id: 3,
+            title: 'Oil Prices Fluctuate on Inventory Data',
+            summary: 'Crude oil markets react to weekly inventory reports and demand forecasts.',
+            time: '3 hours ago',
+            impact: 'medium',
+            markets: ['WTI', 'BRENT', 'CAD']
+          },
+          {
+            id: 4,
+            title: 'Crypto Market Shows Mixed Signals',
+            summary: 'Bitcoin consolidates while altcoins show varied performance across the board.',
+            time: '4 hours ago',
+            impact: 'high',
+            markets: ['BTC', 'ETH', 'CRYPTO']
+          }
+        ];
+      }
     } catch (error) {
       console.error('Error fetching market news:', error);
       return [];

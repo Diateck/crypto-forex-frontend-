@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Typography,
   Box,
@@ -44,6 +44,7 @@ import {
   Email,
   VerifiedUser
 } from '@mui/icons-material';
+import { tradingAPI } from '../services/api';
 
 function TabPanel({ children, value, index }) {
   return (
@@ -60,161 +61,76 @@ export default function CopyTrading() {
   const [selectedTrader, setSelectedTrader] = useState(null);
   const [copyAmount, setCopyAmount] = useState('');
   const [riskLevel, setRiskLevel] = useState('medium');
+  const [topTraders, setTopTraders] = useState([]);
+  const [copiedTraders, setCopiedTraders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for top traders - More realistic live trader data
-  const topTraders = [
-    {
-      id: 1,
-      name: 'Michael Rodriguez',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&auto=format&q=80',
-      roi: 187.6,
-      followers: 3547,
-      winRate: 84,
-      totalTrades: 456,
-      riskScore: 5.8,
-      verified: true,
-      rank: 1,
-      monthlyReturn: 15.7,
-      copiers: 234,
-      description: 'Professional crypto trader & DeFi strategist. 7+ years experience.',
-      country: 'United States',
-      lastTrade: '2 hours ago',
-      status: 'Active',
-      totalProfit: '+$125,430'
-    },
-    {
-      id: 2,
-      name: 'Emma Thompson',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b5bc?w=150&h=150&fit=crop&crop=face&auto=format&q=80',
-      roi: 156.3,
-      followers: 2891,
-      winRate: 79,
-      totalTrades: 378,
-      riskScore: 4.2,
-      verified: true,
-      rank: 2,
-      monthlyReturn: 12.9,
-      copiers: 187,
-      description: 'Forex & commodities expert. Conservative risk approach.',
-      country: 'United Kingdom',
-      lastTrade: '1 hour ago',
-      status: 'Active',
-      totalProfit: '+$89,760'
-    },
-    {
-      id: 3,
-      name: 'David Kim',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format&q=80',
-      roi: 142.8,
-      followers: 2456,
-      winRate: 76,
-      totalTrades: 289,
-      riskScore: 6.5,
-      verified: true,
-      rank: 3,
-      monthlyReturn: 11.4,
-      copiers: 156,
-      description: 'Algorithmic trading specialist. Focus on BTC & ETH pairs.',
-      country: 'Singapore',
-      lastTrade: '3 hours ago',
-      status: 'Active',
-      totalProfit: '+$67,920'
-    },
-    {
-      id: 4,
-      name: 'Sarah Williams',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face&auto=format&q=80',
-      roi: 134.7,
-      followers: 2198,
-      winRate: 73,
-      totalTrades: 324,
-      riskScore: 5.1,
-      verified: true,
-      rank: 4,
-      monthlyReturn: 10.8,
-      copiers: 132,
-      description: 'Multi-asset trader. Specializes in swing trading strategies.',
-      country: 'Australia',
-      lastTrade: '45 minutes ago',
-      status: 'Active',
-      totalProfit: '+$54,680'
-    },
-    {
-      id: 5,
-      name: 'Carlos Mendoza',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face&auto=format&q=80',
-      roi: 128.9,
-      followers: 1876,
-      winRate: 71,
-      totalTrades: 267,
-      riskScore: 6.8,
-      verified: true,
-      rank: 5,
-      monthlyReturn: 9.7,
-      copiers: 98,
-      description: 'High-frequency trader. Latin American markets specialist.',
-      country: 'Mexico',
-      lastTrade: '30 minutes ago',
-      status: 'Active',
-      totalProfit: '+$43,210'
-    },
-    {
-      id: 6,
-      name: 'Yuki Tanaka',
-      avatar: 'https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=150&h=150&fit=crop&crop=face&auto=format&q=80',
-      roi: 119.4,
-      followers: 1654,
-      winRate: 68,
-      totalTrades: 195,
-      riskScore: 7.2,
-      verified: false,
-      rank: 6,
-      monthlyReturn: 8.9,
-      copiers: 76,
-      description: 'Japanese market expert. Focus on technical analysis.',
-      country: 'Japan',
-      lastTrade: '1 hour ago',
-      status: 'Active',
-      totalProfit: '+$38,540'
-    }
-  ];
+  // Load trader data from API
+  useEffect(() => {
+    const loadTraders = async () => {
+      try {
+        setLoading(true);
+        const response = await tradingAPI.getCopyTraders();
+        
+        if (response.success) {
+          setTopTraders(response.data);
+        } else {
+          // Fallback mock data
+          setTopTraders([
+            {
+              id: 1,
+              name: 'Michael Rodriguez',
+              avatar: '/api/placeholder/150/150',
+              roi: 187.6,
+              followers: 3547,
+              winRate: 84,
+              totalTrades: 456,
+              riskScore: 5.8,
+              verified: true,
+              rank: 1,
+              monthlyReturn: 15.7,
+              copiers: 234,
+              description: 'Professional crypto trader & DeFi strategist. 7+ years experience.',
+              country: 'United States',
+              lastTrade: '2 hours ago',
+              status: 'Active',
+              totalProfit: '+$125,430'
+            },
+            {
+              id: 2,
+              name: 'Emma Thompson',
+              avatar: '/api/placeholder/150/150',
+              roi: 156.3,
+              followers: 2891,
+              winRate: 79,
+              totalTrades: 378,
+              riskScore: 4.2,
+              verified: true,
+              rank: 2,
+              monthlyReturn: 12.9,
+              copiers: 187,
+              description: 'Forex & commodities expert. Conservative risk approach.',
+              country: 'United Kingdom',
+              totalProfit: '+$89,650'
+            }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error loading traders:', error);
+        setTopTraders([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTraders();
+  }, []);
+
+  // Handle copy trader action
+  // (Removed duplicate/erroneous handleCopyTrader declaration)
 
   // Mock data for copied traders - Updated with real profile pics
-  const copiedTraders = [
-    {
-      id: 1,
-      name: 'Michael Rodriguez',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&auto=format&q=80',
-      amountCopied: 8500,
-      profit: 1340,
-      profitPercentage: 15.8,
-      status: 'active',
-      startDate: '2024-01-15',
-      lastActivity: '2 hours ago'
-    },
-    {
-      id: 2,
-      name: 'Emma Thompson',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b5bc?w=150&h=150&fit=crop&crop=face&auto=format&q=80',
-      amountCopied: 5000,
-      profit: -320,
-      profitPercentage: -6.4,
-      status: 'active',
-      startDate: '2024-02-01',
-      lastActivity: '1 hour ago'
-    },
-    {
-      id: 3,
-      name: 'David Kim',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format&q=80',
-      amountCopied: 3200,
-      profit: 485,
-      profitPercentage: 15.2,
-      status: 'active',
-      startDate: '2024-03-10',
-      lastActivity: '3 hours ago'
-    }
-  ];
+  // Remove redeclaration, use state variable instead
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);

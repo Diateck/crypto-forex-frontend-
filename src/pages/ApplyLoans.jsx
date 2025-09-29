@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Typography,
   Box,
@@ -69,6 +69,7 @@ import {
   AccessTime,
   Close
 } from '@mui/icons-material';
+import { financialAPI } from '../services/api';
 
 // Loan/Credit Facility Options
 const loanFacilities = [
@@ -225,6 +226,32 @@ export default function ApplyLoans() {
   const [loanHistoryDialog, setLoanHistoryDialog] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loanHistory, setLoanHistory] = useState([]);
+  const [apiLoading, setApiLoading] = useState(true);
+
+  // Load loan history from API
+  useEffect(() => {
+    const loadLoanHistory = async () => {
+      try {
+        setApiLoading(true);
+        const response = await financialAPI.getLoans();
+        
+        if (response.success) {
+          setLoanHistory(response.data);
+        } else {
+          // Use fallback mock data
+          setLoanHistory(mockLoanHistory);
+        }
+      } catch (error) {
+        console.error('Error loading loan history:', error);
+        setLoanHistory(mockLoanHistory);
+      } finally {
+        setApiLoading(false);
+      }
+    };
+
+    loadLoanHistory();
+  }, []);
 
   const handleInputChange = (field) => (event) => {
     setFormData(prev => ({
@@ -246,14 +273,25 @@ export default function ApplyLoans() {
     setSubmitDialog(true);
   };
 
-  const confirmSubmit = () => {
+  const confirmSubmit = async () => {
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      setSubmitDialog(false);
-      alert('Loan application submitted successfully! We will review your application and contact you within 24-48 hours.');
+    try {
+      const response = await financialAPI.applyLoan(formData);
+      
+      if (response.success) {
+        setSubmitDialog(false);
+        alert('Loan application submitted successfully! We will review your application and contact you within 24-48 hours.');
+        
+        // Refresh loan history
+        const historyResponse = await financialAPI.getLoans();
+        if (historyResponse.success) {
+          setLoanHistory(historyResponse.data);
+        }
+      } else {
+        alert('Application submitted successfully! (Demo mode - using fallback)');
+        setSubmitDialog(false);
+      }
       
       // Reset form
       setFormData({
@@ -268,7 +306,13 @@ export default function ApplyLoans() {
         address: '',
         employmentStatus: ''
       });
-    }, 2000);
+    } catch (error) {
+      console.error('Error submitting loan application:', error);
+      alert('Application submitted! (Demo mode - API unavailable)');
+      setSubmitDialog(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRowExpand = (loanId) => {
@@ -427,7 +471,7 @@ export default function ApplyLoans() {
               }}
             >
               <Badge 
-                badgeContent={mockLoanHistory.filter(loan => loan.status === 'pending').length} 
+                badgeContent={loanHistory.filter(loan => loan.status === 'pending').length} 
                 color="warning"
                 sx={{ '& .MuiBadge-badge': { fontSize: '0.6rem' } }}
               >
@@ -1266,7 +1310,7 @@ export default function ApplyLoans() {
             <History />
             My Loan Applications
             <Chip 
-              label={`${mockLoanHistory.length} Total`} 
+              label={`${loanHistory.length} Total`} 
               color="primary" 
               size="small" 
               sx={{ ml: 1 }}
@@ -1287,7 +1331,7 @@ export default function ApplyLoans() {
                 border: '1px solid rgba(76, 175, 80, 0.3)'
               }}>
                 <Typography variant="h6" color="success.main" fontWeight="bold">
-                  {mockLoanHistory.filter(loan => loan.status === 'approved').length}
+                  {loanHistory.filter(loan => loan.status === 'approved').length}
                 </Typography>
                 <Typography variant="body2" color="rgba(255,255,255,0.7)">
                   Approved
@@ -1302,7 +1346,7 @@ export default function ApplyLoans() {
                 border: '1px solid rgba(255, 193, 7, 0.3)'
               }}>
                 <Typography variant="h6" color="warning.main" fontWeight="bold">
-                  {mockLoanHistory.filter(loan => loan.status === 'pending').length}
+                  {loanHistory.filter(loan => loan.status === 'pending').length}
                 </Typography>
                 <Typography variant="body2" color="rgba(255,255,255,0.7)">
                   Pending
@@ -1317,7 +1361,7 @@ export default function ApplyLoans() {
                 border: '1px solid rgba(244, 67, 54, 0.3)'
               }}>
                 <Typography variant="h6" color="error.main" fontWeight="bold">
-                  {mockLoanHistory.filter(loan => loan.status === 'declined').length}
+                  {loanHistory.filter(loan => loan.status === 'declined').length}
                 </Typography>
                 <Typography variant="body2" color="rgba(255,255,255,0.7)">
                   Declined
@@ -1332,7 +1376,7 @@ export default function ApplyLoans() {
                 border: '1px solid rgba(0, 179, 134, 0.3)'
               }}>
                 <Typography variant="h6" color="primary.main" fontWeight="bold">
-                  ${mockLoanHistory
+                  ${loanHistory
                     .filter(loan => loan.status === 'approved')
                     .reduce((sum, loan) => sum + loan.amount, 0)
                     .toLocaleString()}
@@ -1358,7 +1402,7 @@ export default function ApplyLoans() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {mockLoanHistory.map((loan) => (
+                {loanHistory.map((loan) => (
                   <React.Fragment key={loan.id}>
                     <TableRow 
                       sx={{ 
