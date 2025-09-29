@@ -32,6 +32,63 @@ export default function Dashboard() {
     updateTrading,
     updateKYC
   } = useLiveDashboard(user?.id, 15000); // Update every 15 seconds
+
+  // Helper functions for KYC status display
+  const getKYCStatusLabel = (kycStatus) => {
+    switch (kycStatus) {
+      case 'verified':
+      case 'approved':
+        return 'KYC Verified';
+      case 'pending':
+      case 'submitted':
+        return 'KYC Pending';
+      case 'rejected':
+        return 'KYC Rejected';
+      default:
+        return 'KYC Unverified';
+    }
+  };
+
+  const getKYCStatusColor = (kycStatus) => {
+    switch (kycStatus) {
+      case 'verified':
+      case 'approved':
+        return 'success';
+      case 'pending':
+      case 'submitted':
+        return 'warning';
+      case 'rejected':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
+
+  const getAccountStatusValue = (accountStatus) => {
+    switch (accountStatus) {
+      case 'VERIFIED':
+        return 'VERIFIED';
+      case 'PENDING':
+        return 'PENDING';
+      case 'REJECTED':
+        return 'REJECTED';
+      default:
+        return 'UNVERIFIED';
+    }
+  };
+
+  const getAccountStatusChip = (accountStatus) => {
+    switch (accountStatus) {
+      case 'VERIFIED':
+        return { label: 'VERIFIED', color: 'success' };
+      case 'PENDING':
+        return { label: 'PENDING', color: 'warning' };
+      case 'REJECTED':
+        return { label: 'REJECTED', color: 'error' };
+      default:
+        return { label: 'UNVERIFIED', color: 'default' };
+    }
+  };
   
   // Market data state
   const [tickerData, setTickerData] = useState([
@@ -134,10 +191,11 @@ export default function Dashboard() {
     },
     { 
       label: 'Account Status', 
-      value: (currentStats.accountStatus || 'UNVERIFIED').toUpperCase(), 
+      value: getAccountStatusValue(currentStats.accountStatus || 'UNVERIFIED'), 
       icon: <VerifiedUserIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient, 
       chip: true,
+      chipData: getAccountStatusChip(currentStats.accountStatus || 'UNVERIFIED'),
       isLive: dashboardData.isLive,
       refreshAction: updateKYC,
       isPending: dashboardData.pendingActions?.kycAwaitingApproval,
@@ -322,8 +380,8 @@ export default function Dashboard() {
             >
               <Chip 
                 icon={<VerifiedUserIcon />} 
-                label={user?.kycStatus === 'verified' ? 'KYC Verified' : 'KYC Pending'} 
-                color={user?.kycStatus === 'verified' ? 'success' : 'warning'} 
+                label={getKYCStatusLabel(user?.kycStatus)} 
+                color={getKYCStatusColor(user?.kycStatus)} 
                 variant="outlined" 
                 size="small"
                 sx={{ 
@@ -512,12 +570,14 @@ export default function Dashboard() {
                 {card.chip && (
                   <Box sx={{ mt: 1 }}>
                     <Chip 
-                      label="UNVERIFIED" 
-                      color="default" 
+                      label={card.chipData ? card.chipData.label : card.value} 
+                      color={card.chipData ? card.chipData.color : 'default'} 
                       size="small" 
                       sx={{ 
-                        bgcolor: '#fff', 
-                        color: '#f5576c', 
+                        bgcolor: card.chipData?.color === 'success' ? '#4caf50' : 
+                                card.chipData?.color === 'warning' ? '#ff9800' : 
+                                card.chipData?.color === 'error' ? '#f44336' : '#fff', 
+                        color: card.chipData?.color === 'default' ? '#f5576c' : '#fff', 
                         fontWeight: 700,
                         height: { xs: 22, sm: 24 },
                         fontSize: { xs: '0.65rem', sm: '0.75rem' },
