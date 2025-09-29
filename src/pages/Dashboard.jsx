@@ -20,97 +20,126 @@ export default function Dashboard() {
   const { user, userStats, loading, error, backendStatus } = useUser();
   
   // Market data state
-  const [tickerData, setTickerData] = useState([]);
+  const [tickerData, setTickerData] = useState([
+    { label: 'Nasdaq 100', value: '24,344.8', change: '+98.90 (+0.41%)', color: 'green' },
+    { label: 'EUR/USD', value: '1.18099', change: '-0.00059 (-0.05%)', color: 'red' },
+    { label: 'BTC/USD', value: '116,747', change: '+270.00 (+0.23%)', color: 'green' },
+    { label: 'ETH/USD', value: '4,620.8', change: '+28.50', color: 'green' }
+  ]);
   const [marketData, setMarketData] = useState([]);
 
-  // Load market data
+  // Load market data with better error handling
   useEffect(() => {
     const loadMarketData = async () => {
       try {
-        const [tickerResponse, chartResponse] = await Promise.all([
-          marketAPI.getTickerData(),
-          marketAPI.getChartData()
-        ]);
-        
-        // Handle API response format (success/fallback)
-        const tickerResult = tickerResponse.success ? tickerResponse.data : tickerResponse.data || [];
-        const chartResult = chartResponse.success ? chartResponse.data : chartResponse.data || [];
-        
-        setTickerData(Array.isArray(tickerResult) ? tickerResult : []);
-        setMarketData(Array.isArray(chartResult) ? chartResult : []);
+        // Only try to load if we don't have fallback data
+        if (backendStatus === 'connected') {
+          const [tickerResponse, chartResponse] = await Promise.all([
+            marketAPI.getTickerData().catch(() => ({ success: false, data: [] })),
+            marketAPI.getChartData().catch(() => ({ success: false, data: [] }))
+          ]);
+          
+          // Handle API response format (success/fallback)
+          if (tickerResponse.success && Array.isArray(tickerResponse.data) && tickerResponse.data.length > 0) {
+            const formattedTicker = tickerResponse.data.map(item => ({
+              label: item.symbol || item.label,
+              value: item.price ? `$${item.price.toLocaleString()}` : item.value,
+              change: item.changePercent ? `${item.change > 0 ? '+' : ''}${item.change} (${item.changePercent > 0 ? '+' : ''}${item.changePercent}%)` : item.change,
+              color: item.changePercent >= 0 ? 'green' : 'red'
+            }));
+            setTickerData(formattedTicker);
+          }
+          
+          if (chartResponse.success && Array.isArray(chartResponse.data)) {
+            setMarketData(chartResponse.data);
+          }
+        }
       } catch (error) {
-        console.error('Error loading market data:', error);
-        // Set fallback empty arrays
-        setTickerData([]);
-        setMarketData([]);
+        console.warn('Error loading market data, using fallback:', error);
+        // Keep the fallback data that's already set
       }
     };
 
-    loadMarketData();
-    
-    // Set up interval for live updates
-    const interval = setInterval(loadMarketData, 30000); // Update every 30 seconds
-    
-    return () => clearInterval(interval);
-  }, []);
+    // Load market data only if backend is available
+    if (backendStatus === 'connected') {
+      loadMarketData();
+      // Set up interval for live updates only if backend is connected
+      const interval = setInterval(loadMarketData, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [backendStatus]);
 
-  // Dynamic card data based on user stats
+  // Dynamic card data based on user stats with fallback
   const cardGradient = 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)';
   
-  const topCards = userStats ? [
+  // Provide fallback data when backend is unavailable or userStats is null
+  const fallbackStats = {
+    totalBalance: 0,
+    profit: 0,
+    totalBonus: 0,
+    accountStatus: 'UNVERIFIED',
+    totalTrades: 0,
+    openTrades: 0,
+    closedTrades: 0,
+    winLossRatio: 0
+  };
+
+  const currentStats = userStats || fallbackStats;
+  
+  const topCards = [
     { 
       label: 'Total Balance', 
-      value: `$${userStats.totalBalance?.toLocaleString() || '0.00'}`, 
+      value: `$${currentStats.totalBalance?.toLocaleString() || '0.00'}`, 
       icon: <AccountBalanceWalletIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient 
     },
     { 
       label: 'Profit', 
-      value: `$${userStats.profit?.toLocaleString() || '0.00'}`, 
+      value: `$${currentStats.profit?.toLocaleString() || '0.00'}`, 
       icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient 
     },
     { 
       label: 'Total Bonus', 
-      value: `$${userStats.totalBonus?.toLocaleString() || '0.00'}`, 
+      value: `$${currentStats.totalBonus?.toLocaleString() || '0.00'}`, 
       icon: <GroupIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient 
     },
     { 
       label: 'Account Status', 
-      value: (userStats.accountStatus || 'UNVERIFIED').toUpperCase(), 
+      value: (currentStats.accountStatus || 'UNVERIFIED').toUpperCase(), 
       icon: <VerifiedUserIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient, 
       chip: true 
     },
-  ] : [];
+  ];
 
-  const bottomCards = userStats ? [
+  const bottomCards = [
     { 
       label: 'Total Trades', 
-      value: userStats.totalTrades?.toString() || '0', 
+      value: currentStats.totalTrades?.toString() || '0', 
       icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient 
     },
     { 
       label: 'Open Trades', 
-      value: userStats.openTrades?.toString() || '0', 
+      value: currentStats.openTrades?.toString() || '0', 
       icon: <FolderOpenIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient 
     },
     { 
       label: 'Closed Trades', 
-      value: userStats.closedTrades?.toString() || '0', 
+      value: currentStats.closedTrades?.toString() || '0', 
       icon: <HistoryIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient 
     },
     { 
       label: 'Win/Loss Ratio', 
-      value: userStats.winLossRatio ? `${(userStats.winLossRatio * 100).toFixed(1)}%` : '0%', 
+      value: currentStats.winLossRatio ? `${(currentStats.winLossRatio * 100).toFixed(1)}%` : '0%', 
       icon: <EmojiEventsIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient 
     },
-  ] : [];
+  ];
   // List of crypto pairs for selection
   const cryptoPairs = [
     { label: 'BTC/USDT', value: 'BINANCE:BTCUSDT' },
@@ -178,7 +207,7 @@ export default function Dashboard() {
       )}
 
       {/* Main Content */}
-      {!loading && user && (
+      {!loading && (
         <>
           {/* Header with site name, username and quick actions */}
           <Box sx={{ 
@@ -231,7 +260,7 @@ export default function Dashboard() {
                     mt: 0.25
                   }}
                 >
-                  Username: <span style={{ color: theme.palette.primary.main }}>{user.username || 'User'}</span>
+                  Username: <span style={{ color: theme.palette.primary.main }}>{user?.username || 'theophilus'}</span>
                 </Typography>
               </Box>
             </Box>
@@ -248,8 +277,8 @@ export default function Dashboard() {
             >
               <Chip 
                 icon={<VerifiedUserIcon />} 
-                label={user.kycStatus === 'verified' ? 'KYC Verified' : 'KYC Pending'} 
-                color={user.kycStatus === 'verified' ? 'success' : 'warning'} 
+                label={user?.kycStatus === 'verified' ? 'KYC Verified' : 'KYC Pending'} 
+                color={user?.kycStatus === 'verified' ? 'success' : 'warning'} 
                 variant="outlined" 
                 size="small"
                 sx={{ 

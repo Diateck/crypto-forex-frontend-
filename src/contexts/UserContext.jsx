@@ -12,11 +12,27 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [userStats, setUserStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState({
+    id: 'demo_user',
+    username: 'theophilus',
+    email: 'demo@elonbroker.com',
+    firstName: 'Demo',
+    lastName: 'User',
+    kycStatus: 'pending'
+  });
+  const [userStats, setUserStats] = useState({
+    totalBalance: 0,
+    profit: 0,
+    totalBonus: 0,
+    accountStatus: 'UNVERIFIED',
+    totalTrades: 0,
+    openTrades: 0,
+    closedTrades: 0,
+    winLossRatio: 0
+  });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [backendStatus, setBackendStatus] = useState('checking');
+  const [backendStatus, setBackendStatus] = useState('fallback');
 
   // Check if user is authenticated based on stored token
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -31,6 +47,7 @@ export const UserProvider = ({ children }) => {
     if (isAuthenticated) {
       loadUserData();
     } else {
+      // Keep fallback data visible
       setLoading(false);
     }
   }, [isAuthenticated]);

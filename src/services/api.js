@@ -1,6 +1,6 @@
 // API Configuration and Base Service
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://crypto-forex-backend.onrender.com';
-const API_TIMEOUT = 10000;
+const API_TIMEOUT = 5000; // Reduced timeout to prevent long waits
 
 class ApiService {
   constructor() {
@@ -116,29 +116,31 @@ class ApiService {
         email: 'demo@elonbroker.com',
         firstName: 'Demo',
         lastName: 'User',
-        kycStatus: 'verified',
-        accountType: 'premium'
+        kycStatus: 'pending',
+        accountType: 'demo'
       },
       '/auth/stats': {
-        totalBalance: 125847.89,
-        todayPnL: 2847.32,
-        todayPnLPercentage: 2.31,
-        totalDeposits: 100000,
-        totalWithdrawals: 15000,
-        activeTrades: 8,
-        totalTrades: 156,
-        winRate: 73.5
+        totalBalance: 0,
+        profit: 0,
+        totalBonus: 0,
+        accountStatus: 'UNVERIFIED',
+        totalTrades: 0,
+        openTrades: 0,
+        closedTrades: 0,
+        winLossRatio: 0
       },
       '/market/ticker': [
-        { symbol: 'BTC/USD', price: 65432.10, change: 1247.50, changePercent: 1.94 },
-        { symbol: 'ETH/USD', price: 3890.75, change: -85.25, changePercent: -2.14 },
-        { symbol: 'EUR/USD', price: 1.1809, change: -0.0023, changePercent: -0.19 }
-      ]
+        { label: 'Nasdaq 100', value: '24,344.8', change: '+98.90 (+0.41%)', color: 'green' },
+        { label: 'EUR/USD', value: '1.18099', change: '-0.00059 (-0.05%)', color: 'red' },
+        { label: 'BTC/USD', value: '116,747', change: '+270.00 (+0.23%)', color: 'green' },
+        { label: 'ETH/USD', value: '4,620.8', change: '+28.50', color: 'green' }
+      ],
+      '/market/chart': []
     };
 
     return {
       success: false,
-      data: fallbackData[endpoint] || {},
+      data: fallbackData[endpoint] || fallbackData[endpoint.split('?')[0]] || {},
       error: error.message,
       fallback: true
     };
