@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Typography, Box, Grid, Card, useTheme, Avatar, Button, Stack, Chip, CircularProgress, Alert } from '@mui/material';
+import { Typography, Box, Grid, Card, useTheme, Avatar, Button, Stack, Chip, CircularProgress, Alert, Badge } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -12,6 +12,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import PendingIcon from '@mui/icons-material/Pending';
 import { useUser } from '../contexts/UserContext';
 import { marketAPI } from '../services/api';
 import useLiveDashboard from '../hooks/useLiveDashboard';
@@ -107,7 +108,11 @@ export default function Dashboard() {
       icon: <AccountBalanceWalletIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
       isLive: dashboardData.isLive,
-      refreshAction: updateBalance
+      refreshAction: updateBalance,
+      isPending: dashboardData.pendingActions?.depositsAwaitingApproval > 0,
+      pendingText: dashboardData.pendingActions?.depositsAwaitingApproval > 0 ? 
+        `${dashboardData.pendingActions.depositsAwaitingApproval} deposit(s) pending admin approval` : null,
+      adminControlled: true
     },
     { 
       label: 'Profit', 
@@ -115,7 +120,8 @@ export default function Dashboard() {
       icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
       isLive: dashboardData.isLive,
-      refreshAction: updateTrading
+      refreshAction: updateTrading,
+      adminControlled: false // Auto-updates from trading
     },
     { 
       label: 'Total Bonus', 
@@ -123,7 +129,8 @@ export default function Dashboard() {
       icon: <GroupIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
       isLive: dashboardData.isLive,
-      refreshAction: updateBonus
+      refreshAction: updateBonus,
+      adminControlled: true // Only admin can give bonuses
     },
     { 
       label: 'Account Status', 
@@ -132,7 +139,11 @@ export default function Dashboard() {
       gradient: cardGradient, 
       chip: true,
       isLive: dashboardData.isLive,
-      refreshAction: updateKYC
+      refreshAction: updateKYC,
+      isPending: dashboardData.pendingActions?.kycAwaitingApproval,
+      pendingText: dashboardData.pendingActions?.kycAwaitingApproval ? 
+        'KYC documents pending admin approval' : null,
+      adminControlled: true
     },
   ];
 
@@ -143,7 +154,8 @@ export default function Dashboard() {
       icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
       isLive: dashboardData.isLive,
-      refreshAction: updateTrading
+      refreshAction: updateTrading,
+      adminControlled: false // Auto-updates
     },
     { 
       label: 'Open Trades', 
@@ -151,7 +163,8 @@ export default function Dashboard() {
       icon: <FolderOpenIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
       isLive: dashboardData.isLive,
-      refreshAction: updateTrading
+      refreshAction: updateTrading,
+      adminControlled: false // Auto-updates
     },
     { 
       label: 'Closed Trades', 
@@ -159,7 +172,8 @@ export default function Dashboard() {
       icon: <HistoryIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
       isLive: dashboardData.isLive,
-      refreshAction: updateTrading
+      refreshAction: updateTrading,
+      adminControlled: false // Auto-updates
     },
     { 
       label: 'Win/Loss Ratio', 
@@ -167,7 +181,8 @@ export default function Dashboard() {
       icon: <EmojiEventsIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
       isLive: dashboardData.isLive,
-      refreshAction: updateTrading
+      refreshAction: updateTrading,
+      adminControlled: false // Auto-calculated
     },
   ];
   // List of crypto pairs for selection

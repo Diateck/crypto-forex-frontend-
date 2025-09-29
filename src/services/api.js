@@ -157,25 +157,71 @@ export const userAPI = {
   getProfile: () => apiService.get('/auth/profile'),
   updateProfile: (data) => apiService.put('/auth/profile', data),
   getStats: () => apiService.get('/auth/stats'),
+  
   // Real-time dashboard data
   getDashboardData: () => apiService.get('/dashboard/stats'),
   getBalanceHistory: () => apiService.get('/dashboard/balance-history'),
-  // KYC Management
-  submitKYC: (kycData) => apiService.post('/auth/kyc', kycData),
-  getKYCStatus: () => apiService.get('/auth/kyc-status')
+  
+  // KYC Management (User Side)
+  submitKYC: (kycData) => apiService.post('/auth/kyc', kycData), // Creates pending KYC
+  getKYCStatus: () => apiService.get('/auth/kyc-status'),
+  uploadKYCDocument: (documentData) => apiService.post('/auth/kyc-upload', documentData)
 };
 
-// Financial API endpoints - Enhanced for real-time updates
+// Admin API endpoints for monitoring and approval
+export const adminAPI = {
+  // Dashboard monitoring
+  getAllUsersStats: () => apiService.get('/admin/users-stats'),
+  getUserDashboard: (userId) => apiService.get(`/admin/user-dashboard/${userId}`),
+  
+  // KYC Management (Admin Side)
+  getPendingKYC: () => apiService.get('/admin/pending-kyc'),
+  getKYCDetails: (userId) => apiService.get(`/admin/kyc-details/${userId}`),
+  approveKYC: (userId) => apiService.post(`/admin/approve-kyc/${userId}`),
+  rejectKYC: (userId, reason) => apiService.post(`/admin/reject-kyc/${userId}`, { reason }),
+  
+  // Financial monitoring
+  getPendingDeposits: () => apiService.get('/admin/pending-deposits'),
+  getPendingWithdrawals: () => apiService.get('/admin/pending-withdrawals'),
+  getAllTransactions: () => apiService.get('/admin/all-transactions'),
+  
+  // User management
+  getAllUsers: () => apiService.get('/admin/users'),
+  getUserDetails: (userId) => apiService.get(`/admin/user/${userId}`),
+  updateUserBalance: (userId, balanceData) => apiService.post(`/admin/update-balance/${userId}`, balanceData),
+  
+  // Bonus management
+  giveBonus: (userId, bonusData) => apiService.post(`/admin/give-bonus/${userId}`, bonusData),
+  getBonusHistory: () => apiService.get('/admin/bonus-history')
+};
+
+// Financial API endpoints - Enhanced with Admin Approval System
 export const financialAPI = {
   getDeposits: () => apiService.get('/financial/deposits'),
   getWithdrawals: () => apiService.get('/financial/withdrawals'),
   getLoans: () => apiService.get('/financial/loans'),
   applyLoan: (loanData) => apiService.post('/financial/loans', loanData),
-  // Real-time balance updates
+  
+  // Real-time balance updates (Admin Controlled)
   getCurrentBalance: () => apiService.get('/financial/current-balance'),
   getBonusHistory: () => apiService.get('/financial/bonus-history'),
-  deposit: (depositData) => apiService.post('/financial/deposit', depositData),
-  withdraw: (withdrawData) => apiService.post('/financial/withdraw', withdrawData)
+  getPendingActions: (userId) => apiService.get(`/financial/pending-actions/${userId}`),
+  
+  // User Actions (Require Admin Approval)
+  deposit: (depositData) => apiService.post('/financial/deposit', depositData), // Creates pending deposit
+  withdraw: (withdrawData) => apiService.post('/financial/withdraw', withdrawData), // Creates pending withdrawal
+  
+  // Admin-only endpoints (for admin dashboard)
+  getPendingDeposits: () => apiService.get('/admin/pending-deposits'),
+  approveDeposit: (depositId) => apiService.post(`/admin/approve-deposit/${depositId}`),
+  rejectDeposit: (depositId) => apiService.post(`/admin/reject-deposit/${depositId}`),
+  
+  getPendingWithdrawals: () => apiService.get('/admin/pending-withdrawals'),
+  approveWithdrawal: (withdrawalId) => apiService.post(`/admin/approve-withdrawal/${withdrawalId}`),
+  rejectWithdrawal: (withdrawalId) => apiService.post(`/admin/reject-withdrawal/${withdrawalId}`),
+  
+  // Admin bonus management
+  giveBonus: (userId, bonusData) => apiService.post(`/admin/give-bonus/${userId}`, bonusData)
 };
 
 // Real-time Trading API endpoints
