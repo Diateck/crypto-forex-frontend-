@@ -156,7 +156,40 @@ export const userAPI = {
   logout: () => apiService.post('/auth/logout'),
   getProfile: () => apiService.get('/auth/profile'),
   updateProfile: (data) => apiService.put('/auth/profile', data),
-  getStats: () => apiService.get('/auth/stats')
+  getStats: () => apiService.get('/auth/stats'),
+  // Real-time dashboard data
+  getDashboardData: () => apiService.get('/dashboard/stats'),
+  getBalanceHistory: () => apiService.get('/dashboard/balance-history'),
+  // KYC Management
+  submitKYC: (kycData) => apiService.post('/auth/kyc', kycData),
+  getKYCStatus: () => apiService.get('/auth/kyc-status')
+};
+
+// Financial API endpoints - Enhanced for real-time updates
+export const financialAPI = {
+  getDeposits: () => apiService.get('/financial/deposits'),
+  getWithdrawals: () => apiService.get('/financial/withdrawals'),
+  getLoans: () => apiService.get('/financial/loans'),
+  applyLoan: (loanData) => apiService.post('/financial/loans', loanData),
+  // Real-time balance updates
+  getCurrentBalance: () => apiService.get('/financial/current-balance'),
+  getBonusHistory: () => apiService.get('/financial/bonus-history'),
+  deposit: (depositData) => apiService.post('/financial/deposit', depositData),
+  withdraw: (withdrawData) => apiService.post('/financial/withdraw', withdrawData)
+};
+
+// Real-time Trading API endpoints
+export const tradingAPI = {
+  getPositions: () => apiService.get('/trading/positions'),
+  getOrders: () => apiService.get('/trading/orders'),
+  getHistory: () => apiService.get('/trading/history'),
+  getSignals: () => apiService.get('/trading/signals'),
+  getCopyTraders: () => apiService.get('/trading/copy-traders'),
+  // Real-time trading stats
+  getLiveTradingStats: () => apiService.get('/trading/live-stats'),
+  getWinLossRatio: () => apiService.get('/trading/win-loss-ratio'),
+  placeTrade: (tradeData) => apiService.post('/trading/place-order', tradeData),
+  closeTrade: (tradeId) => apiService.post(`/trading/close/${tradeId}`)
 };
 
 // Market API endpoints
@@ -164,23 +197,6 @@ export const marketAPI = {
   getTickerData: () => apiService.get('/market/ticker'),
   getChartData: (symbol, timeframe) => apiService.get('/market/chart', { symbol, timeframe }),
   getNews: (category) => apiService.get('/market/news', { category })
-};
-
-// Trading API endpoints
-export const tradingAPI = {
-  getPositions: () => apiService.get('/trading/positions'),
-  getOrders: () => apiService.get('/trading/orders'),
-  getHistory: () => apiService.get('/trading/history'),
-  getSignals: () => apiService.get('/trading/signals'),
-  getCopyTraders: () => apiService.get('/trading/copy-traders')
-};
-
-// Financial API endpoints
-export const financialAPI = {
-  getDeposits: () => apiService.get('/financial/deposits'),
-  getWithdrawals: () => apiService.get('/financial/withdrawals'),
-  getLoans: () => apiService.get('/financial/loans'),
-  applyLoan: (loanData) => apiService.post('/financial/loans', loanData)
 };
 
 export default apiService;

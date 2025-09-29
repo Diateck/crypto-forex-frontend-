@@ -14,10 +14,23 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { useUser } from '../contexts/UserContext';
 import { marketAPI } from '../services/api';
+import useLiveDashboard from '../hooks/useLiveDashboard';
 
 export default function Dashboard() {
   const theme = useTheme();
   const { user, userStats, loading, error, backendStatus } = useUser();
+  
+  // Live Dashboard Hook for real-time updates
+  const {
+    dashboardData,
+    loading: dashboardLoading,
+    error: dashboardError,
+    refreshDashboardData,
+    updateBalance,
+    updateBonus,
+    updateTrading,
+    updateKYC
+  } = useLiveDashboard(user?.id, 15000); // Update every 15 seconds
   
   // Market data state
   const [tickerData, setTickerData] = useState([
