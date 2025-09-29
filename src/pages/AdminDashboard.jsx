@@ -35,11 +35,13 @@ import {
 } from '@mui/material';
 import {
   CheckCircle as ApproveIcon,
+  CheckCircle,
   Cancel as RejectIcon,
   Visibility as ViewIcon,
   Refresh as RefreshIcon,
   AdminPanelSettings as AdminIcon,
   AccountBalance as DepositIcon,
+  AccountBalanceWallet as WithdrawIcon,
   PendingActions as PendingIcon,
   TrendingUp as TrendingIcon,
   Menu as MenuIcon,
@@ -534,6 +536,529 @@ function DepositManagement() {
   );
 }
 
+// Withdrawal Management Component
+function WithdrawalManagement() {
+  const [withdrawals, setWithdrawals] = useState([]);
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
+
+  // Load withdrawals from localStorage (backend fallback)
+  useEffect(() => {
+    loadWithdrawals();
+  }, []);
+
+  const loadWithdrawals = () => {
+    const pendingWithdrawals = JSON.parse(localStorage.getItem('pendingWithdrawals') || '[]');
+    setWithdrawals(pendingWithdrawals);
+  };
+
+  const handleApproveWithdrawal = async (withdrawal) => {
+    try {
+      setLoading(true);
+      
+      // Update withdrawal status
+      const updatedWithdrawal = {
+        ...withdrawal,
+        status: 'approved',
+        approvedAt: new Date().toISOString(),
+        adminNotes: 'Approved by admin'
+      };
+
+      // Update pending withdrawals
+      const allWithdrawals = JSON.parse(localStorage.getItem('pendingWithdrawals') || '[]');
+      const updatedWithdrawals = allWithdrawals.map(w => 
+        w.id === withdrawal.id ? updatedWithdrawal : w
+      );
+      localStorage.setItem('pendingWithdrawals', JSON.stringify(updatedWithdrawals));
+
+      // Update user's withdrawal history
+      const userWithdrawals = JSON.parse(localStorage.getItem('userWithdrawals') || '[]');
+      const updatedUserWithdrawals = userWithdrawals.map(w => 
+        w.id === withdrawal.id ? updatedWithdrawal : w
+      );
+      localStorage.setItem('userWithdrawals', JSON.stringify(updatedUserWithdrawals));
+
+      // Store notification for user dashboard
+      const notifications = JSON.parse(localStorage.getItem('userNotifications') || '[]');
+      notifications.push({
+        id: Date.now(),
+        type: 'withdrawal_approved',
+        title: 'Withdrawal Approved',
+        message: `Your withdrawal of $${withdrawal.amount.toLocaleString()} has been approved and is being processed.`,
+        timestamp: new Date().toISOString(),
+        read: false
+      });
+      localStorage.setItem('userNotifications', JSON.stringify(notifications));
+
+      loadWithdrawals();
+      setNotification({
+        open: true,
+        message: 'Withdrawal approved successfully!',
+        severity: 'success'
+      });
+
+    } catch (error) {
+      console.error('Error approving withdrawal:', error);
+      setNotification({
+        open: true,
+        message: 'Error approving withdrawal',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRejectWithdrawal = async (withdrawal) => {
+    try {
+      setLoading(true);
+      
+      // Update withdrawal status
+      const updatedWithdrawal = {
+        ...withdrawal,
+        status: 'rejected',
+        rejectedAt: new Date().toISOString(),
+        adminNotes: 'Rejected by admin'
+      };
+
+      // Update pending withdrawals
+      const allWithdrawals = JSON.parse(localStorage.getItem('pendingWithdrawals') || '[]');
+      const updatedWithdrawals = allWithdrawals.map(w => 
+        w.id === withdrawal.id ? updatedWithdrawal : w
+      );
+      localStorage.setItem('pendingWithdrawals', JSON.stringify(updatedWithdrawals));
+
+      // Update user's withdrawal history
+      const userWithdrawals = JSON.parse(localStorage.getItem('userWithdrawals') || '[]');
+      const updatedUserWithdrawals = userWithdrawals.map(w => 
+        w.id === withdrawal.id ? updatedWithdrawal : w
+      );
+      localStorage.setItem('userWithdrawals', JSON.stringify(updatedUserWithdrawals));
+
+      // Restore user balance (since withdrawal was rejected)
+      const currentBalance = parseFloat(localStorage.getItem('userBalance') || '0');
+      const newBalance = currentBalance + withdrawal.amount;
+      localStorage.setItem('userBalance', newBalance.toString());
+
+      // Store notification for user dashboard
+      const notifications = JSON.parse(localStorage.getItem('userNotifications') || '[]');
+      notifications.push({
+        id: Date.now(),
+        type: 'withdrawal_rejected',
+        title: 'Withdrawal Rejected',
+        message: `Your withdrawal of $${withdrawal.amount.toLocaleString()} has been rejected. Funds have been returned to your balance.`,
+        timestamp: new Date().toISOString(),
+        read: false
+      });
+      localStorage.setItem('userNotifications', JSON.stringify(notifications));
+
+      loadWithdrawals();
+      setNotification({
+        open: true,
+        message: 'Withdrawal rejected and funds restored to user balance',
+        severity: 'info'
+      });
+
+    } catch (error) {
+      console.error('Error rejecting withdrawal:', error);
+      setNotification({
+        open: true,
+        message: 'Error rejecting withdrawal',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'warning';
+      case 'approved': return 'success';
+      case 'rejected': return 'error';
+      case 'processing': return 'info';
+      default: return 'default';
+    }
+  };
+
+  const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
+  const processedWithdrawals = withdrawals.filter(w => w.status !== 'pending');
+
+  return (
+    <Box>
+      {/* Withdrawal Stats */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={4}>
+          <Card sx={{ bgcolor: '#232742', color: '#fff' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ bgcolor: '#ff9800' }}>
+                  <PendingIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" fontWeight={700}>
+                    Pending Withdrawals
+                  </Typography>
+                  <Typography variant="h4" fontWeight={900} color="#ff9800">
+                    {pendingWithdrawals.length}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Card sx={{ bgcolor: '#232742', color: '#fff' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ bgcolor: '#4caf50' }}>
+                  <CheckCircle />
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" fontWeight={700}>
+                    Total Amount Pending
+                  </Typography>
+                  <Typography variant="h4" fontWeight={900} color="#4caf50">
+                    ${pendingWithdrawals.reduce((sum, w) => sum + w.amount, 0).toLocaleString()}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Card sx={{ bgcolor: '#232742', color: '#fff' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ bgcolor: '#2196f3' }}>
+                  <TrendingIcon />
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" fontWeight={700}>
+                    Processed Today
+                  </Typography>
+                  <Typography variant="h4" fontWeight={900} color="#2196f3">
+                    {processedWithdrawals.filter(w => {
+                      const today = new Date().toDateString();
+                      const withdrawalDate = new Date(w.submittedAt).toDateString();
+                      return today === withdrawalDate;
+                    }).length}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Withdrawal Management Table */}
+      <Card sx={{ bgcolor: '#232742', color: '#fff' }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h5" fontWeight={700}>
+              💰 Withdrawal Management
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={loadWithdrawals}
+              sx={{ borderColor: '#1976d2', color: '#1976d2' }}
+            >
+              Refresh
+            </Button>
+          </Box>
+
+          {withdrawals.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h6" color="textSecondary">
+                No withdrawal requests found
+              </Typography>
+            </Box>
+          ) : (
+            <TableContainer component={Paper} sx={{ bgcolor: '#181A20' }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#1a1d2b' }}>
+                    <TableCell sx={{ color: '#fff', fontWeight: 700 }}>User</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 700 }}>Method</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 700 }}>Amount</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 700 }}>Status</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 700 }}>Date</TableCell>
+                    <TableCell sx={{ color: '#fff', fontWeight: 700 }}>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {withdrawals.map((withdrawal) => (
+                    <TableRow key={withdrawal.id} sx={{ '&:hover': { bgcolor: '#232742' } }}>
+                      <TableCell sx={{ color: '#fff' }}>
+                        <Box>
+                          <Typography variant="body2" fontWeight={600}>
+                            {withdrawal.userName}
+                          </Typography>
+                          <Typography variant="caption" color="textSecondary">
+                            {withdrawal.userEmail}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ color: '#fff' }}>
+                        <Box>
+                          <Typography variant="body2" fontWeight={600}>
+                            {withdrawal.type.charAt(0).toUpperCase() + withdrawal.type.slice(1)}
+                          </Typography>
+                          <Typography variant="caption" color="textSecondary">
+                            {withdrawal.currency}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={{ color: '#fff' }}>
+                        <Typography variant="body1" fontWeight={700} color="#4caf50">
+                          ${withdrawal.amount.toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={withdrawal.status.toUpperCase()} 
+                          color={getStatusColor(withdrawal.status)}
+                          size="small"
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ color: '#fff' }}>
+                        <Typography variant="body2">
+                          {new Date(withdrawal.submittedAt).toLocaleDateString()}
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(withdrawal.submittedAt).toLocaleTimeString()}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Stack direction="row" spacing={1}>
+                          <Tooltip title="View Details">
+                            <IconButton
+                              size="small"
+                              onClick={() => setSelectedWithdrawal(withdrawal)}
+                              sx={{ color: '#2196f3' }}
+                            >
+                              <ViewIcon />
+                            </IconButton>
+                          </Tooltip>
+                          {withdrawal.status === 'pending' && (
+                            <>
+                              <Tooltip title="Approve Withdrawal">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleApproveWithdrawal(withdrawal)}
+                                  disabled={loading}
+                                  sx={{ color: '#4caf50' }}
+                                >
+                                  <ApproveIcon />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Reject Withdrawal">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleRejectWithdrawal(withdrawal)}
+                                  disabled={loading}
+                                  sx={{ color: '#f44336' }}
+                                >
+                                  <RejectIcon />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          )}
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* View Details Dialog */}
+      {selectedWithdrawal && (
+        <Dialog 
+          open={Boolean(selectedWithdrawal)} 
+          onClose={() => setSelectedWithdrawal(null)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle sx={{ bgcolor: '#232742', color: '#fff' }}>
+            Withdrawal Details
+          </DialogTitle>
+          <DialogContent sx={{ bgcolor: '#232742', color: '#fff' }}>
+            <Box sx={{ pt: 2 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">User</Typography>
+                  <Typography variant="body1" fontWeight={600}>{selectedWithdrawal.userName}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Email</Typography>
+                  <Typography variant="body1">{selectedWithdrawal.userEmail}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Method</Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {selectedWithdrawal.type.charAt(0).toUpperCase() + selectedWithdrawal.type.slice(1)}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Amount</Typography>
+                  <Typography variant="body1" fontWeight={700} color="#4caf50">
+                    ${selectedWithdrawal.amount.toLocaleString()} {selectedWithdrawal.currency}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Status</Typography>
+                  <Chip 
+                    label={selectedWithdrawal.status.toUpperCase()} 
+                    color={getStatusColor(selectedWithdrawal.status)}
+                    size="small"
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="subtitle2" color="textSecondary">Submitted</Typography>
+                  <Typography variant="body2">
+                    {new Date(selectedWithdrawal.submittedAt).toLocaleString()}
+                  </Typography>
+                </Grid>
+                
+                {/* Method-specific details */}
+                {selectedWithdrawal.type === 'bank' && selectedWithdrawal.bankDetails && (
+                  <>
+                    <Grid item xs={12}>
+                      <Divider sx={{ my: 1, bgcolor: '#444' }} />
+                      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                        Bank Details
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="subtitle2" color="textSecondary">Bank Name</Typography>
+                      <Typography variant="body1">{selectedWithdrawal.bankDetails.bankName}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="subtitle2" color="textSecondary">Account Name</Typography>
+                      <Typography variant="body1">{selectedWithdrawal.bankDetails.accountName}</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2" color="textSecondary">Account Number</Typography>
+                      <Typography variant="body1" sx={{ fontFamily: 'monospace' }}>
+                        {selectedWithdrawal.bankDetails.accountNumber}
+                      </Typography>
+                    </Grid>
+                    {selectedWithdrawal.bankDetails.swiftCode && (
+                      <Grid item xs={6}>
+                        <Typography variant="subtitle2" color="textSecondary">SWIFT Code</Typography>
+                        <Typography variant="body1">{selectedWithdrawal.bankDetails.swiftCode}</Typography>
+                      </Grid>
+                    )}
+                  </>
+                )}
+                
+                {selectedWithdrawal.walletAddress && (
+                  <>
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2" color="textSecondary">Wallet Address</Typography>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          fontFamily: 'monospace', 
+                          wordBreak: 'break-all',
+                          bgcolor: '#181A20',
+                          p: 1,
+                          borderRadius: 1
+                        }}
+                      >
+                        {selectedWithdrawal.walletAddress}
+                      </Typography>
+                    </Grid>
+                  </>
+                )}
+                
+                {selectedWithdrawal.notes && (
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="textSecondary">Notes</Typography>
+                    <Typography variant="body2">{selectedWithdrawal.notes}</Typography>
+                  </Grid>
+                )}
+                
+                {selectedWithdrawal.expectedProcessingTime && (
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="textSecondary">Processing Time</Typography>
+                    <Typography variant="body2">{selectedWithdrawal.expectedProcessingTime}</Typography>
+                  </Grid>
+                )}
+                
+                {selectedWithdrawal.fee && (
+                  <Grid item xs={6}>
+                    <Typography variant="subtitle2" color="textSecondary">Fee</Typography>
+                    <Typography variant="body2">{selectedWithdrawal.fee}</Typography>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ bgcolor: '#232742' }}>
+            <Button onClick={() => setSelectedWithdrawal(null)} color="inherit">
+              Close
+            </Button>
+            {selectedWithdrawal.status === 'pending' && (
+              <>
+                <Button 
+                  onClick={() => {
+                    handleApproveWithdrawal(selectedWithdrawal);
+                    setSelectedWithdrawal(null);
+                  }}
+                  color="success"
+                  variant="contained"
+                  disabled={loading}
+                >
+                  Approve
+                </Button>
+                <Button 
+                  onClick={() => {
+                    handleRejectWithdrawal(selectedWithdrawal);
+                    setSelectedWithdrawal(null);
+                  }}
+                  color="error"
+                  variant="contained"
+                  disabled={loading}
+                >
+                  Reject
+                </Button>
+              </>
+            )}
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={() => setNotification({ ...notification, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert 
+          onClose={() => setNotification({ ...notification, open: false })} 
+          severity={notification.severity}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
+    </Box>
+  );
+}
+
 export default function AdminDashboard() {
   const [currentTab, setCurrentTab] = useState(0);
 
@@ -603,21 +1128,27 @@ export default function AdminDashboard() {
               sx={{ minHeight: 72 }}
             />
             <Tab 
+              icon={<WithdrawIcon />} 
+              label="Withdrawal Management" 
+              {...a11yProps(2)} 
+              sx={{ minHeight: 72 }}
+            />
+            <Tab 
               icon={<ContactMailIcon />} 
               label="Contact Management" 
-              {...a11yProps(2)} 
+              {...a11yProps(3)} 
               sx={{ minHeight: 72 }}
             />
             <Tab 
               icon={<PeopleIcon />} 
               label="User Management" 
-              {...a11yProps(3)} 
+              {...a11yProps(4)} 
               sx={{ minHeight: 72 }}
             />
             <Tab 
               icon={<SettingsIcon />} 
               label="System Settings" 
-              {...a11yProps(4)} 
+              {...a11yProps(5)} 
               sx={{ minHeight: 72 }}
             />
           </Tabs>
@@ -678,10 +1209,14 @@ export default function AdminDashboard() {
         </TabPanel>
 
         <TabPanel value={currentTab} index={2}>
-          <AdminContactManager onSave={handleContactInfoSave} />
+          <WithdrawalManagement />
         </TabPanel>
 
         <TabPanel value={currentTab} index={3}>
+          <AdminContactManager onSave={handleContactInfoSave} />
+        </TabPanel>
+
+        <TabPanel value={currentTab} index={4}>
           <Paper sx={{ p: 3, bgcolor: '#1a1d2b', color: '#fff' }}>
             <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
               👥 User Management
@@ -692,7 +1227,7 @@ export default function AdminDashboard() {
           </Paper>
         </TabPanel>
 
-        <TabPanel value={currentTab} index={4}>
+        <TabPanel value={currentTab} index={5}>
           <Paper sx={{ p: 3, bgcolor: '#1a1d2b', color: '#fff' }}>
             <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
               ⚙️ System Settings
