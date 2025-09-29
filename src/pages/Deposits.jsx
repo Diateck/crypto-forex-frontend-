@@ -41,7 +41,6 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import HistoryIcon from '@mui/icons-material/History';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useTheme } from '@mui/material/styles';
-import { financialAPI, marketAPI } from '../services/api';
 import { useUser } from '../contexts/UserContext';
 
 // Default deposit methods (fallback)
@@ -281,16 +280,18 @@ export default function Deposits() {
         proofFile: depositForm.proofFile
       };
       
-      // Submit to backend
-      const response = await financialAPI.submitDeposit(depositData);
+      // Store deposit for admin approval (no backend API call)
+      const existingDeposits = JSON.parse(localStorage.getItem('pendingDeposits') || '[]');
+      existingDeposits.push(depositData);
+      localStorage.setItem('pendingDeposits', JSON.stringify(existingDeposits));
       
-      if (response.success) {
-        showNotification('Deposit submitted successfully! You will receive confirmation shortly.', 'success');
-        handleCloseModal();
-        refreshData(); // Refresh deposit history
-      } else {
-        showNotification(response.message || 'Failed to submit deposit', 'error');
-      }
+      // Also store in user's deposit history
+      const userDeposits = JSON.parse(localStorage.getItem('userDeposits') || '[]');
+      userDeposits.push(depositData);
+      localStorage.setItem('userDeposits', JSON.stringify(userDeposits));
+      
+      showNotification('Deposit submitted successfully! Waiting for admin approval.', 'success');
+      handleCloseModal();
       
     } catch (error) {
       console.error('Error submitting deposit:', error);
