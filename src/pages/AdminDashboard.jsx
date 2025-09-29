@@ -42,11 +42,11 @@ import {
   AccountBalance as DepositIcon,
   PendingActions as PendingIcon,
   TrendingUp as TrendingIcon,
-  MenuIcon,
-  ContactMailIcon,
-  DashboardIcon,
-  PeopleIcon,
-  SettingsIcon
+  Menu as MenuIcon,
+  ContactMail as ContactMailIcon,
+  Dashboard as DashboardIcon,
+  People as PeopleIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import AdminContactManager from '../components/AdminContactManager';
