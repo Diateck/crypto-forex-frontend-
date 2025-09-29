@@ -28,6 +28,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import { UserProvider } from './contexts';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -325,9 +326,11 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider theme={darkTheme}>
-      <Router>
-        <AppContent />
-      </Router>
+      <UserProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </UserProvider>
     </ThemeProvider>
   );
 }
