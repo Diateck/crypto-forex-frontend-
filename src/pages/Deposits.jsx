@@ -893,49 +893,46 @@ export default function Deposits() {
               >
                 Account Type: {user.accountType}
               </Typography>
-              <Box sx={{ mb: 2 }}>
-                <Typography 
-                  variant="subtitle2" 
-                  fontWeight={700} 
-                  sx={{ 
-                    mb: 1, 
-                    fontSize: { xs: '0.85rem', sm: '0.9rem' }
-                  }}
+              
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Deposit Type</InputLabel>
+                <Select
+                  value={depositForm.depositType}
+                  onChange={(e) => handleFormChange('depositType', e.target.value)}
+                  error={!!validation.depositType}
                 >
-                  Deposit Type:
-                </Typography>
-                <select style={{ 
-                  width: '100%', 
-                  padding: '12px 16px', 
-                  borderRadius: 8, 
-                  border: '1px solid #444', 
-                  background: '#181A20', 
-                  color: '#fff', 
-                  fontSize: { xs: '0.9rem', sm: '1rem' },
-                  fontWeight: 500
-                }}>
-                  <option value="">Select Deposit Type</option>
-                  <option value="Litecoin">Litecoin</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
-                  <option value="Bitcoin Cash">Bitcoin Cash</option>
-                  <option value="USDT">USDT</option>
-                  <option value="PayPal">PayPal</option>
-                  <option value="Stellar">Stellar</option>
-                  <option value="Western Union">Western Union</option>
-                  <option value="Skrill">Skrill</option>
-                  <option value="MoneyGram">MoneyGram</option>
-                </select>
-              </Box>
+                  {otherDepositMethods.map((method) => (
+                    <MenuItem key={method} value={method}>{method}</MenuItem>
+                  ))}
+                </Select>
+                {validation.depositType && (
+                  <FormHelperText error>{validation.depositType}</FormHelperText>
+                )}
+              </FormControl>
               <TextField 
-                label="Amount" 
+                label="Amount (USD)" 
                 fullWidth 
                 sx={{ mb: 2 }} 
-                value={amount} 
-                onChange={e => setAmount(e.target.value)}
+                value={depositForm.amount} 
+                onChange={e => handleFormChange('amount', e.target.value)}
                 size="medium"
                 type="number"
                 inputProps={{ min: 0 }}
+                error={!!validation.amount}
+                helperText={validation.amount}
               />
+              
+              <TextField 
+                label="Notes (Optional)" 
+                fullWidth 
+                sx={{ mb: 2 }} 
+                value={depositForm.notes} 
+                onChange={e => handleFormChange('notes', e.target.value)}
+                multiline
+                rows={3}
+                placeholder="Please provide any additional details for your deposit request..."
+              />
+              
               <Box sx={{ 
                 display: 'flex', 
                 justifyContent: 'flex-end', 
@@ -957,14 +954,15 @@ export default function Deposits() {
                 <Button 
                   variant="contained" 
                   color="secondary" 
-                  onClick={handleCloseModal}
+                  onClick={submitDeposit}
+                  disabled={loading.submit}
                   fullWidth
                   sx={{ 
                     fontWeight: 600,
                     py: { xs: 1, sm: 1.25 }
                   }}
                 >
-                  Submit
+                  {loading.submit ? 'Submitting...' : 'Submit Request'}
                 </Button>
               </Box>
             </>
