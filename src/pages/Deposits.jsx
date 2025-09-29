@@ -10,104 +10,357 @@ import {
   Avatar, 
   Stack, 
   Chip,
-  Container 
+  Container,
+  Alert,
+  Snackbar,
+  LinearProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Tabs,
+  Tab,
+  FormHelperText
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import EmailIcon from '@mui/icons-material/Email';
 import SettingsIcon from '@mui/icons-material/Settings';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PendingIcon from '@mui/icons-material/Pending';
+import CancelIcon from '@mui/icons-material/Cancel';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import HistoryIcon from '@mui/icons-material/History';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useTheme } from '@mui/material/styles';
 import { financialAPI, marketAPI } from '../services/api';
+import { useUser } from '../contexts/UserContext';
 
 // Default deposit methods (fallback)
 const defaultDepositMethods = [
   {
+    id: 'btc',
     name: 'Bitcoin',
     address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
     qr: 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
     currency: 'BTC',
+    minAmount: 0.001,
+    maxAmount: 10,
+    processingTime: '15-30 minutes',
+    status: 'active'
   },
   {
+    id: 'eth',
     name: 'Ethereum',
     address: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
     qr: 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=ethereum:0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
     currency: 'ETH',
+    minAmount: 0.01,
+    maxAmount: 100,
+    processingTime: '5-15 minutes',
+    status: 'active'
   },
   {
+    id: 'ltc',
     name: 'Litecoin',
     address: 'LcHKZQJQ8Qh6QJQ8Qh6QJQ8Qh6QJQ8Qh6Q',
     qr: 'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=litecoin:LcHKZQJQ8Qh6QJQ8Qh6QJQ8Qh6QJQ8Qh6Q',
     currency: 'LTC',
+    minAmount: 0.1,
+    maxAmount: 500,
+    processingTime: '10-20 minutes',
+    status: 'active'
   },
 ];
 
+// Tab panel component
+function TabPanel({ children, value, index }) {
+  return (
+    <div hidden={value !== index}>
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
 export default function Deposits() {
   const theme = useTheme();
+  const { user } = useUser();
+  
+  // State management
+  const [currentTab, setCurrentTab] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState(null);
-  const [amount, setAmount] = useState('');
-  const [proof, setProof] = useState(null);
+  const [depositForm, setDepositForm] = useState({
+    amount: '',
+    proofFile: null,
+    depositType: '',
+    notes: ''
+  });
+  const [validation, setValidation] = useState({});
   const [tickerData, setTickerData] = useState([]);
   const [depositMethods, setDepositMethods] = useState(defaultDepositMethods);
-  const [loading, setLoading] = useState(true);
+  const [depositHistory, setDepositHistory] = useState([]);
+  const [loading, setLoading] = useState({
+    page: true,
+    submit: false,
+    refresh: false
+  });
+  const [notification, setNotification] = useState({
+    open: false,
+    message: '',
+    severity: 'info'
+  });
 
-  const user = {
-    name: 'Theophilus Crown',
-    email: 'theophiluscrown693@gmail.com',
-    accountType: 'Deposit Type',
+  // Form validation
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!depositForm.amount || parseFloat(depositForm.amount) <= 0) {
+      errors.amount = 'Amount is required and must be greater than 0';
+    }
+    
+    if (selectedMethod && selectedMethod !== 'other') {
+      const method = depositMethods.find(m => m.id === selectedMethod.id);
+      if (method) {
+        if (parseFloat(depositForm.amount) < method.minAmount) {
+          errors.amount = `Minimum amount is ${method.minAmount} ${method.currency}`;
+        }
+        if (parseFloat(depositForm.amount) > method.maxAmount) {
+          errors.amount = `Maximum amount is ${method.maxAmount} ${method.currency}`;
+        }
+      }
+    }
+    
+    if (selectedMethod === 'other' && !depositForm.depositType) {
+      errors.depositType = 'Deposit type is required';
+    }
+    
+    if (selectedMethod && selectedMethod !== 'other' && !depositForm.proofFile) {
+      errors.proofFile = 'Payment proof is required';
+    }
+    
+    setValidation(errors);
+    return Object.keys(errors).length === 0;
   };
 
   // Load ticker data and deposit methods from API
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        
-        const [tickerResponse, methodsResponse] = await Promise.all([
-          marketAPI.getTickerData(),
-          financialAPI.getPaymentMethods()
-        ]);
-        
-        // Handle ticker data
-        if (tickerResponse.success) {
-          setTickerData(tickerResponse.data);
-        } else {
-          setTickerData([
-            { label: 'BTC/USD', value: '65,432.10', change: '+1,247.50 (+1.94%)', color: 'success.main' },
-            { label: 'ETH/USD', value: '3,890.75', change: '-85.25 (-2.14%)', color: 'error.main' },
-            { label: 'EUR/USD', value: '1.1809', change: '-0.0023 (-0.19%)', color: 'error.main' },
-          ]);
-        }
-        
-        // Handle deposit methods
-        if (methodsResponse.success) {
-          setDepositMethods(methodsResponse.data);
-        }
-        
-      } catch (error) {
-        console.error('Error loading data:', error);
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(prev => ({ ...prev, page: true }));
+      
+      const [tickerResponse, methodsResponse, historyResponse] = await Promise.all([
+        marketAPI.getTickerData().catch(() => ({ success: false })),
+        financialAPI.getPaymentMethods().catch(() => ({ success: false })),
+        financialAPI.getDepositHistory(user?.id).catch(() => ({ success: false }))
+      ]);
+      
+      // Handle ticker data
+      if (tickerResponse.success) {
+        setTickerData(tickerResponse.data);
+      } else {
         setTickerData([
           { label: 'BTC/USD', value: '65,432.10', change: '+1,247.50 (+1.94%)', color: 'success.main' },
           { label: 'ETH/USD', value: '3,890.75', change: '-85.25 (-2.14%)', color: 'error.main' },
+          { label: 'LTC/USD', value: '95.42', change: '+2.15 (+2.31%)', color: 'success.main' },
+          { label: 'EUR/USD', value: '1.1809', change: '-0.0023 (-0.19%)', color: 'error.main' },
         ]);
-      } finally {
-        setLoading(false);
       }
-    };
+      
+      // Handle deposit methods
+      if (methodsResponse.success) {
+        setDepositMethods(methodsResponse.data);
+      }
+      
+      // Handle deposit history
+      if (historyResponse.success) {
+        setDepositHistory(historyResponse.data);
+      } else {
+        // Demo deposit history
+        setDepositHistory([
+          {
+            id: '1',
+            amount: '0.005',
+            currency: 'BTC',
+            usdValue: '325.50',
+            status: 'completed',
+            date: '2024-01-15T10:30:00Z',
+            method: 'Bitcoin',
+            txHash: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
+          },
+          {
+            id: '2',
+            amount: '0.15',
+            currency: 'ETH',
+            usdValue: '583.61',
+            status: 'pending',
+            date: '2024-01-14T14:20:00Z',
+            method: 'Ethereum',
+            txHash: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+          }
+        ]);
+      }
+      
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+      showNotification('Error loading data. Using demo data.', 'warning');
+    } finally {
+      setLoading(prev => ({ ...prev, page: false }));
+    }
+  };
 
-    loadData();
-  }, []);
+  const refreshData = async () => {
+    setLoading(prev => ({ ...prev, refresh: true }));
+    await loadInitialData();
+    setLoading(prev => ({ ...prev, refresh: false }));
+    showNotification('Data refreshed successfully', 'success');
+  };
+
+  const showNotification = (message, severity = 'info') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const handleFormChange = (field, value) => {
+    setDepositForm(prev => ({ ...prev, [field]: value }));
+    // Clear validation error for this field
+    if (validation[field]) {
+      setValidation(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type and size
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      
+      if (!allowedTypes.includes(file.type)) {
+        showNotification('Please upload a valid image or PDF file', 'error');
+        return;
+      }
+      
+      if (file.size > maxSize) {
+        showNotification('File size must be less than 5MB', 'error');
+        return;
+      }
+      
+      handleFormChange('proofFile', file);
+      showNotification('File uploaded successfully', 'success');
+    }
+  };
+
+  const submitDeposit = async () => {
+    if (!validateForm()) {
+      showNotification('Please fix the form errors', 'error');
+      return;
+    }
+    
+    try {
+      setLoading(prev => ({ ...prev, submit: true }));
+      
+      // Prepare deposit data
+      const depositData = {
+        userId: user?.id,
+        amount: parseFloat(depositForm.amount),
+        method: selectedMethod === 'other' ? depositForm.depositType : selectedMethod.name,
+        currency: selectedMethod === 'other' ? 'USD' : selectedMethod.currency,
+        walletAddress: selectedMethod === 'other' ? null : selectedMethod.address,
+        notes: depositForm.notes,
+        proofFile: depositForm.proofFile
+      };
+      
+      // Submit to backend
+      const response = await financialAPI.submitDeposit(depositData);
+      
+      if (response.success) {
+        showNotification('Deposit submitted successfully! You will receive confirmation shortly.', 'success');
+        handleCloseModal();
+        refreshData(); // Refresh deposit history
+      } else {
+        showNotification(response.message || 'Failed to submit deposit', 'error');
+      }
+      
+    } catch (error) {
+      console.error('Error submitting deposit:', error);
+      showNotification('Network error. Please try again.', 'error');
+    } finally {
+      setLoading(prev => ({ ...prev, submit: false }));
+    }
+  };
 
   const handleOpenModal = (method) => {
     setSelectedMethod(method);
     setModalOpen(true);
+    // Reset form
+    setDepositForm({
+      amount: '',
+      proofFile: null,
+      depositType: '',
+      notes: ''
+    });
+    setValidation({});
   };
   
   const handleCloseModal = () => {
     setModalOpen(false);
     setSelectedMethod(null);
-    setAmount('');
-    setProof(null);
+    setDepositForm({
+      amount: '',
+      proofFile: null,
+      depositType: '',
+      notes: ''
+    });
+    setValidation({});
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircleIcon color="success" />;
+      case 'pending':
+        return <PendingIcon color="warning" />;
+      case 'failed':
+      case 'rejected':
+        return <CancelIcon color="error" />;
+      default:
+        return <PendingIcon color="info" />;
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'success';
+      case 'pending':
+        return 'warning';
+      case 'failed':
+      case 'rejected':
+        return 'error';
+      default:
+        return 'info';
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -117,6 +370,21 @@ export default function Deposits() {
         minHeight: '100vh',
         bgcolor: theme.palette.background.default
       }}>
+      
+      {/* Loading Progress Bar */}
+      {(loading.page || loading.submit || loading.refresh) && (
+        <LinearProgress 
+          sx={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            zIndex: 1301,
+            height: 3
+          }} 
+        />
+      )}
+
       {/* Header - Consistent with Dashboard */}
       <Box sx={{ 
         display: 'flex', 
@@ -144,7 +412,7 @@ export default function Deposits() {
             height: { xs: 36, sm: 42, md: 48 },
             flexShrink: 0
           }}>
-            <PersonIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.8rem' } }} />
+            <AccountBalanceWalletIcon sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.8rem' } }} />
           </Avatar>
           <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
             <Typography 
@@ -156,7 +424,7 @@ export default function Deposits() {
                 lineHeight: 1.2
               }}
             >
-              Elon Investment Broker
+              Deposit Funds
             </Typography>
             <Typography 
               variant="h6"
@@ -168,7 +436,7 @@ export default function Deposits() {
                 mt: 0.25
               }}
             >
-              Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
+              User: <span style={{ color: theme.palette.primary.main }}>{user?.username || 'theophilus'}</span>
             </Typography>
           </Box>
         </Box>
@@ -185,8 +453,8 @@ export default function Deposits() {
         >
           <Chip 
             icon={<VerifiedUserIcon />} 
-            label="KYC" 
-            color="primary" 
+            label={user?.kycStatus === 'verified' ? 'KYC Verified' : 'KYC Pending'} 
+            color={user?.kycStatus === 'verified' ? 'success' : 'warning'} 
             variant="outlined" 
             size="small"
             sx={{ 
@@ -199,10 +467,12 @@ export default function Deposits() {
             }}
           />
           <Button 
-            variant="contained" 
+            variant="outlined"
             color="primary" 
-            startIcon={<EmailIcon sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }} />} 
+            startIcon={<RefreshIcon sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }} />} 
             size="small"
+            onClick={refreshData}
+            disabled={loading.refresh}
             sx={{ 
               fontSize: { xs: '0.75rem', sm: '0.875rem' },
               height: { xs: 32, sm: 36 },
@@ -212,23 +482,7 @@ export default function Deposits() {
               whiteSpace: 'nowrap'
             }}
           >
-            Mail Us
-          </Button>
-          <Button 
-            variant="contained" 
-            color="secondary" 
-            startIcon={<SettingsIcon sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }} />} 
-            size="small"
-            sx={{ 
-              fontSize: { xs: '0.75rem', sm: '0.875rem' },
-              height: { xs: 32, sm: 36 },
-              px: { xs: 1.5, sm: 2, md: 3 },
-              fontWeight: 600,
-              minWidth: { xs: 'auto', sm: 80 },
-              whiteSpace: 'nowrap'
-            }}
-          >
-            Settings
+            Refresh
           </Button>
         </Stack>
       </Box>

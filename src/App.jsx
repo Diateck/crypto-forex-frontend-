@@ -49,6 +49,7 @@ import ReferUser from './pages/ReferUser';
 import Technical from './pages/Technical';
 import Chart from './pages/Chart';
 import Calendar from './pages/Calendar';
+import AdminDashboard from './pages/AdminDashboard';
 
 const drawerWidth = 240;
 
@@ -316,6 +317,7 @@ function AppContent() {
           <Route path="/dashboard/technical" element={<RequireAuth><Technical /></RequireAuth>} />
           <Route path="/dashboard/chart" element={<RequireAuth><Chart /></RequireAuth>} />
           <Route path="/dashboard/calendar" element={<RequireAuth><Calendar /></RequireAuth>} />
+          <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
           <Route path="*" element={<RequireAuth><Dashboard /></RequireAuth>} />
         </Routes>
       </Box>
