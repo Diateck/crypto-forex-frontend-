@@ -220,6 +220,36 @@ export default function Deposits() {
     }
   };
 
+  // Enhanced file upload handler with validation
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file type and size
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    
+    if (!allowedTypes.includes(file.type)) {
+      showNotification('Please upload only JPG, PNG, GIF, or PDF files', 'error');
+      return;
+    }
+    
+    if (file.size > maxSize) {
+      showNotification('File size must be less than 5MB', 'error');
+      return;
+    }
+    
+    setDepositForm(prev => ({ 
+      ...prev, 
+      proofFile: file 
+    }));
+    
+    // Clear validation error if file is selected
+    if (validation.proofFile) {
+      setValidation(prev => ({ ...prev, proofFile: null }));
+    }
+  };
+
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -387,6 +417,7 @@ export default function Deposits() {
   };
 
   const handleOpenModal = (method) => {
+    console.log('Opening modal with method:', method); // Debug log
     setSelectedMethod(method);
     setModalOpen(true);
     setDepositForm({
@@ -399,6 +430,7 @@ export default function Deposits() {
   };
   
   const handleCloseModal = () => {
+    console.log('Closing modal'); // Debug log
     setModalOpen(false);
     setSelectedMethod(null);
     setDepositForm({
@@ -651,7 +683,14 @@ export default function Deposits() {
       </Box>
 
       {/* Deposit Modal */}
-      <Modal open={modalOpen} onClose={handleCloseModal}>
+      <Modal 
+        open={modalOpen} 
+        onClose={handleCloseModal}
+        closeAfterTransition
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
         <Box sx={{ 
           position: 'absolute', 
           top: '50%', 
@@ -664,9 +703,10 @@ export default function Deposits() {
           minWidth: { xs: '95vw', sm: 400, md: 450 }, 
           maxWidth: { xs: '98vw', sm: 500, md: 550 },
           maxHeight: { xs: '90vh', sm: 'none' },
-          overflowY: 'auto'
+          overflowY: 'auto',
+          outline: 'none'
         }}>
-          {selectedMethod && selectedMethod !== 'other' ? (
+          {selectedMethod && selectedMethod !== 'other' && (
             <>
               <Typography 
                 variant="h6" 
@@ -795,7 +835,9 @@ export default function Deposits() {
                 </Button>
               </Box>
             </>
-          ) : selectedMethod === 'other' ? (
+          )}
+          
+          {selectedMethod === 'other' && (
             <>
               <Typography 
                 variant="h6" 
@@ -908,7 +950,7 @@ export default function Deposits() {
                 </Button>
               </Box>
             </>
-          ) : null}
+          )}
         </Box>
       </Modal>
 
