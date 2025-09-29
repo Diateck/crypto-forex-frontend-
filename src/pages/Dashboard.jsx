@@ -25,6 +25,40 @@ export default function Dashboard() {
   // Contact Modal State
   const [contactModalOpen, setContactModalOpen] = useState(false);
   
+  // Notification system for deposit updates
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  
+  // Check for new notifications on mount and periodically
+  useEffect(() => {
+    checkForNotifications();
+    const interval = setInterval(checkForNotifications, 5000); // Check every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+  
+  const checkForNotifications = () => {
+    try {
+      const userNotifications = JSON.parse(localStorage.getItem('userNotifications') || '[]');
+      const unreadNotifications = userNotifications.filter(n => !n.read);
+      setNotifications(unreadNotifications);
+    } catch (error) {
+      console.error('Error checking notifications:', error);
+    }
+  };
+  
+  const markNotificationAsRead = (notificationId) => {
+    try {
+      const userNotifications = JSON.parse(localStorage.getItem('userNotifications') || '[]');
+      const updatedNotifications = userNotifications.map(n => 
+        n.id === notificationId ? { ...n, read: true } : n
+      );
+      localStorage.setItem('userNotifications', JSON.stringify(updatedNotifications));
+      checkForNotifications();
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+  
   // Live Dashboard Hook for real-time updates
   const {
     dashboardData,
@@ -311,6 +345,27 @@ export default function Dashboard() {
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
+      )}
+
+      {/* Notifications */}
+      {notifications.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          {notifications.slice(0, 3).map((notification) => (
+            <Alert 
+              key={notification.id}
+              severity={notification.severity || 'info'} 
+              sx={{ mb: 1 }}
+              onClose={() => markNotificationAsRead(notification.id)}
+            >
+              <strong>{notification.title}:</strong> {notification.message}
+            </Alert>
+          ))}
+          {notifications.length > 3 && (
+            <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+              +{notifications.length - 3} more notifications
+            </Typography>
+          )}
+        </Box>
       )}
 
       {/* Main Content */}
