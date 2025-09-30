@@ -37,9 +37,12 @@ import {
   History
 } from '@mui/icons-material';
 import { useUser } from '../contexts/UserContext';
+import { useBalance } from '../contexts/BalanceContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import useLiveTrading from '../hooks/useLiveTrading';
 
-// Backend API configuration - Ready for backend integration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Backend API configuration - Updated to use deployed backend
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crypto-forex-backend-9mme.onrender.com/api';
 
 const tradingAPI = {
   // Submit trade order to backend
@@ -173,16 +176,31 @@ const multipliers = [
 export default function Trade() {
   const theme = useTheme();
   const { user } = useUser();
+  const { balance, updateBalance, deductBalance, addBalance, refreshBalance } = useBalance();
+  const { addNotification } = useNotifications();
   
-  // Enhanced state management for backend integration
+  // Use live trading hook for real-time data
+  const {
+    activeTrades,
+    tradeHistory,
+    tradingStats,
+    marketData,
+    isLive,
+    lastUpdated,
+    loading: tradingLoading,
+    error: tradingError,
+    submitTrade: submitTradeAPI,
+    closeTrade: closeTradeAPI,
+    refreshData,
+    refreshMarketData
+  } = useLiveTrading(user?.id, 15000);
+  
+  // Local state management
   const [selectedAsset, setSelectedAsset] = useState(tradingAssets[0]);
   const [selectedMultiplier, setSelectedMultiplier] = useState(multipliers[0]);
   const [tradeAmount, setTradeAmount] = useState(100);
   const [currentPrice, setCurrentPrice] = useState(selectedAsset.price);
   const [priceChange, setPriceChange] = useState(selectedAsset.change);
-  const [accountBalance, setAccountBalance] = useState(0);
-  const [activeTrades, setActiveTrades] = useState([]);
-  const [tradeHistory, setTradeHistory] = useState([]);
   const [validation, setValidation] = useState({});
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [confirmDialog, setConfirmDialog] = useState({ open: false, trade: null });
@@ -191,74 +209,39 @@ export default function Trade() {
     trade: false,
     close: false
   });
-  const [tradingStats, setTradingStats] = useState({
-    todayPnl: 0,
-    totalTrades: 0,
-    winRate: 0
-  });
   
+  // Update current price when asset or market data changes
+  useEffect(() => {
+    if (marketData[selectedAsset.tvSymbol]) {
+      setCurrentPrice(marketData[selectedAsset.tvSymbol].price);
+      setPriceChange(marketData[selectedAsset.tvSymbol].change);
+    }
+  }, [selectedAsset, marketData]);
+
   // Load initial data on component mount
   useEffect(() => {
-    loadInitialData();
-  }, [user?.id]);
-
-  const loadInitialData = async () => {
-    try {
-      setLoading(prev => ({ ...prev, page: true }));
-      
-      // Load user balance (fallback to demo data)
-      const storedBalance = localStorage.getItem('userBalance');
-      setAccountBalance(storedBalance ? parseFloat(storedBalance) : 12547.83);
-      
-      // Try to load from backend first, fallback to localStorage
-      const [positionsResult, historyResult] = await Promise.all([
-        user?.id ? tradingAPI.getActivePositions(user.id) : Promise.resolve({ success: false }),
-        user?.id ? tradingAPI.getTradingHistory(user.id) : Promise.resolve({ success: false })
-      ]);
-      
-      // Handle active positions
-      if (positionsResult.success) {
-        setActiveTrades(positionsResult.data || []);
-      } else {
-        const localPositions = JSON.parse(localStorage.getItem('userActiveTrades') || '[]');
-        setActiveTrades(localPositions);
-      }
-      
-      // Handle trading history
-      if (historyResult.success) {
-        setTradeHistory(historyResult.data || []);
-        calculateTradingStats(historyResult.data || []);
-      } else {
-        const localHistory = JSON.parse(localStorage.getItem('userTradeHistory') || '[]');
-        setTradeHistory(localHistory);
-        calculateTradingStats(localHistory);
-      }
-      
-    } catch (error) {
-      console.error('Error loading initial data:', error);
-      showNotification('Error loading data. Using local data.', 'warning');
-    } finally {
-      setLoading(prev => ({ ...prev, page: false }));
-    }
-  };
+    setLoading(prev => ({ ...prev, page: tradingLoading }));
+  }, [tradingLoading]);
 
   // Calculate trading statistics
   const calculateTradingStats = (trades) => {
-    const today = new Date().toDateString();
-    const todayTrades = trades.filter(t => new Date(t.timestamp).toDateString() === today);
-    const completedTrades = trades.filter(t => t.status === 'CLOSED');
-    const winningTrades = completedTrades.filter(t => t.pnl > 0);
-    
-    setTradingStats({
-      todayPnl: todayTrades.reduce((sum, t) => sum + (t.pnl || 0), 0),
-      totalTrades: completedTrades.length,
-      winRate: completedTrades.length > 0 ? (winningTrades.length / completedTrades.length * 100) : 0
-    });
+    // This is now handled by the useLiveTrading hook
+    return {
+      todayPnl: tradingStats.todayPnl,
+      totalTrades: tradingStats.totalTrades,
+      winRate: tradingStats.winRate
+    };
   };
 
   // Notification handler
   const showNotification = (message, severity = 'info') => {
     setSnackbar({ open: true, message, severity });
+    // Also add to global notification context
+    addNotification({
+      message,
+      type: severity,
+      timestamp: new Date().toISOString()
+    });
   };
 
   // Enhanced form validation
@@ -267,7 +250,7 @@ export default function Trade() {
     
     if (!tradeAmount || isNaN(tradeAmount) || tradeAmount <= 0) {
       errors.amount = 'Please enter a valid trade amount';
-    } else if (tradeAmount > accountBalance) {
+    } else if (tradeAmount > balance) {
       errors.amount = 'Insufficient balance for this trade';
     } else if (tradeAmount < 10) {
       errors.amount = 'Minimum trade amount is $10';
@@ -282,8 +265,15 @@ export default function Trade() {
   // Handle asset selection
   const handleAssetChange = (asset) => {
     setSelectedAsset(asset);
-    setCurrentPrice(asset.price);
-    setPriceChange(asset.change);
+    
+    // Update price from market data if available
+    if (marketData[asset.tvSymbol]) {
+      setCurrentPrice(marketData[asset.tvSymbol].price);
+      setPriceChange(marketData[asset.tvSymbol].change);
+    } else {
+      setCurrentPrice(asset.price);
+      setPriceChange(asset.change);
+    }
   };
 
   // Professional trade execution with backend integration
@@ -348,66 +338,59 @@ export default function Trade() {
         throw new Error(accountVerification.message || 'Account verification failed');
       }
 
-      // Step 2: Try to submit to backend API first
-      let backendSuccess = false;
-      let backendResponse = null;
-      
+      // Step 2: Try to submit to backend API using the hook
       try {
-        backendResponse = await tradingAPI.submitTrade(trade);
+        const result = await submitTradeAPI(trade);
         
-        if (backendResponse.success) {
-          backendSuccess = true;
+        if (result.success) {
           showNotification(
-            backendResponse.message || 'Trade executed successfully!',
+            result.message || 'Trade executed successfully!',
             'success'
           );
-        } else {
-          throw new Error(backendResponse.message || 'Backend submission failed');
+          
+          // Close dialog and refresh data
+          setConfirmDialog({ open: false, trade: null });
+          return;
         }
-        
       } catch (apiError) {
         console.warn('Backend API failed, using localStorage fallback:', apiError);
-        backendSuccess = false;
       }
       
       // Step 3: Fallback to localStorage if backend fails (for development/demo)
-      if (!backendSuccess) {
-        const localTradeData = {
-          ...trade,
-          id: `trade_${Date.now()}`,
-          status: 'ACTIVE',
-          backendStatus: 'offline',
-          localSubmission: true,
-          pnl: 0
-        };
-        
-        // Store for admin dashboard monitoring
-        const existingTrades = JSON.parse(localStorage.getItem('allUserTrades') || '[]');
-        existingTrades.push(localTradeData);
-        localStorage.setItem('allUserTrades', JSON.stringify(existingTrades));
-        
-        // Store in user's active trades
-        const userActiveTrades = JSON.parse(localStorage.getItem('userActiveTrades') || '[]');
-        userActiveTrades.push(localTradeData);
-        localStorage.setItem('userActiveTrades', JSON.stringify(userActiveTrades));
-        
-        // Update user balance (subtract margin requirement)
-        const newBalance = accountBalance - trade.amount;
-        setAccountBalance(newBalance);
-        localStorage.setItem('userBalance', newBalance.toString());
-        
-        // Update local state
-        setActiveTrades(prev => [localTradeData, ...prev]);
-        
-        showNotification(
-          `${trade.type} ${trade.multiplierLabel} ${trade.symbol} trade opened successfully!`,
-          'success'
-        );
-      }
+      const localTradeData = {
+        ...trade,
+        id: `trade_${Date.now()}`,
+        status: 'ACTIVE',
+        backendStatus: 'offline',
+        localSubmission: true,
+        pnl: 0
+      };
+      
+      // Store for admin dashboard monitoring
+      const existingTrades = JSON.parse(localStorage.getItem('allUserTrades') || '[]');
+      existingTrades.push(localTradeData);
+      localStorage.setItem('allUserTrades', JSON.stringify(existingTrades));
+      
+      // Store in user's active trades
+      const userActiveTrades = JSON.parse(localStorage.getItem('userActiveTrades') || '[]');
+      userActiveTrades.push(localTradeData);
+      localStorage.setItem('userActiveTrades', JSON.stringify(userActiveTrades));
+      
+      // Update user balance using BalanceContext
+      deductBalance(trade.amount);
+      
+      // Also update localStorage for consistency
+      const newBalance = balance - trade.amount;
+      localStorage.setItem('userBalance', newBalance.toString());
+      
+      showNotification(
+        `${trade.type} ${trade.multiplierLabel} ${trade.symbol} trade opened successfully!`,
+        'success'
+      );
       
       // Step 4: Close dialog and refresh data
       setConfirmDialog({ open: false, trade: null });
-      await loadInitialData(); // Refresh data
+      await refreshData(); // Refresh data from the hook
       
     } catch (error) {
       console.error('Error submitting trade:', error);
@@ -433,77 +416,67 @@ export default function Trade() {
 
       const closePrice = currentPrice;
       
-      // Try to close via backend API first
-      let backendSuccess = false;
-      
+      // Try to close via backend API using the hook
       try {
-        const backendResponse = await tradingAPI.closeTrade(tradeId, closePrice);
+        const result = await closeTradeAPI(tradeId, closePrice);
         
-        if (backendResponse.success) {
-          backendSuccess = true;
+        if (result.success) {
           showNotification(
-            backendResponse.message || 'Trade closed successfully!',
-            'success'
+            result.message || 'Trade closed successfully!',
+            result.data.pnl >= 0 ? 'success' : 'warning'
           );
-        } else {
-          throw new Error(backendResponse.message || 'Backend close failed');
+          return;
         }
-        
       } catch (apiError) {
         console.warn('Backend API failed, using localStorage fallback:', apiError);
-        backendSuccess = false;
       }
       
       // Fallback to localStorage if backend fails
-      if (!backendSuccess) {
-        // Calculate P&L
-        const pnl = trade.type === 'BUY'
-          ? (closePrice - trade.entryPrice) * (trade.amount / trade.entryPrice) * trade.multiplier
-          : (trade.entryPrice - closePrice) * (trade.amount / trade.entryPrice) * trade.multiplier;
+      // Calculate P&L
+      const pnl = trade.type === 'BUY'
+        ? (closePrice - trade.entryPrice) * (trade.amount / trade.entryPrice) * trade.multiplier
+        : (trade.entryPrice - closePrice) * (trade.amount / trade.entryPrice) * trade.multiplier;
 
-        // Update trade with close information
-        const updatedTrade = {
-          ...trade,
-          exitPrice: closePrice,
-          pnl: Math.round(pnl * 100) / 100,
-          status: 'CLOSED',
-          closedAt: new Date().toISOString(),
-          closingReason: 'manual'
-        };
+      // Update trade with close information
+      const updatedTrade = {
+        ...trade,
+        exitPrice: closePrice,
+        pnl: Math.round(pnl * 100) / 100,
+        status: 'CLOSED',
+        closedAt: new Date().toISOString(),
+        closingReason: 'manual'
+      };
 
-        // Update all trades for admin dashboard
-        const allTrades = JSON.parse(localStorage.getItem('allUserTrades') || '[]');
-        const updatedAllTrades = allTrades.map(t => 
-          t.id === tradeId ? updatedTrade : t
-        );
-        localStorage.setItem('allUserTrades', JSON.stringify(updatedAllTrades));
+      // Update all trades for admin dashboard
+      const allTrades = JSON.parse(localStorage.getItem('allUserTrades') || '[]');
+      const updatedAllTrades = allTrades.map(t => 
+        t.id === tradeId ? updatedTrade : t
+      );
+      localStorage.setItem('allUserTrades', JSON.stringify(updatedAllTrades));
 
-        // Update user's active trades
-        const userActiveTrades = JSON.parse(localStorage.getItem('userActiveTrades') || '[]');
-        const updatedActiveTrades = userActiveTrades.filter(t => t.id !== tradeId);
-        localStorage.setItem('userActiveTrades', JSON.stringify(updatedActiveTrades));
+      // Update user's active trades
+      const userActiveTrades = JSON.parse(localStorage.getItem('userActiveTrades') || '[]');
+      const updatedActiveTrades = userActiveTrades.filter(t => t.id !== tradeId);
+      localStorage.setItem('userActiveTrades', JSON.stringify(updatedActiveTrades));
 
-        // Update user's trade history
-        const userTradeHistory = JSON.parse(localStorage.getItem('userTradeHistory') || '[]');
-        userTradeHistory.push(updatedTrade);
-        localStorage.setItem('userTradeHistory', JSON.stringify(userTradeHistory));
+      // Update user's trade history
+      const userTradeHistory = JSON.parse(localStorage.getItem('userTradeHistory') || '[]');
+      userTradeHistory.push(updatedTrade);
+      localStorage.setItem('userTradeHistory', JSON.stringify(userTradeHistory));
 
-        // Update balance (return initial amount + P&L)
-        const newBalance = accountBalance + trade.amount + pnl;
-        setAccountBalance(newBalance);
-        localStorage.setItem('userBalance', newBalance.toString());
-
-        // Update local state
-        setActiveTrades(prev => prev.filter(t => t.id !== tradeId));
-        setTradeHistory(prev => [updatedTrade, ...prev]);
-
-        showNotification(
-          `Trade closed with ${pnl >= 0 ? 'profit' : 'loss'} of $${Math.abs(pnl).toFixed(2)}`,
-          pnl >= 0 ? 'success' : 'warning'
-        );
-      }
+      // Update balance (return initial amount + P&L) using BalanceContext
+      addBalance(trade.amount + pnl);
       
-      await loadInitialData(); // Refresh data and stats
+      // Also update localStorage for consistency
+      const newBalance = balance + trade.amount + pnl;
+      localStorage.setItem('userBalance', newBalance.toString());
+
+      showNotification(
+        `Trade closed with ${pnl >= 0 ? 'profit' : 'loss'} of $${Math.abs(pnl).toFixed(2)}`,
+        pnl >= 0 ? 'success' : 'warning'
+      );
+      
+      await refreshData(); // Refresh data from the hook
       
     } catch (error) {
       console.error('Error closing trade:', error);
@@ -751,7 +724,7 @@ export default function Trade() {
                       value={tradeAmount}
                       onChange={(e) => setTradeAmount(Number(e.target.value))}
                       error={!!validation.amount}
-                      helperText={validation.amount || `Max: $${accountBalance.toLocaleString()}`}
+                      helperText={validation.amount || `Max: $${balance.toLocaleString()}`}
                       InputProps={{
                         sx: { color: '#fff' }
                       }}
@@ -854,7 +827,7 @@ export default function Trade() {
                 </Typography>
               </Box>
               <Typography variant="h4" fontWeight="bold" color="white" sx={{ mb: 1 }}>
-                ${accountBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </Typography>
               <Typography variant="body2" color="rgba(255,255,255,0.7)" sx={{ mb: 2 }}>
                 Available Balance
@@ -872,6 +845,29 @@ export default function Trade() {
                   {tradingStats.todayPnl >= 0 ? '+' : ''}${tradingStats.todayPnl.toFixed(2)}
                 </Typography>
               </Stack>
+              <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
+                <Typography variant="body2" color="rgba(255,255,255,0.7)">
+                  Last Updated
+                </Typography>
+                <Typography variant="body2" color="rgba(255,255,255,0.5)" sx={{ fontSize: '0.75rem' }}>
+                  {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : 'Live'}
+                </Typography>
+              </Stack>
+              {!isLive && (
+                <Stack direction="row" justifyContent="space-between" sx={{ mt: 1 }}>
+                  <Typography variant="body2" color="warning.main" sx={{ fontSize: '0.75rem' }}>
+                    Offline Mode
+                  </Typography>
+                  <Button
+                    size="small"
+                    color="primary"
+                    onClick={refreshData}
+                    sx={{ fontSize: '0.7rem', py: 0.25, px: 1, minWidth: 'auto' }}
+                  >
+                    Retry
+                  </Button>
+                </Stack>
+              )}
             </Card>
 
             {/* Active Trades */}
@@ -1016,6 +1012,11 @@ export default function Trade() {
               <Alert severity="warning">
                 Trading involves risk. Only trade with funds you can afford to lose.
               </Alert>
+              {balance < confirmDialog.trade.amount && (
+                <Alert severity="error" sx={{ mt: 1 }}>
+                  Insufficient balance! Current balance: ${balance.toLocaleString()}
+                </Alert>
+              )}
             </Box>
           )}
         </DialogContent>
@@ -1030,7 +1031,7 @@ export default function Trade() {
             onClick={submitTrade}
             variant="contained"
             color="primary"
-            disabled={loading.trade}
+            disabled={loading.trade || (confirmDialog.trade && balance < confirmDialog.trade.amount)}
             autoFocus
           >
             {loading.trade ? 'Executing...' : 'Confirm Trade'}
