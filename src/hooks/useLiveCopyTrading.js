@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { useBalance } from '../contexts/BalanceContext';
-import { NotificationContext } from '../contexts/NotificationContext';
+import { useNotifications } from '../contexts/NotificationContext';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crypto-forex-backend-9mme.onrender.com/api';
 
@@ -9,7 +9,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crypto-forex-back
 export const useLiveCopyTrading = () => {
   const { user } = useUser();
   const { updateBalance } = useBalance();
-  const { addNotification } = useContext(NotificationContext);
+  const { addNotification } = useNotifications();
   
   const [traders, setTraders] = useState([]);
   const [mycopies, setMyCopies] = useState([]);
