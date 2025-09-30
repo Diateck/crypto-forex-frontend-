@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Typography,
   Box,
@@ -58,7 +58,7 @@ import {
   TrendingFlat
 } from '@mui/icons-material';
 import { useUser } from '../contexts/UserContext';
-import { BalanceContext } from '../contexts/BalanceContext';
+import { useBalance } from '../contexts/BalanceContext';
 import useLiveCopyTrading from '../hooks/useLiveCopyTrading';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
@@ -73,7 +73,7 @@ function TabPanel({ children, value, index }) {
 export default function CopyTrading() {
   const theme = useTheme();
   const { user } = useUser();
-  const { balance } = useContext(BalanceContext);
+  const { balance } = useBalance();
   
   const [tabValue, setTabValue] = useState(0);
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
