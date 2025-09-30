@@ -27,8 +27,8 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useTheme } from '@mui/material/styles';
 import { useUser } from '../contexts/UserContext';
 
-// Backend API configuration - Ready for backend integration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Backend API configuration - Use live deployed backend
+const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
 
 const depositsAPI = {
   // Submit deposit request to backend
