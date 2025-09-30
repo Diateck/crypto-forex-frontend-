@@ -489,27 +489,6 @@ export default function Dashboard() {
         </Box>
       )}
 
-      {/* Backend Connection Status */}
-      {!backendLoading && (
-        <Box sx={{ mb: 2 }}>
-          <Alert severity={backendConnected ? 'success' : 'info'} sx={{ mb: 1 }}>
-            <strong>Connection Status:</strong> {backendConnected ? 
-              'Successfully connected to backend server. Real-time data active.' : 
-              'Using demo data. Backend server unavailable.'}
-            {backendConnected && (
-              <Button 
-                size="small" 
-                onClick={loadBackendData} 
-                sx={{ ml: 2 }}
-                variant="outlined"
-              >
-                Refresh Data
-              </Button>
-            )}
-          </Alert>
-        </Box>
-      )}
-
       {/* Main Content */}
       {!loading && (
         <>
@@ -594,30 +573,6 @@ export default function Dashboard() {
                   }
                 }}
               />
-              <Chip 
-                label={backendConnected ? 'Backend Connected' : (dashboardData.isLive ? 'Live Dashboard' : (backendStatus === 'connected' ? 'Live Data' : 'Demo Mode'))} 
-                color={backendConnected ? 'success' : (dashboardData.isLive ? 'success' : (backendStatus === 'connected' ? 'success' : 'info'))} 
-                variant="filled" 
-                size="small"
-                sx={{ 
-                  height: { xs: 28, sm: 32 },
-                  fontSize: { xs: '0.7rem', sm: '0.8125rem' },
-                  fontWeight: 600
-                }}
-              />
-              {backendConnected && (
-                <Chip 
-                  label={`Data Source: Backend`} 
-                  color="primary" 
-                  variant="outlined" 
-                  size="small"
-                  sx={{ 
-                    height: { xs: 28, sm: 32 },
-                    fontSize: { xs: '0.7rem', sm: '0.8125rem' },
-                    fontWeight: 600
-                  }}
-                />
-              )}
               <Button 
                 variant="contained" 
                 color="primary" 
