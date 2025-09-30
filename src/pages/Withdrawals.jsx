@@ -13,7 +13,6 @@ import {
   Chip,
   Container,
   Alert,
-  Snackbar,
   FormControl,
   InputLabel,
   Select,
@@ -31,9 +30,11 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useTheme } from '@mui/material/styles';
 import { useUser } from '../contexts/UserContext';
+import { useBalance } from '../contexts/BalanceContext';
+import { useNotifications } from '../contexts/NotificationContext';
 
-// Backend API configuration - Ready for backend integration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Backend API configuration - Use live deployed backend
+const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
 
 const withdrawalsAPI = {
   // Submit withdrawal request to backend
@@ -144,6 +145,8 @@ const withdrawalOptions = [
 export default function Withdrawals() {
   const theme = useTheme();
   const { user } = useUser();
+  const { balance, deductBalance, refreshBalance } = useBalance();
+  const { addNotification } = useNotifications();
   
   // Enhanced state management for backend integration
   const [withdrawalForm, setWithdrawalForm] = useState({
@@ -157,17 +160,13 @@ export default function Withdrawals() {
     notes: ''
   });
   const [validation, setValidation] = useState({});
-  const [notification, setNotification] = useState({
-    open: false,
-    message: '',
-    severity: 'info'
-  });
+  // Using shared notification context - removed local notification state
   const [loading, setLoading] = useState({
     page: false,
     submit: false,
     balance: false
   });
-  const [userBalance, setUserBalance] = useState(0);
+  // Using shared balance from BalanceContext - removed local userBalance state
   const [withdrawalHistory, setWithdrawalHistory] = useState([]);
   const [withdrawalLimits, setWithdrawalLimits] = useState({});
   const [confirmDialog, setConfirmDialog] = useState({
@@ -203,23 +202,18 @@ export default function Withdrawals() {
         const localHistory = JSON.parse(localStorage.getItem('userWithdrawals') || '[]');
         setWithdrawalHistory(localHistory);
       }
-      
-      // Load user balance (fallback to demo data)
-      const storedBalance = localStorage.getItem('userBalance');
-      setUserBalance(storedBalance ? parseFloat(storedBalance) : 12547.83);
+
+      // Balance is now managed by shared BalanceContext
       
     } catch (error) {
       console.error('Error loading initial data:', error);
-      showNotification('Error loading data. Using local data.', 'warning');
+      addNotification('Error loading data. Using local data.', 'warning');
     } finally {
       setLoading(prev => ({ ...prev, page: false }));
     }
   };
 
-  // Notification handler
-  const showNotification = (message, severity = 'info') => {
-    setNotification({ open: true, message, severity });
-  };
+  // Using shared notification context - removed local showNotification function
 
   // Form change handler
   const handleFormChange = (field, value) => {
@@ -246,7 +240,7 @@ export default function Withdrawals() {
       const amount = parseFloat(withdrawalForm.amount);
       
       // Check balance
-      if (amount > userBalance) {
+      if (amount > balance) {
         errors.amount = 'Insufficient balance';
       }
       
@@ -293,7 +287,7 @@ export default function Withdrawals() {
   // Handle withdrawal submission with confirmation
   const handleWithdrawalRequest = () => {
     if (!validateForm()) {
-      showNotification('Please fix the form errors', 'error');
+      addNotification('Please fix the form errors', 'error');
       return;
     }
     
@@ -351,7 +345,7 @@ export default function Withdrawals() {
         ipAddress: null, // Will be set by backend
         userAgent: navigator.userAgent,
         sessionId: localStorage.getItem('sessionId') || null,
-        userBalance: userBalance
+        userBalance: balance
       };
 
       // Step 1: Try to submit to backend API first
@@ -373,7 +367,7 @@ export default function Withdrawals() {
         
         if (backendResponse.success) {
           backendSuccess = true;
-          showNotification(
+          addNotification(
             backendResponse.message || 'Withdrawal request submitted successfully! Processing will begin shortly.',
             'success'
           );
@@ -405,12 +399,10 @@ export default function Withdrawals() {
         userWithdrawals.push(localWithdrawalData);
         localStorage.setItem('userWithdrawals', JSON.stringify(userWithdrawals));
         
-        // Update user balance (subtract withdrawal amount)
-        const newBalance = userBalance - parseFloat(withdrawalForm.amount);
-        setUserBalance(newBalance);
-        localStorage.setItem('userBalance', newBalance.toString());
+        // Update user balance using shared context (deducts across all pages)
+        deductBalance(parseFloat(withdrawalForm.amount));
         
-        showNotification(
+        addNotification(
           'Withdrawal request submitted successfully! Waiting for admin approval.',
           'success'
         );
@@ -433,7 +425,7 @@ export default function Withdrawals() {
       
     } catch (error) {
       console.error('Error submitting withdrawal:', error);
-      showNotification(
+      addNotification(
         'Error submitting withdrawal. Please try again or contact support.',
         'error'
       );
@@ -691,7 +683,7 @@ export default function Withdrawals() {
               fontSize: { xs: '0.85rem', sm: '0.9rem' }
             }}
           >
-            (Balance: ${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+            (Balance: ${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
           </Typography>
         </Box>
         <Divider sx={{ mb: 3 }} />
@@ -859,10 +851,10 @@ export default function Withdrawals() {
             value={withdrawalForm.amount}
             onChange={e => handleFormChange('amount', e.target.value)}
             type="number"
-            inputProps={{ min: 0, max: userBalance }}
+            inputProps={{ min: 0, max: balance }}
             size="medium"
             error={!!validation.amount}
-            helperText={validation.amount || `Available balance: $${userBalance.toLocaleString()}`}
+            helperText={validation.amount || `Available balance: $${balance.toLocaleString()}`}
             InputProps={{
               sx: { fontSize: { xs: '0.9rem', sm: '1rem' } }
             }}
@@ -973,21 +965,7 @@ export default function Withdrawals() {
         </DialogActions>
       </Dialog>
 
-      {/* Notification Snackbar */}
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={6000}
-        onClose={() => setNotification({ ...notification, open: false })}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert 
-          onClose={() => setNotification({ ...notification, open: false })} 
-          severity={notification.severity} 
-          sx={{ width: '100%' }}
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
+      {/* Using shared notification system - removed local Snackbar */}
       </Box>
     </Container>
   );

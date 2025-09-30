@@ -15,6 +15,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import PendingIcon from '@mui/icons-material/Pending';
 import { useUser } from '../contexts/UserContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useBalance } from '../contexts/BalanceContext';
 import { marketAPI } from '../services/api';
 import useLiveDashboard from '../hooks/useLiveDashboard';
 import ContactModal from '../components/ContactModal';
@@ -89,6 +90,7 @@ const dashboardAPI = {
 export default function Dashboard() {
   const theme = useTheme();
   const { user, userStats, loading, error, backendStatus } = useUser();
+  const { balance, refreshBalance } = useBalance();
   
   // Backend data state
   const [backendData, setBackendData] = useState({

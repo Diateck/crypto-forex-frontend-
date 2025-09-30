@@ -30,6 +30,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { UserProvider } from './contexts';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { BalanceProvider } from './contexts/BalanceContext';
 import NotificationPanel from './components/NotificationPanel';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
@@ -332,11 +333,13 @@ function App() {
   return (
     <ThemeProvider theme={darkTheme}>
       <UserProvider>
-        <NotificationProvider>
-          <Router>
-            <AppContent />
-          </Router>
-        </NotificationProvider>
+        <BalanceProvider>
+          <NotificationProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </NotificationProvider>
+        </BalanceProvider>
       </UserProvider>
     </ThemeProvider>
   );
