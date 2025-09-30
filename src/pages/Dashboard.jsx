@@ -13,11 +13,14 @@ import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import PendingIcon from '@mui/icons-material/Pending';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { useUser } from '../contexts/UserContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useBalance } from '../contexts/BalanceContext';
 import { marketAPI } from '../services/api';
 import useLiveDashboard from '../hooks/useLiveDashboard';
+import useLiveCopyTrading from '../hooks/useLiveCopyTrading';
 import ContactModal from '../components/ContactModal';
 
 // Backend API base URL - Use live deployed backend
@@ -91,6 +94,14 @@ export default function Dashboard() {
   const theme = useTheme();
   const { user, userStats, loading, error, backendStatus } = useUser();
   const { balance, refreshBalance } = useBalance();
+  
+  // Copy Trading Integration
+  const { 
+    mycopies, 
+    performanceData, 
+    loading: copyTradingLoading, 
+    connected: copyTradingConnected 
+  } = useLiveCopyTrading();
   
   // Backend data state
   const [backendData, setBackendData] = useState({
@@ -864,6 +875,190 @@ export default function Dashboard() {
             </Card>
           </Grid>
         ))}
+      </Grid>
+
+      {/* Copy Trading Integration Cards */}
+      <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 3 }}>
+        {/* Copy Trading Summary Card */}
+        <Grid item xs={12} sm={6} md={6}>
+          <Card
+            sx={{
+              borderRadius: 3,
+              boxShadow: 6,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: '#fff',
+              minHeight: { xs: 140, sm: 160, md: 180 },
+              display: 'flex',
+              flexDirection: 'column',
+              p: { xs: 2, sm: 2.5, md: 3 },
+              position: 'relative',
+              overflow: 'hidden',
+              transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+              '&:hover': {
+                transform: { xs: 'none', sm: 'translateY(-2px)' },
+                boxShadow: { xs: 6, sm: 8 }
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <ContentCopyIcon sx={{ fontSize: { xs: 32, sm: 36, md: 40 }, mr: 2, opacity: 0.9 }} />
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' } }}>
+                  Copy Trading
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.8, fontSize: { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' } }}>
+                  {copyTradingConnected ? 'Live Connected' : 'Connecting...'}
+                  <Box
+                    component="span"
+                    sx={{
+                      display: 'inline-block',
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      backgroundColor: copyTradingConnected ? '#4caf50' : '#ff9800',
+                      ml: 1,
+                      animation: copyTradingLoading ? 'pulse 1.5s infinite' : 'none',
+                      '@keyframes pulse': {
+                        '0%': { opacity: 0.6 },
+                        '50%': { opacity: 1 },
+                        '100%': { opacity: 0.6 }
+                      }
+                    }}
+                  />
+                </Typography>
+              </Box>
+            </Box>
+            
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flex: 1 }}>
+              <Box>
+                <Typography variant="h3" sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' } }}>
+                  {mycopies?.length || 0}
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.8, fontSize: { xs: '0.8rem', sm: '0.875rem', md: '0.95rem' } }}>
+                  Active Copies
+                </Typography>
+              </Box>
+              
+              {performanceData && (
+                <Box sx={{ textAlign: 'right' }}>
+                  <Typography variant="h4" sx={{ 
+                    fontWeight: 600,
+                    color: performanceData.totalProfit >= 0 ? '#4caf50' : '#f44336',
+                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' }
+                  }}>
+                    {performanceData.totalProfit >= 0 ? '+' : ''}
+                    ${performanceData.totalProfit?.toFixed(2) || '0.00'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.8, fontSize: { xs: '0.8rem', sm: '0.875rem', md: '0.95rem' } }}>
+                    Total P&L
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+            
+            <Box sx={{ 
+              position: 'absolute', 
+              top: -20, 
+              right: -20, 
+              width: '80px', 
+              height: '80px', 
+              opacity: 0.1,
+              transform: 'rotate(15deg)'
+            }}>
+              <TrendingUpIcon sx={{ fontSize: 60 }} />
+            </Box>
+          </Card>
+        </Grid>
+
+        {/* Copy Trading Performance Card */}
+        <Grid item xs={12} sm={6} md={6}>
+          <Card
+            sx={{
+              borderRadius: 3,
+              boxShadow: 6,
+              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+              color: '#fff',
+              minHeight: { xs: 140, sm: 160, md: 180 },
+              display: 'flex',
+              flexDirection: 'column',
+              p: { xs: 2, sm: 2.5, md: 3 },
+              position: 'relative',
+              overflow: 'hidden',
+              transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+              '&:hover': {
+                transform: { xs: 'none', sm: 'translateY(-2px)' },
+                boxShadow: { xs: 6, sm: 8 }
+              }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <TrendingUpIcon sx={{ fontSize: { xs: 32, sm: 36, md: 40 }, mr: 2, opacity: 0.9 }} />
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' } }}>
+                  Performance Today
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.8, fontSize: { xs: '0.75rem', sm: '0.8rem', md: '0.875rem' } }}>
+                  Copy Trading Results
+                </Typography>
+              </Box>
+            </Box>
+            
+            {performanceData && !copyTradingLoading ? (
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="h3" sx={{ 
+                  fontWeight: 700, 
+                  mb: 1,
+                  color: performanceData.dailyChange >= 0 ? '#4caf50' : '#ffeb3b',
+                  fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
+                }}>
+                  {performanceData.dailyChange >= 0 ? '+' : ''}
+                  {performanceData.dailyChange?.toFixed(2) || '0.00'}%
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.8, mb: 2, fontSize: { xs: '0.8rem', sm: '0.875rem', md: '0.95rem' } }}>
+                  Daily Performance
+                </Typography>
+                
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' } }}>
+                      {performanceData.winRate?.toFixed(1) || '0.0'}%
+                    </Typography>
+                    <Typography variant="caption" sx={{ opacity: 0.8, fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem' } }}>
+                      Win Rate
+                    </Typography>
+                  </Box>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' } }}>
+                      {performanceData.totalTrades || 0}
+                    </Typography>
+                    <Typography variant="caption" sx={{ opacity: 0.8, fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.8rem' } }}>
+                      Total Trades
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            ) : (
+              <Box sx={{ textAlign: 'center', py: 3, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <CircularProgress size={32} sx={{ color: 'white', mb: 2 }} />
+                <Typography variant="body2" sx={{ opacity: 0.8, fontSize: { xs: '0.8rem', sm: '0.875rem', md: '0.95rem' } }}>
+                  Loading performance...
+                </Typography>
+              </Box>
+            )}
+            
+            <Box sx={{ 
+              position: 'absolute', 
+              top: -20, 
+              right: -20, 
+              width: '80px', 
+              height: '80px', 
+              opacity: 0.1,
+              transform: 'rotate(-15deg)'
+            }}>
+              <ContentCopyIcon sx={{ fontSize: 60 }} />
+            </Box>
+          </Card>
+        </Grid>
       </Grid>
 
       {/* Three Large, Vertically Arranged Live Charts */}
