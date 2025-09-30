@@ -57,10 +57,10 @@ import {
   Timeline,
   TrendingFlat
 } from '@mui/icons-material';
-import { UserContext } from '../contexts/UserContext';
+import { useUser } from '../contexts/UserContext';
 import { BalanceContext } from '../contexts/BalanceContext';
 import useLiveCopyTrading from '../hooks/useLiveCopyTrading';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 function TabPanel({ children, value, index }) {
   return (
@@ -72,7 +72,7 @@ function TabPanel({ children, value, index }) {
 
 export default function CopyTrading() {
   const theme = useTheme();
-  const { user } = useContext(UserContext);
+  const { user } = useUser();
   const { balance } = useContext(BalanceContext);
   
   const [tabValue, setTabValue] = useState(0);
@@ -1026,7 +1026,7 @@ export default function CopyTrading() {
                             stroke="rgba(255,255,255,0.7)"
                             tick={{ fontSize: 12 }}
                           />
-                          <Tooltip 
+                          <RechartsTooltip 
                             contentStyle={{ 
                               backgroundColor: '#232742', 
                               border: '1px solid #00B386',
