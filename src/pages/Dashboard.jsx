@@ -14,6 +14,7 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import PendingIcon from '@mui/icons-material/Pending';
 import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { marketAPI } from '../services/api';
 import useLiveDashboard from '../hooks/useLiveDashboard';
 import ContactModal from '../components/ContactModal';
@@ -105,9 +106,8 @@ export default function Dashboard() {
   // Contact Modal State
   const [contactModalOpen, setContactModalOpen] = useState(false);
   
-  // Notification system for deposit updates
-  const [notifications, setNotifications] = useState([]);
-  const [showNotifications, setShowNotifications] = useState(false);
+  // Use new notification system
+  const { addNotification } = useNotifications();
   
   // Load backend data on component mount
   useEffect(() => {
@@ -146,11 +146,6 @@ export default function Dashboard() {
           stats: statsResult.success ? statsResult.data : null,
           notifications: notificationsResult.success ? notificationsResult.data.notifications : []
         });
-        
-        // Update local notifications with backend notifications
-        if (notificationsResult.success) {
-          setNotifications(notificationsResult.data.notifications.filter(n => !n.read));
-        }
       } else {
         setBackendConnected(false);
         setBackendError('Unable to connect to backend server. Using demo data.');
@@ -163,39 +158,7 @@ export default function Dashboard() {
       setBackendLoading(false);
     }
   };
-  
-  // Check for local notifications if backend is not connected
-  useEffect(() => {
-    if (!backendConnected) {
-      checkForLocalNotifications();
-      const interval = setInterval(checkForLocalNotifications, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [backendConnected]);
-  
-  const checkForLocalNotifications = () => {
-    try {
-      const userNotifications = JSON.parse(localStorage.getItem('userNotifications') || '[]');
-      const unreadNotifications = userNotifications.filter(n => !n.read);
-      setNotifications(unreadNotifications);
-    } catch (error) {
-      console.error('Error checking local notifications:', error);
-    }
-  };
-  
-  const markNotificationAsRead = (notificationId) => {
-    try {
-      const userNotifications = JSON.parse(localStorage.getItem('userNotifications') || '[]');
-      const updatedNotifications = userNotifications.map(n => 
-        n.id === notificationId ? { ...n, read: true } : n
-      );
-      localStorage.setItem('userNotifications', JSON.stringify(updatedNotifications));
-      checkForNotifications();
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
-  
+
   // Live Dashboard Hook for real-time updates
   const {
     dashboardData,
@@ -544,27 +507,6 @@ export default function Dashboard() {
               </Button>
             )}
           </Alert>
-        </Box>
-      )}
-
-      {/* Notifications */}
-      {notifications.length > 0 && (
-        <Box sx={{ mb: 3 }}>
-          {notifications.slice(0, 3).map((notification) => (
-            <Alert 
-              key={notification.id}
-              severity={notification.severity || 'info'} 
-              sx={{ mb: 1 }}
-              onClose={() => markNotificationAsRead(notification.id)}
-            >
-              <strong>{notification.title}:</strong> {notification.message}
-            </Alert>
-          ))}
-          {notifications.length > 3 && (
-            <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-              +{notifications.length - 3} more notifications
-            </Typography>
-          )}
         </Box>
       )}
 

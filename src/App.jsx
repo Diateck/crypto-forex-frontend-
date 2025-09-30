@@ -29,6 +29,8 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { UserProvider } from './contexts';
+import { NotificationProvider } from './contexts/NotificationContext';
+import NotificationPanel from './components/NotificationPanel';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -297,6 +299,7 @@ function AppContent() {
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, bgcolor: 'background.default', p: { xs: 1, sm: 3 } }}>
         <Toolbar />
+        <NotificationPanel />
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
@@ -329,9 +332,11 @@ function App() {
   return (
     <ThemeProvider theme={darkTheme}>
       <UserProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <NotificationProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </NotificationProvider>
       </UserProvider>
     </ThemeProvider>
   );
