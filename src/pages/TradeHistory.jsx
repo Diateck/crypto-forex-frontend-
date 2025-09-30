@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Typography,
   Box,
@@ -25,7 +25,9 @@ import {
   Divider,
   TablePagination,
   IconButton,
-  Tooltip
+  Tooltip,
+  LinearProgress,
+  Alert
 } from '@mui/material';
 import {
   Person,
@@ -41,100 +43,117 @@ import {
   AccountBalanceWallet,
   SwapHoriz,
   CreditCard,
-  AttachMoney
+  AttachMoney,
+  History,
+  CalendarToday
 } from '@mui/icons-material';
+import { useUser } from '../contexts/UserContext';
+import { useBalance } from '../contexts/BalanceContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import useLiveTrading from '../hooks/useLiveTrading';
 
-// Mock transaction data
-const mockTransactions = [
-  {
-    id: 'TXN001',
-    date: '2024-03-15',
-    time: '14:30:25',
-    type: 'Deposit',
-    description: 'Bitcoin Deposit',
-    amount: '+$1,500.00',
-    status: 'Completed',
-    balance: '$12,500.00',
-    reference: 'DEP-BTC-001'
-  },
-  {
-    id: 'TXN002',
-    date: '2024-03-14',
-    time: '09:15:42',
-    type: 'Trade',
-    description: 'BTC/USDT Buy Order',
-    amount: '-$850.00',
-    status: 'Completed',
-    balance: '$11,000.00',
-    reference: 'TRD-BTC-002'
-  },
-  {
-    id: 'TXN003',
-    date: '2024-03-14',
-    time: '08:22:17',
-    type: 'Withdrawal',
-    description: 'Ethereum Withdrawal',
-    amount: '-$750.00',
-    status: 'Pending',
-    balance: '$11,850.00',
-    reference: 'WTD-ETH-003'
-  },
-  {
-    id: 'TXN004',
-    date: '2024-03-13',
-    time: '16:45:33',
-    type: 'Trade',
-    description: 'EUR/USD Position Close',
-    amount: '+$320.50',
-    status: 'Completed',
-    balance: '$12,600.00',
-    reference: 'TRD-EUR-004'
-  },
-  {
-    id: 'TXN005',
-    date: '2024-03-12',
-    time: '11:20:08',
-    type: 'Deposit',
-    description: 'Wire Transfer',
-    amount: '+$2,000.00',
-    status: 'Completed',
-    balance: '$12,279.50',
-    reference: 'DEP-WIRE-005'
-  },
-  {
-    id: 'TXN006',
-    date: '2024-03-11',
-    time: '13:15:22',
-    type: 'Trade',
-    description: 'AAPL Stock Purchase',
-    amount: '-$1,200.00',
-    status: 'Completed',
-    balance: '$10,279.50',
-    reference: 'TRD-AAPL-006'
-  },
-  {
-    id: 'TXN007',
-    date: '2024-03-10',
-    time: '10:30:15',
-    type: 'Bonus',
-    description: 'Welcome Bonus',
-    amount: '+$100.00',
-    status: 'Completed',
-    balance: '$11,479.50',
-    reference: 'BON-WEL-007'
-  },
-  {
-    id: 'TXN008',
-    date: '2024-03-09',
-    time: '15:45:30',
-    type: 'Withdrawal',
-    description: 'Bank Transfer',
-    amount: '-$500.00',
-    status: 'Failed',
-    balance: '$11,379.50',
-    reference: 'WTD-BANK-008'
+// Backend API configuration
+const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
+
+// API functions for comprehensive activity data
+const activityAPI = {
+  // Get all user activities (trades, deposits, withdrawals)
+  getAllActivities: async (userId) => {
+    try {
+      const [tradesResponse, depositsResponse, withdrawalsResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/trading/history/${userId}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        }),
+        fetch(`${API_BASE_URL}/deposits/history/${userId}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        }),
+        fetch(`${API_BASE_URL}/withdrawals/history/${userId}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        })
+      ]);
+
+      const results = await Promise.all([
+        tradesResponse.ok ? tradesResponse.json() : { success: false },
+        depositsResponse.ok ? depositsResponse.json() : { success: false },
+        withdrawalsResponse.ok ? withdrawalsResponse.json() : { success: false }
+      ]);
+
+      return {
+        success: true,
+        data: {
+          trades: results[0].success ? results[0].data : [],
+          deposits: results[1].success ? results[1].data : [],
+          withdrawals: results[2].success ? results[2].data : []
+        }
+      };
+    } catch (error) {
+      console.error('API Error:', error);
+      return { success: false, error: error.message };
+    }
   }
-];
+};
+
+// Transform activities into unified transaction format
+const transformToTransactions = (activities, balance) => {
+  const transactions = [];
+
+  // Transform trades
+  activities.trades?.forEach(trade => {
+    transactions.push({
+      id: trade.id || `TRD-${Date.now()}`,
+      date: new Date(trade.createdAt || trade.timestamp).toLocaleDateString(),
+      time: new Date(trade.createdAt || trade.timestamp).toLocaleTimeString(),
+      type: 'Trade',
+      description: `${trade.type} ${trade.multiplierLabel || ''} ${trade.symbol}`,
+      amount: trade.status === 'CLOSED' 
+        ? (trade.realizedPnl >= 0 ? `+$${trade.realizedPnl.toFixed(2)}` : `-$${Math.abs(trade.realizedPnl).toFixed(2)}`)
+        : `-$${trade.amount.toFixed(2)}`,
+      status: trade.status === 'ACTIVE' ? 'Open' : 'Closed',
+      balance: `$${balance.toFixed(2)}`,
+      reference: `TRD-${trade.symbol}-${trade.id?.slice(-6) || '000'}`,
+      originalData: trade
+    });
+  });
+
+  // Transform deposits
+  activities.deposits?.forEach(deposit => {
+    transactions.push({
+      id: deposit.id || `DEP-${Date.now()}`,
+      date: new Date(deposit.createdAt || deposit.timestamp).toLocaleDateString(),
+      time: new Date(deposit.createdAt || deposit.timestamp).toLocaleTimeString(),
+      type: 'Deposit',
+      description: `${deposit.method || 'Deposit'} - ${deposit.amount}`,
+      amount: `+$${deposit.amount.toFixed(2)}`,
+      status: deposit.status === 'approved' ? 'Completed' : 
+              deposit.status === 'pending' ? 'Pending' : 'Failed',
+      balance: `$${balance.toFixed(2)}`,
+      reference: `DEP-${deposit.method?.slice(0,3).toUpperCase() || 'GEN'}-${deposit.id?.slice(-6) || '000'}`,
+      originalData: deposit
+    });
+  });
+
+  // Transform withdrawals
+  activities.withdrawals?.forEach(withdrawal => {
+    transactions.push({
+      id: withdrawal.id || `WTD-${Date.now()}`,
+      date: new Date(withdrawal.createdAt || withdrawal.timestamp).toLocaleDateString(),
+      time: new Date(withdrawal.createdAt || withdrawal.timestamp).toLocaleTimeString(),
+      type: 'Withdrawal',
+      description: `${withdrawal.method || 'Withdrawal'} - ${withdrawal.amount}`,
+      amount: `-$${withdrawal.amount.toFixed(2)}`,
+      status: withdrawal.status === 'completed' ? 'Completed' : 
+              withdrawal.status === 'pending' ? 'Pending' : 'Failed',
+      balance: `$${balance.toFixed(2)}`,
+      reference: `WTD-${withdrawal.method?.slice(0,3).toUpperCase() || 'GEN'}-${withdrawal.id?.slice(-6) || '000'}`,
+      originalData: withdrawal
+    });
+  });
+
+  // Sort by date (newest first)
+  transactions.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+  
+  return transactions;
+};
 
 const getTypeIcon = (type) => {
   switch (type) {
@@ -148,8 +167,10 @@ const getTypeIcon = (type) => {
 
 const getStatusColor = (status) => {
   switch (status) {
-    case 'Completed': return 'success';
-    case 'Pending': return 'warning';
+    case 'Completed':
+    case 'Closed': return 'success';
+    case 'Pending':
+    case 'Open': return 'warning';
     case 'Failed': return 'error';
     default: return 'default';
   }
@@ -157,11 +178,149 @@ const getStatusColor = (status) => {
 
 export default function AccountHistory() {
   const theme = useTheme();
+  const { user } = useUser();
+  const { balance, refreshBalance } = useBalance();
+  const { addNotification } = useNotifications();
+  
+  // Use live trading hook for real-time data
+  const {
+    activeTrades,
+    tradeHistory,
+    tradingStats,
+    isLive,
+    lastUpdated,
+    loading: tradingLoading,
+    error: tradingError,
+    refreshData
+  } = useLiveTrading(user?.id, 15000);
+
+  // Local state
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filterType, setFilterType] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [allActivities, setAllActivities] = useState({
+    trades: [],
+    deposits: [],
+    withdrawals: []
+  });
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activityStats, setActivityStats] = useState({
+    totalDeposits: 0,
+    totalWithdrawals: 0,
+    totalTrades: 0,
+    currentBalance: 0
+  });
+
+  // Load all activities from backend and localStorage
+  const loadAllActivities = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      let activities = {
+        trades: [],
+        deposits: [],
+        withdrawals: []
+      };
+
+      // Try to load from backend first
+      if (user?.id) {
+        const backendResult = await activityAPI.getAllActivities(user.id);
+        if (backendResult.success) {
+          activities = backendResult.data;
+        }
+      }
+
+      // Fallback to localStorage data
+      if (!activities.trades.length) {
+        activities.trades = [
+          ...JSON.parse(localStorage.getItem('userTradeHistory') || '[]'),
+          ...activeTrades.map(trade => ({ ...trade, status: 'ACTIVE' }))
+        ];
+      }
+
+      if (!activities.deposits.length) {
+        activities.deposits = JSON.parse(localStorage.getItem('userDeposits') || '[]');
+      }
+
+      if (!activities.withdrawals.length) {
+        activities.withdrawals = JSON.parse(localStorage.getItem('userWithdrawals') || '[]');
+      }
+
+      setAllActivities(activities);
+
+      // Transform to unified transaction format
+      const unifiedTransactions = transformToTransactions(activities, balance);
+      setTransactions(unifiedTransactions);
+
+      // Calculate activity statistics
+      calculateActivityStats(activities);
+
+    } catch (error) {
+      console.error('Error loading activities:', error);
+      setError('Failed to load activity data');
+      addNotification({
+        message: 'Error loading activity history',
+        type: 'error',
+        timestamp: new Date().toISOString()
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate activity statistics
+  const calculateActivityStats = (activities) => {
+    const stats = {
+      totalDeposits: 0,
+      totalWithdrawals: 0,
+      totalTrades: 0,
+      currentBalance: balance
+    };
+
+    // Calculate deposits total
+    activities.deposits?.forEach(deposit => {
+      if (deposit.status === 'approved' || deposit.status === 'completed') {
+        stats.totalDeposits += parseFloat(deposit.amount || 0);
+      }
+    });
+
+    // Calculate withdrawals total
+    activities.withdrawals?.forEach(withdrawal => {
+      if (withdrawal.status === 'completed') {
+        stats.totalWithdrawals += parseFloat(withdrawal.amount || 0);
+      }
+    });
+
+    // Count total trades
+    stats.totalTrades = activities.trades?.length || 0;
+
+    setActivityStats(stats);
+  };
+
+  // Load data on component mount and when dependencies change
+  useEffect(() => {
+    loadAllActivities();
+  }, [user?.id, balance, activeTrades, tradeHistory]);
+
+  // Refresh data function
+  const handleRefresh = async () => {
+    await Promise.all([
+      loadAllActivities(),
+      refreshData(),
+      refreshBalance()
+    ]);
+    
+    addNotification({
+      message: 'Activity history refreshed',
+      type: 'success',
+      timestamp: new Date().toISOString()
+    });
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -173,7 +332,7 @@ export default function AccountHistory() {
   };
 
   // Filter transactions based on search and filters
-  const filteredTransactions = mockTransactions.filter(transaction => {
+  const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          transaction.reference.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === '' || transaction.type === filterType;
@@ -190,6 +349,31 @@ export default function AccountHistory() {
 
   return (
     <Box sx={{ p: { xs: 1, sm: 3 }, minHeight: '100vh' }}>
+      {/* Loading indicator */}
+      {(loading || tradingLoading) && (
+        <LinearProgress 
+          sx={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            zIndex: 9999,
+            height: 3,
+            '& .MuiLinearProgress-bar': {
+              backgroundColor: '#4CAF50'
+            }
+          }} 
+        />
+      )}
+
+      {/* Error Alert */}
+      {(error || tradingError) && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {error || tradingError} - Using available data.
+        </Alert>
+      )}
+
+      {/* Header with site name, username and quick actions */}
       {/* Header with site name, username and quick actions - matching Dashboard */}
       <Box sx={{ 
         display: 'flex', 
@@ -212,8 +396,13 @@ export default function AccountHistory() {
               Elon Investment Broker
             </Typography>
             <Typography variant="h6" fontWeight={700} color="#fff">
-              Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
+              Username: <span style={{ color: theme.palette.primary.main }}>{user?.username || user?.name || 'theophilus'}</span>
             </Typography>
+            {!isLive && (
+              <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 0.5 }}>
+                Offline Mode
+              </Typography>
+            )}
           </Box>
         </Box>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
@@ -245,8 +434,15 @@ export default function AccountHistory() {
           </Typography>
         </Box>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Button variant="outlined" startIcon={<Refresh />} size="small" fullWidth={{ xs: true, sm: false }}>
-            Refresh
+          <Button 
+            variant="outlined" 
+            startIcon={<Refresh />} 
+            size="small" 
+            fullWidth={{ xs: true, sm: false }}
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            {loading ? 'Refreshing...' : 'Refresh'}
           </Button>
           <Button variant="contained" startIcon={<Download />} size="small" fullWidth={{ xs: true, sm: false }}>
             Export
@@ -268,7 +464,7 @@ export default function AccountHistory() {
                 <TrendingUp color="success" sx={{ fontSize: 40 }} />
                 <Box>
                   <Typography variant="h5" fontWeight="bold" color="success.main">
-                    $4,120.50
+                    ${activityStats.totalDeposits.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </Typography>
                   <Typography variant="body2" color="rgba(255,255,255,0.7)">
                     Total Deposits
@@ -290,7 +486,7 @@ export default function AccountHistory() {
                 <TrendingDown color="error" sx={{ fontSize: 40 }} />
                 <Box>
                   <Typography variant="h5" fontWeight="bold" color="error.main">
-                    $1,250.00
+                    ${activityStats.totalWithdrawals.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </Typography>
                   <Typography variant="body2" color="rgba(255,255,255,0.7)">
                     Total Withdrawals
@@ -312,7 +508,7 @@ export default function AccountHistory() {
                 <SwapHoriz color="primary" sx={{ fontSize: 40 }} />
                 <Box>
                   <Typography variant="h5" fontWeight="bold" color="primary.main">
-                    24
+                    {activityStats.totalTrades}
                   </Typography>
                   <Typography variant="body2" color="rgba(255,255,255,0.7)">
                     Total Trades
@@ -334,11 +530,16 @@ export default function AccountHistory() {
                 <AccountBalanceWallet color="warning" sx={{ fontSize: 40 }} />
                 <Box>
                   <Typography variant="h5" fontWeight="bold" color="#fff">
-                    $12,500.00
+                    ${balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </Typography>
                   <Typography variant="body2" color="rgba(255,255,255,0.7)">
                     Current Balance
                   </Typography>
+                  {lastUpdated && (
+                    <Typography variant="caption" color="rgba(255,255,255,0.5)" sx={{ display: 'block', mt: 0.5 }}>
+                      Updated: {new Date(lastUpdated).toLocaleTimeString()}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
             </CardContent>
@@ -414,6 +615,8 @@ export default function AccountHistory() {
                 >
                   <MenuItem value="">All Status</MenuItem>
                   <MenuItem value="Completed">Completed</MenuItem>
+                  <MenuItem value="Closed">Closed</MenuItem>
+                  <MenuItem value="Open">Open</MenuItem>
                   <MenuItem value="Pending">Pending</MenuItem>
                   <MenuItem value="Failed">Failed</MenuItem>
                 </Select>
