@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Typography, Box, Grid, Card, useTheme, Avatar, Button, Stack, Chip, CircularProgress, Alert, Badge } from '@mui/material';
+import { Typography, Box, Grid, Card, useTheme, Avatar, Button, Stack, Chip, CircularProgress, Alert, Badge, LinearProgress } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -465,36 +465,53 @@ export default function Dashboard() {
       minHeight: '100vh',
       bgcolor: theme.palette.background.default
     }}>
-      {/* Loading State */}
+      {/* Subtle loading indicator - only show when backend is connecting */}
       {(loading || backendLoading) && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-          <CircularProgress />
-          <Typography variant="h6" sx={{ ml: 2 }}>
-            {backendLoading ? 'Connecting to backend...' : 'Loading dashboard...'}
-          </Typography>
-        </Box>
+        <LinearProgress 
+          sx={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            zIndex: 9999,
+            height: 3,
+            '& .MuiLinearProgress-bar': {
+              backgroundColor: backendLoading ? '#4CAF50' : '#2196F3'
+            },
+            '& .MuiLinearProgress-root': {
+              backgroundColor: 'rgba(255,255,255,0.1)'
+            }
+          }} 
+        />
       )}
 
       {/* Error State */}
       {(error || backendError) && (
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ mb: 2, mt: (loading || backendLoading) ? 1 : 0 }}>
           {error && (
             <Alert severity="error" sx={{ mb: 1 }}>
               {error}
             </Alert>
           )}
           {backendError && (
-            <Alert severity="warning" sx={{ mb: 1 }}>
+            <Alert 
+              severity="warning" 
+              sx={{ 
+                mb: 1,
+                '& .MuiAlert-message': {
+                  fontSize: '0.875rem'
+                }
+              }}
+            >
               <strong>Backend Status:</strong> {backendError}
             </Alert>
           )}
         </Box>
       )}
 
-      {/* Main Content */}
-      {!loading && (
-        <>
-          {/* Header with site name, username and quick actions */}
+      {/* Main Content - Always show, don't hide during loading */}
+      <>
+        {/* Header with site name, username and quick actions */}
           <Box sx={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -534,6 +551,25 @@ export default function Dashboard() {
                   }}
                 >
                   Elon Investment Broker
+                  {/* Subtle connection status indicator */}
+                  <Box
+                    component="span"
+                    sx={{
+                      display: 'inline-block',
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      backgroundColor: backendConnected ? '#4CAF50' : '#FF9800',
+                      ml: 1,
+                      animation: backendLoading ? 'pulse 1.5s infinite' : 'none',
+                      '@keyframes pulse': {
+                        '0%': { opacity: 0.6 },
+                        '50%': { opacity: 1 },
+                        '100%': { opacity: 0.6 }
+                      }
+                    }}
+                    title={backendConnected ? 'Connected to backend' : 'Backend offline'}
+                  />
                 </Typography>
                 <Typography 
                   variant="h6"
@@ -1182,8 +1218,7 @@ export default function Dashboard() {
           </Button>
         </Stack>
       </Box>
-        </>
-      )}
+      </>
 
       {/* Contact Modal */}
       <ContactModal
