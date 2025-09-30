@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useContext } from 'react';
-import { UserContext } from '../contexts/UserContext';
+import { useUser } from '../contexts/UserContext';
 import { BalanceContext } from '../contexts/BalanceContext';
 import { NotificationContext } from '../contexts/NotificationContext';
 
@@ -7,13 +7,15 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crypto-forex-back
 
 // Custom hook for real-time copy trading functionality
 export const useLiveCopyTrading = () => {
-  const { user } = useContext(UserContext);
+  const { user } = useUser();
   const { updateBalance } = useContext(BalanceContext);
   const { addNotification } = useContext(NotificationContext);
   
   const [traders, setTraders] = useState([]);
   const [mycopies, setMyCopies] = useState([]);
   const [platforms, setPlatforms] = useState([]);
+  const [performanceData, setPerformanceData] = useState(null);
+  const [tradingHistory, setTradingHistory] = useState([]);
   const [liveStream, setLiveStream] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -132,6 +134,7 @@ export const useLiveCopyTrading = () => {
         // Update balance context with copy trading performance
         if (data.summary && updateBalance) {
           updateBalance('copyTradingProfit', data.summary.totalProfit);
+          updateBalance('copyTradingInvested', data.summary.totalInvested);
         }
       } else {
         // Fallback to localStorage
@@ -307,6 +310,62 @@ export const useLiveCopyTrading = () => {
     }
   }, []);
 
+  // Fetch performance data
+  const fetchPerformanceData = useCallback(async (period = '30d') => {
+    if (!user?.id) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/copy-trading/performance/${user.id}?period=${period}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setPerformanceData(data.data);
+        return data.data;
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err) {
+      console.error('Error fetching performance data:', err);
+      // Fallback performance data
+      const fallbackData = {
+        period,
+        metrics: {
+          totalProfit: mycopies.reduce((sum, copy) => sum + (copy.totalProfit || 0), 0),
+          totalInvested: mycopies.reduce((sum, copy) => sum + (copy.amount || 0), 0),
+          totalReturn: mycopies.reduce((sum, copy) => sum + (copy.totalProfit || 0), 0),
+          totalReturnPercent: 0,
+          averageReturn: 0,
+          activeCopies: mycopies.filter(copy => copy.status === 'active').length
+        },
+        performanceChart: [],
+        summary: { period, totalDays: 30 }
+      };
+      setPerformanceData(fallbackData);
+      return fallbackData;
+    }
+  }, [user?.id, mycopies]);
+
+  // Fetch trading history
+  const fetchTradingHistory = useCallback(async (limit = 50, offset = 0) => {
+    if (!user?.id) return;
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/copy-trading/history/${user.id}?limit=${limit}&offset=${offset}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setTradingHistory(data.data);
+        return data.data;
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err) {
+      console.error('Error fetching trading history:', err);
+      setTradingHistory([]);
+      return [];
+    }
+  }, [user?.id]);
+
   // Setup real-time WebSocket connection
   const connectLiveStream = useCallback(() => {
     if (!user?.id || liveStream) return;
@@ -376,6 +435,8 @@ export const useLiveCopyTrading = () => {
     fetchPlatforms();
     if (user?.id) {
       fetchMyCopies();
+      fetchPerformanceData();
+      fetchTradingHistory();
     }
   }, [user?.id]);
 
@@ -403,17 +464,20 @@ export const useLiveCopyTrading = () => {
       fetchTopTraders();
       if (user?.id) {
         fetchMyCopies();
+        fetchPerformanceData();
       }
     }, 30000);
     
     return () => clearInterval(interval);
-  }, [fetchTopTraders, fetchMyCopies, user?.id]);
+  }, [fetchTopTraders, fetchMyCopies, fetchPerformanceData, user?.id]);
 
   return {
     // Data
     traders,
     mycopies,
     platforms,
+    performanceData,
+    tradingHistory,
     
     // State
     loading,
@@ -426,10 +490,14 @@ export const useLiveCopyTrading = () => {
     stopCopyTrader,
     getTraderDetails,
     getTraderActivity,
+    fetchPerformanceData,
+    fetchTradingHistory,
     applyFilters,
     refreshData: () => {
       fetchTopTraders();
       fetchMyCopies();
+      fetchPerformanceData();
+      fetchTradingHistory();
     },
     
     // Live stream controls

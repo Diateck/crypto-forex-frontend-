@@ -60,6 +60,7 @@ import {
 import { UserContext } from '../contexts/UserContext';
 import { BalanceContext } from '../contexts/BalanceContext';
 import useLiveCopyTrading from '../hooks/useLiveCopyTrading';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 function TabPanel({ children, value, index }) {
   return (
@@ -87,6 +88,8 @@ export default function CopyTrading() {
     traders,
     mycopies,
     platforms,
+    performanceData,
+    tradingHistory,
     loading,
     error,
     connected,
@@ -95,6 +98,8 @@ export default function CopyTrading() {
     stopCopyTrader,
     getTraderDetails,
     getTraderActivity,
+    fetchPerformanceData,
+    fetchTradingHistory,
     applyFilters,
     refreshData,
     isLive
@@ -786,9 +791,13 @@ export default function CopyTrading() {
 
       {/* Performance Tab */}
       <TabPanel value={tabValue} index={2}>
-        {mycopies.length > 0 ? (
+        {loading && !performanceData ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+            <CircularProgress size={60} />
+          </Box>
+        ) : mycopies.length > 0 || performanceData ? (
           <Grid container spacing={3}>
-            {/* Performance Summary Cards */}
+            {/* Performance Summary Cards - Using Real Data */}
             <Grid item xs={12} sm={6} md={6} lg={3}>
               <Card sx={{ 
                 background: 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)',
@@ -801,11 +810,17 @@ export default function CopyTrading() {
                 <CardContent sx={{ textAlign: 'center' }}>
                   <BarChart color="primary" sx={{ fontSize: 48, mb: 1 }} />
                   <Typography variant="h4" fontWeight="bold" color="success.main">
-                    ${mycopies.reduce((sum, copy) => sum + (copy.totalProfit || 0), 0).toLocaleString()}
+                    ${performanceData?.metrics?.totalProfit?.toLocaleString() || 
+                      mycopies.reduce((sum, copy) => sum + (copy.totalProfit || 0), 0).toLocaleString()}
                   </Typography>
                   <Typography variant="body2" color="rgba(255,255,255,0.7)">
                     Total Profit
                   </Typography>
+                  {performanceData?.metrics?.dailyProfit && (
+                    <Typography variant="caption" color="success.main">
+                      +${performanceData.metrics.dailyProfit.toFixed(2)} today
+                    </Typography>
+                  )}
                 </CardContent>
               </Card>
             </Grid>
@@ -821,14 +836,20 @@ export default function CopyTrading() {
                 <CardContent sx={{ textAlign: 'center' }}>
                   <TrendingUp color="primary" sx={{ fontSize: 48, mb: 1 }} />
                   <Typography variant="h4" fontWeight="bold" color="primary">
-                    {mycopies.length > 0 
+                    {performanceData?.metrics?.totalReturnPercent?.toFixed(2) || 
+                     (mycopies.length > 0 
                       ? (mycopies.reduce((sum, copy) => sum + (copy.profitPercentage || 0), 0) / mycopies.length).toFixed(2)
                       : '0.00'
-                    }%
+                     )}%
                   </Typography>
                   <Typography variant="body2" color="rgba(255,255,255,0.7)">
                     Average Return
                   </Typography>
+                  {performanceData?.metrics?.sharpeRatio && (
+                    <Typography variant="caption" color="rgba(255,255,255,0.6)">
+                      Sharpe: {performanceData.metrics.sharpeRatio}
+                    </Typography>
+                  )}
                 </CardContent>
               </Card>
             </Grid>
@@ -844,11 +865,20 @@ export default function CopyTrading() {
                 <CardContent sx={{ textAlign: 'center' }}>
                   <ContentCopy color="primary" sx={{ fontSize: 48, mb: 1 }} />
                   <Typography variant="h4" fontWeight="bold" color="#fff">
-                    {mycopies.filter(copy => copy.status === 'active').length}
+                    {performanceData?.metrics?.activeCopies || 
+                     mycopies.filter(copy => copy.status === 'active').length}
                   </Typography>
                   <Typography variant="body2" color="rgba(255,255,255,0.7)">
                     Active Copies
                   </Typography>
+                  {connected && (
+                    <Chip 
+                      label="LIVE" 
+                      size="small" 
+                      color="success" 
+                      sx={{ mt: 0.5, fontWeight: 'bold' }}
+                    />
+                  )}
                 </CardContent>
               </Card>
             </Grid>
@@ -864,16 +894,79 @@ export default function CopyTrading() {
                 <CardContent sx={{ textAlign: 'center' }}>
                   <Person color="primary" sx={{ fontSize: 48, mb: 1 }} />
                   <Typography variant="h4" fontWeight="bold" color="#fff">
-                    ${mycopies.reduce((sum, copy) => sum + (copy.amount || 0), 0).toLocaleString()}
+                    ${performanceData?.metrics?.totalInvested?.toLocaleString() || 
+                      mycopies.reduce((sum, copy) => sum + (copy.amount || 0), 0).toLocaleString()}
                   </Typography>
                   <Typography variant="body2" color="rgba(255,255,255,0.7)">
                     Total Invested
                   </Typography>
+                  {performanceData?.metrics?.totalCurrentValue && (
+                    <Typography variant="caption" color="primary.main">
+                      Current: ${performanceData.metrics.totalCurrentValue.toLocaleString()}
+                    </Typography>
+                  )}
                 </CardContent>
               </Card>
             </Grid>
 
-            {/* Performance Chart Placeholder */}
+            {/* Performance Metrics Cards */}
+            {performanceData?.metrics && (
+              <>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ 
+                    background: 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)',
+                    borderRadius: 3,
+                    boxShadow: 6,
+                    color: '#fff'
+                  }}>
+                    <CardContent sx={{ textAlign: 'center' }}>
+                      <Typography variant="h6" color="success.main" gutterBottom>
+                        Best Day
+                      </Typography>
+                      <Typography variant="h5" fontWeight="bold">
+                        +${performanceData.metrics.bestDay?.toFixed(2) || '0.00'}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ 
+                    background: 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)',
+                    borderRadius: 3,
+                    boxShadow: 6,
+                    color: '#fff'
+                  }}>
+                    <CardContent sx={{ textAlign: 'center' }}>
+                      <Typography variant="h6" color="error.main" gutterBottom>
+                        Max Drawdown
+                      </Typography>
+                      <Typography variant="h5" fontWeight="bold">
+                        -{performanceData.metrics.maxDrawdown?.toFixed(1) || '0.0'}%
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Card sx={{ 
+                    background: 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)',
+                    borderRadius: 3,
+                    boxShadow: 6,
+                    color: '#fff'
+                  }}>
+                    <CardContent sx={{ textAlign: 'center' }}>
+                      <Typography variant="h6" color="primary.main" gutterBottom>
+                        Win Rate
+                      </Typography>
+                      <Typography variant="h5" fontWeight="bold">
+                        {((performanceData.metrics.winningDays / performanceData.metrics.totalDays) * 100).toFixed(1) || '0.0'}%
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </>
+            )}
+
+            {/* Performance Chart */}
             <Grid item xs={12}>
               <Card sx={{ 
                 background: 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)',
@@ -882,21 +975,90 @@ export default function CopyTrading() {
                 color: '#fff'
               }}>
                 <CardContent>
-                  <Typography variant="h6" gutterBottom fontWeight="bold">
-                    Portfolio Performance
-                  </Typography>
-                  <Box sx={{ 
-                    height: 300, 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    bgcolor: 'rgba(255,255,255,0.05)',
-                    borderRadius: 2
-                  }}>
-                    <Typography variant="h6" color="rgba(255,255,255,0.6)">
-                      Performance chart will be available soon
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6" gutterBottom fontWeight="bold">
+                      Portfolio Performance
+                      {connected && (
+                        <Chip 
+                          label="LIVE DATA" 
+                          size="small" 
+                          color="success" 
+                          sx={{ ml: 2, fontWeight: 'bold' }}
+                        />
+                      )}
                     </Typography>
+                    <Stack direction="row" spacing={1}>
+                      <Button 
+                        size="small" 
+                        variant={performanceData?.period === '7d' ? 'contained' : 'outlined'}
+                        onClick={() => fetchPerformanceData('7d')}
+                      >
+                        7D
+                      </Button>
+                      <Button 
+                        size="small" 
+                        variant={performanceData?.period === '30d' ? 'contained' : 'outlined'}
+                        onClick={() => fetchPerformanceData('30d')}
+                      >
+                        30D
+                      </Button>
+                      <Button 
+                        size="small" 
+                        variant={performanceData?.period === '90d' ? 'contained' : 'outlined'}
+                        onClick={() => fetchPerformanceData('90d')}
+                      >
+                        90D
+                      </Button>
+                    </Stack>
                   </Box>
+                  
+                  {performanceData?.performanceChart?.length > 0 ? (
+                    <Box sx={{ height: 300 }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={performanceData.performanceChart}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                          <XAxis 
+                            dataKey="date" 
+                            stroke="rgba(255,255,255,0.7)"
+                            tick={{ fontSize: 12 }}
+                          />
+                          <YAxis 
+                            stroke="rgba(255,255,255,0.7)"
+                            tick={{ fontSize: 12 }}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: '#232742', 
+                              border: '1px solid #00B386',
+                              borderRadius: '8px',
+                              color: '#fff'
+                            }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="totalProfit" 
+                            stroke="#00B386" 
+                            strokeWidth={3}
+                            dot={{ fill: '#00B386', strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: '#00B386', strokeWidth: 2 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </Box>
+                  ) : (
+                    <Box sx={{ 
+                      height: 300, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      bgcolor: 'rgba(255,255,255,0.05)',
+                      borderRadius: 2
+                    }}>
+                      <Typography variant="h6" color="rgba(255,255,255,0.6)">
+                        {loading ? 'Loading performance data...' : 'Performance chart will update with live data'}
+                      </Typography>
+                    </Box>
+                  )}
                 </CardContent>
               </Card>
             </Grid>
@@ -913,7 +1075,7 @@ export default function CopyTrading() {
                 No Performance Data Available
               </Typography>
               <Typography variant="body2" color="rgba(255,255,255,0.6)" sx={{ mb: 3 }}>
-                Start copying traders to track your performance
+                Start copying traders to track your performance with live data
               </Typography>
               <Button 
                 variant="contained" 
