@@ -18,9 +18,89 @@ import { marketAPI } from '../services/api';
 import useLiveDashboard from '../hooks/useLiveDashboard';
 import ContactModal from '../components/ContactModal';
 
+// Backend API base URL - Use live deployed backend
+const BACKEND_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
+
+// Backend API functions
+const dashboardAPI = {
+  getOverview: async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/dashboard/overview`);
+      if (!response.ok) throw new Error('Failed to fetch overview');
+      return await response.json();
+    } catch (error) {
+      console.error('Dashboard overview API error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+  getBalance: async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/dashboard/balance`);
+      if (!response.ok) throw new Error('Failed to fetch balance');
+      return await response.json();
+    } catch (error) {
+      console.error('Dashboard balance API error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+  getKYCStatus: async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/dashboard/kyc-status`);
+      if (!response.ok) throw new Error('Failed to fetch KYC status');
+      return await response.json();
+    } catch (error) {
+      console.error('Dashboard KYC API error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+  getTradingOverview: async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/dashboard/trading-overview`);
+      if (!response.ok) throw new Error('Failed to fetch trading overview');
+      return await response.json();
+    } catch (error) {
+      console.error('Dashboard trading API error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+  getStats: async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/dashboard/stats`);
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      return await response.json();
+    } catch (error) {
+      console.error('Dashboard stats API error:', error);
+      return { success: false, error: error.message };
+    }
+  },
+  getNotifications: async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/dashboard/notifications`);
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+      return await response.json();
+    } catch (error) {
+      console.error('Dashboard notifications API error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+};
+
 export default function Dashboard() {
   const theme = useTheme();
   const { user, userStats, loading, error, backendStatus } = useUser();
+  
+  // Backend data state
+  const [backendData, setBackendData] = useState({
+    overview: null,
+    balance: null,
+    kycStatus: null,
+    tradingOverview: null,
+    stats: null,
+    notifications: []
+  });
+  const [backendLoading, setBackendLoading] = useState(true);
+  const [backendError, setBackendError] = useState(null);
+  const [backendConnected, setBackendConnected] = useState(false);
   
   // Contact Modal State
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -29,20 +109,77 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   
-  // Check for new notifications on mount and periodically
+  // Load backend data on component mount
   useEffect(() => {
-    checkForNotifications();
-    const interval = setInterval(checkForNotifications, 5000); // Check every 5 seconds
+    loadBackendData();
+    // Refresh backend data every 30 seconds
+    const interval = setInterval(loadBackendData, 30000);
     return () => clearInterval(interval);
   }, []);
   
-  const checkForNotifications = () => {
+  const loadBackendData = async () => {
+    try {
+      setBackendLoading(true);
+      setBackendError(null);
+      
+      // Fetch all dashboard data from backend
+      const [overviewResult, balanceResult, kycResult, tradingResult, statsResult, notificationsResult] = await Promise.all([
+        dashboardAPI.getOverview(),
+        dashboardAPI.getBalance(),
+        dashboardAPI.getKYCStatus(),
+        dashboardAPI.getTradingOverview(),
+        dashboardAPI.getStats(),
+        dashboardAPI.getNotifications()
+      ]);
+      
+      // Check if any requests succeeded
+      const hasSuccessfulResponse = [overviewResult, balanceResult, kycResult, tradingResult, statsResult, notificationsResult]
+        .some(result => result && result.success);
+      
+      if (hasSuccessfulResponse) {
+        setBackendConnected(true);
+        setBackendData({
+          overview: overviewResult.success ? overviewResult.data : null,
+          balance: balanceResult.success ? balanceResult.data : null,
+          kycStatus: kycResult.success ? kycResult.data : null,
+          tradingOverview: tradingResult.success ? tradingResult.data : null,
+          stats: statsResult.success ? statsResult.data : null,
+          notifications: notificationsResult.success ? notificationsResult.data.notifications : []
+        });
+        
+        // Update local notifications with backend notifications
+        if (notificationsResult.success) {
+          setNotifications(notificationsResult.data.notifications.filter(n => !n.read));
+        }
+      } else {
+        setBackendConnected(false);
+        setBackendError('Unable to connect to backend server. Using demo data.');
+      }
+    } catch (error) {
+      setBackendConnected(false);
+      setBackendError(`Backend connection failed: ${error.message}`);
+      console.error('Backend data loading error:', error);
+    } finally {
+      setBackendLoading(false);
+    }
+  };
+  
+  // Check for local notifications if backend is not connected
+  useEffect(() => {
+    if (!backendConnected) {
+      checkForLocalNotifications();
+      const interval = setInterval(checkForLocalNotifications, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [backendConnected]);
+  
+  const checkForLocalNotifications = () => {
     try {
       const userNotifications = JSON.parse(localStorage.getItem('userNotifications') || '[]');
       const unreadNotifications = userNotifications.filter(n => !n.read);
       setNotifications(unreadNotifications);
     } catch (error) {
-      console.error('Error checking notifications:', error);
+      console.error('Error checking local notifications:', error);
     }
   };
   
@@ -178,10 +315,14 @@ export default function Dashboard() {
     }
   }, [backendStatus]);
 
-  // Dynamic card data based on live dashboard data
+  // Dynamic card data - prioritize backend data over local data
   const cardGradient = 'linear-gradient(135deg, #232742 0%, #1a1d2b 100%)';
   
-  // Use live dashboard data when available, fallback to userStats, then fallback data
+  // Determine data source and current stats
+  const hasBackendData = backendConnected && backendData.overview;
+  const dataSource = hasBackendData ? 'backend' : 'local';
+  
+  // Use backend data when available, fallback to userStats, then fallback data
   const fallbackStats = {
     totalBalance: 0,
     profit: 0,
@@ -193,8 +334,25 @@ export default function Dashboard() {
     winLossRatio: 0
   };
 
-  // Priority: Live Dashboard Data → UserStats → Fallback Data
-  const currentStats = dashboardData.isLive ? dashboardData : (userStats || fallbackStats);
+  // Priority: Backend Data → Live Dashboard Data → UserStats → Fallback Data
+  let currentStats;
+  if (hasBackendData) {
+    // Use backend data
+    currentStats = {
+      totalBalance: backendData.balance?.totalBalance || backendData.overview?.totalBalance || 0,
+      profit: backendData.overview?.totalProfit || 0,
+      totalBonus: backendData.overview?.totalBonus || 0,
+      accountStatus: backendData.overview?.accountStatus || backendData.kycStatus?.kycStatus || 'UNVERIFIED',
+      totalTrades: backendData.tradingOverview?.totalTrades || 0,
+      openTrades: backendData.tradingOverview?.activeTrades || 0,
+      closedTrades: backendData.tradingOverview?.totalTrades - backendData.tradingOverview?.activeTrades || 0,
+      winLossRatio: backendData.tradingOverview?.winRate ? backendData.tradingOverview.winRate / 100 : 0
+    };
+  } else if (dashboardData.isLive) {
+    currentStats = dashboardData;
+  } else {
+    currentStats = userStats || fallbackStats;
+  }
   
   const topCards = [
     { 
@@ -202,11 +360,12 @@ export default function Dashboard() {
       value: `$${currentStats.totalBalance?.toLocaleString() || '0.00'}`, 
       icon: <AccountBalanceWalletIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
-      isLive: dashboardData.isLive,
-      refreshAction: updateBalance,
-      isPending: dashboardData.pendingActions?.depositsAwaitingApproval > 0,
-      pendingText: dashboardData.pendingActions?.depositsAwaitingApproval > 0 ? 
-        `${dashboardData.pendingActions.depositsAwaitingApproval} deposit(s) pending admin approval` : null,
+      isLive: hasBackendData || dashboardData.isLive,
+      dataSource: dataSource,
+      refreshAction: hasBackendData ? loadBackendData : updateBalance,
+      isPending: hasBackendData ? false : (dashboardData.pendingActions?.depositsAwaitingApproval > 0),
+      pendingText: hasBackendData ? null : (dashboardData.pendingActions?.depositsAwaitingApproval > 0 ? 
+        `${dashboardData.pendingActions.depositsAwaitingApproval} deposit(s) pending admin approval` : null),
       adminControlled: true
     },
     { 
@@ -214,18 +373,20 @@ export default function Dashboard() {
       value: `$${currentStats.profit?.toLocaleString() || '0.00'}`, 
       icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
-      isLive: dashboardData.isLive,
-      refreshAction: updateTrading,
-      adminControlled: false // Auto-updates from trading
+      isLive: hasBackendData || dashboardData.isLive,
+      dataSource: dataSource,
+      refreshAction: hasBackendData ? loadBackendData : updateTrading,
+      adminControlled: false
     },
     { 
       label: 'Total Bonus', 
       value: `$${currentStats.totalBonus?.toLocaleString() || '0.00'}`, 
       icon: <GroupIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
-      isLive: dashboardData.isLive,
-      refreshAction: updateBonus,
-      adminControlled: true // Only admin can give bonuses
+      isLive: hasBackendData || dashboardData.isLive,
+      dataSource: dataSource,
+      refreshAction: hasBackendData ? loadBackendData : updateBonus,
+      adminControlled: true
     },
     { 
       label: 'Account Status', 
@@ -234,11 +395,13 @@ export default function Dashboard() {
       gradient: cardGradient, 
       chip: true,
       chipData: getAccountStatusChip(currentStats.accountStatus || 'UNVERIFIED'),
-      isLive: dashboardData.isLive,
-      refreshAction: updateKYC,
-      isPending: dashboardData.pendingActions?.kycAwaitingApproval,
-      pendingText: dashboardData.pendingActions?.kycAwaitingApproval ? 
-        'KYC documents pending admin approval' : null,
+      isLive: hasBackendData || dashboardData.isLive,
+      dataSource: dataSource,
+      refreshAction: hasBackendData ? loadBackendData : updateKYC,
+      isPending: hasBackendData ? (backendData.kycStatus?.kycStatus === 'pending') : dashboardData.pendingActions?.kycAwaitingApproval,
+      pendingText: hasBackendData ? 
+        (backendData.kycStatus?.kycStatus === 'pending' ? 'KYC verification in progress' : null) :
+        (dashboardData.pendingActions?.kycAwaitingApproval ? 'KYC documents pending admin approval' : null),
       adminControlled: true
     },
   ];
@@ -249,36 +412,40 @@ export default function Dashboard() {
       value: currentStats.totalTrades?.toString() || '0', 
       icon: <ShowChartIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
-      isLive: dashboardData.isLive,
-      refreshAction: updateTrading,
-      adminControlled: false // Auto-updates
+      isLive: hasBackendData || dashboardData.isLive,
+      dataSource: dataSource,
+      refreshAction: hasBackendData ? loadBackendData : updateTrading,
+      adminControlled: false
     },
     { 
       label: 'Open Trades', 
       value: currentStats.openTrades?.toString() || '0', 
       icon: <FolderOpenIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
-      isLive: dashboardData.isLive,
-      refreshAction: updateTrading,
-      adminControlled: false // Auto-updates
+      isLive: hasBackendData || dashboardData.isLive,
+      dataSource: dataSource,
+      refreshAction: hasBackendData ? loadBackendData : updateTrading,
+      adminControlled: false
     },
     { 
       label: 'Closed Trades', 
       value: currentStats.closedTrades?.toString() || '0', 
       icon: <HistoryIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
-      isLive: dashboardData.isLive,
-      refreshAction: updateTrading,
-      adminControlled: false // Auto-updates
+      isLive: hasBackendData || dashboardData.isLive,
+      dataSource: dataSource,
+      refreshAction: hasBackendData ? loadBackendData : updateTrading,
+      adminControlled: false
     },
     { 
       label: 'Win/Loss Ratio', 
       value: currentStats.winLossRatio ? `${(currentStats.winLossRatio * 100).toFixed(1)}%` : '0%', 
       icon: <EmojiEventsIcon sx={{ fontSize: { xs: '1.75rem', sm: '2rem', md: '2.25rem' } }} />, 
       gradient: cardGradient,
-      isLive: dashboardData.isLive,
-      refreshAction: updateTrading,
-      adminControlled: false // Auto-calculated
+      isLive: hasBackendData || dashboardData.isLive,
+      dataSource: dataSource,
+      refreshAction: hasBackendData ? loadBackendData : updateTrading,
+      adminControlled: false
     },
   ];
   // List of crypto pairs for selection
@@ -334,17 +501,50 @@ export default function Dashboard() {
       bgcolor: theme.palette.background.default
     }}>
       {/* Loading State */}
-      {loading && (
+      {(loading || backendLoading) && (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
           <CircularProgress />
+          <Typography variant="h6" sx={{ ml: 2 }}>
+            {backendLoading ? 'Connecting to backend...' : 'Loading dashboard...'}
+          </Typography>
         </Box>
       )}
 
       {/* Error State */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
+      {(error || backendError) && (
+        <Box sx={{ mb: 2 }}>
+          {error && (
+            <Alert severity="error" sx={{ mb: 1 }}>
+              {error}
+            </Alert>
+          )}
+          {backendError && (
+            <Alert severity="warning" sx={{ mb: 1 }}>
+              <strong>Backend Status:</strong> {backendError}
+            </Alert>
+          )}
+        </Box>
+      )}
+
+      {/* Backend Connection Status */}
+      {!backendLoading && (
+        <Box sx={{ mb: 2 }}>
+          <Alert severity={backendConnected ? 'success' : 'info'} sx={{ mb: 1 }}>
+            <strong>Connection Status:</strong> {backendConnected ? 
+              'Successfully connected to backend server. Real-time data active.' : 
+              'Using demo data. Backend server unavailable.'}
+            {backendConnected && (
+              <Button 
+                size="small" 
+                onClick={loadBackendData} 
+                sx={{ ml: 2 }}
+                variant="outlined"
+              >
+                Refresh Data
+              </Button>
+            )}
+          </Alert>
+        </Box>
       )}
 
       {/* Notifications */}
@@ -453,8 +653,8 @@ export default function Dashboard() {
                 }}
               />
               <Chip 
-                label={dashboardData.isLive ? 'Live Dashboard' : (backendStatus === 'connected' ? 'Live Data' : 'Demo Mode')} 
-                color={dashboardData.isLive ? 'success' : (backendStatus === 'connected' ? 'success' : 'info')} 
+                label={backendConnected ? 'Backend Connected' : (dashboardData.isLive ? 'Live Dashboard' : (backendStatus === 'connected' ? 'Live Data' : 'Demo Mode'))} 
+                color={backendConnected ? 'success' : (dashboardData.isLive ? 'success' : (backendStatus === 'connected' ? 'success' : 'info'))} 
                 variant="filled" 
                 size="small"
                 sx={{ 
@@ -463,6 +663,19 @@ export default function Dashboard() {
                   fontWeight: 600
                 }}
               />
+              {backendConnected && (
+                <Chip 
+                  label={`Data Source: Backend`} 
+                  color="primary" 
+                  variant="outlined" 
+                  size="small"
+                  sx={{ 
+                    height: { xs: 28, sm: 32 },
+                    fontSize: { xs: '0.7rem', sm: '0.8125rem' },
+                    fontWeight: 600
+                  }}
+                />
+              )}
               <Button 
                 variant="contained" 
                 color="primary" 
