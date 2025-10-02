@@ -1485,9 +1485,6 @@ export default function AdminDashboard() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
             🛠️ Elon Investment Broker - Admin Panel
           </Typography>
-          <Button color="inherit" href="/dashboard">
-            Back to Dashboard
-          </Button>
         </Toolbar>
       </AppBar>
 

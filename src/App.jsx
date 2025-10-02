@@ -156,8 +156,9 @@ function AppContent() {
     }
   };
 
-  // Check if current route is login or register
+  // Check if current route is login, register, or admin
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isAdminPage = location.pathname === '/admin';
 
   if (isAuthPage) {
     // Render only the auth page, no AppBar/Drawer
@@ -167,6 +168,17 @@ function AppContent() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+        </Routes>
+      </Box>
+    );
+  }
+
+  if (isAdminPage) {
+    // Render only the admin page, completely independent
+    return (
+      <Box sx={{ minHeight: '100vh', bgcolor: '#0a0e1a' }}>
+        <Routes>
+          <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
         </Routes>
       </Box>
     );
@@ -321,7 +333,6 @@ function AppContent() {
           <Route path="/dashboard/technical" element={<RequireAuth><Technical /></RequireAuth>} />
           <Route path="/dashboard/chart" element={<RequireAuth><Chart /></RequireAuth>} />
           <Route path="/dashboard/calendar" element={<RequireAuth><Calendar /></RequireAuth>} />
-          <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
           <Route path="*" element={<RequireAuth><Dashboard /></RequireAuth>} />
         </Routes>
       </Box>
