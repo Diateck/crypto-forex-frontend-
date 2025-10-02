@@ -31,7 +31,12 @@ import {
   Tabs,
   Tab,
   AppBar,
-  Toolbar
+  Toolbar,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon
 } from '@mui/material';
 import {
   CheckCircle as ApproveIcon,
@@ -52,31 +57,6 @@ import {
 } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import AdminContactManager from '../components/AdminContactManager';
-
-function TabPanel({ children, value, index, ...other }) {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`admin-tabpanel-${index}`}
-      aria-labelledby={`admin-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ pt: 3 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-}
-
-function a11yProps(index) {
-  return {
-    id: `admin-tab-${index}`,
-    'aria-controls': `admin-tabpanel-${index}`,
-  };
-}
 
 // Deposit Management Component
 function DepositManagement() {
@@ -1458,14 +1438,71 @@ function TradingManagement() {
 
 export default function AdminDashboard() {
   const [currentTab, setCurrentTab] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = (newValue) => {
     setCurrentTab(newValue);
+    setDrawerOpen(false); // Close drawer when selecting a tab
+  };
+
+  const handleDrawerToggle = () => {
+    setDrawerOpen(!drawerOpen);
   };
 
   const handleContactInfoSave = (contactData) => {
     console.log('Saving contact information:', contactData);
     // TODO: Implement actual save to backend
+  };
+
+  // Admin navigation items
+  const adminMenuItems = [
+    { 
+      index: 0, 
+      label: 'Overview', 
+      icon: <DashboardIcon />,
+      description: 'Dashboard overview and statistics'
+    },
+    { 
+      index: 1, 
+      label: 'Deposit Management', 
+      icon: <DepositIcon />,
+      description: 'Manage user deposits and approvals'
+    },
+    { 
+      index: 2, 
+      label: 'Withdrawal Management', 
+      icon: <WithdrawIcon />,
+      description: 'Handle withdrawal requests'
+    },
+    { 
+      index: 3, 
+      label: 'Trading Management', 
+      icon: <TrendingIcon />,
+      description: 'Monitor and manage user trades'
+    },
+    { 
+      index: 4, 
+      label: 'Contact Management', 
+      icon: <ContactMailIcon />,
+      description: 'Manage contact information and support'
+    },
+    { 
+      index: 5, 
+      label: 'User Management', 
+      icon: <PeopleIcon />,
+      description: 'User accounts and permissions'
+    },
+    { 
+      index: 6, 
+      label: 'System Settings', 
+      icon: <SettingsIcon />,
+      description: 'System configuration and settings'
+    }
+  ];
+
+  const getCurrentPageTitle = () => {
+    const currentItem = adminMenuItems.find(item => item.index === currentTab);
+    return currentItem ? currentItem.label : 'Admin Dashboard';
   };
 
   return (
@@ -1478,6 +1515,7 @@ export default function AdminDashboard() {
             edge="start"
             color="inherit"
             aria-label="menu"
+            onClick={handleDrawerToggle}
             sx={{ mr: 2 }}
           >
             <MenuIcon />
@@ -1485,86 +1523,93 @@ export default function AdminDashboard() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
             🛠️ Elon Investment Broker - Admin Panel
           </Typography>
+          <Typography variant="subtitle1" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+            {getCurrentPageTitle()}
+          </Typography>
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="xl" sx={{ py: 3 }}>
-        {/* Admin Navigation */}
-        <Paper sx={{ bgcolor: '#232742', mb: 3 }}>
-          <Tabs
-            value={currentTab}
-            onChange={handleTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{
-              '& .MuiTab-root': {
-                color: 'rgba(255,255,255,0.7)',
-                fontWeight: 600,
+      {/* Admin Navigation Drawer */}
+      <Drawer
+        variant="temporary"
+        open={drawerOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 280,
+            bgcolor: '#1a1d2b',
+            color: '#fff',
+            borderRight: '1px solid #23272F',
+          },
+        }}
+      >
+        <Box sx={{ p: 2, borderBottom: '1px solid #23272F' }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: '#fff' }}>
+            🛠️ Admin Panel
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+            Management Dashboard
+          </Typography>
+        </Box>
+        <List sx={{ pt: 1 }}>
+          {adminMenuItems.map((item) => (
+            <ListItem
+              button
+              key={item.index}
+              selected={currentTab === item.index}
+              onClick={() => handleTabChange(item.index)}
+              sx={{
+                borderRadius: 2,
+                mb: 1,
+                mx: 1,
+                bgcolor: currentTab === item.index ? '#232742' : 'transparent',
+                '&:hover': {
+                  bgcolor: '#232742',
+                },
                 '&.Mui-selected': {
-                  color: '#fff'
-                }
-              },
-              '& .MuiTabs-indicator': {
-                backgroundColor: '#1976d2'
-              }
-            }}
-          >
-            <Tab 
-              icon={<DashboardIcon />} 
-              label="Overview" 
-              {...a11yProps(0)} 
-              sx={{ minHeight: 72 }}
-            />
-            <Tab 
-              icon={<DepositIcon />} 
-              label="Deposit Management" 
-              {...a11yProps(1)} 
-              sx={{ minHeight: 72 }}
-            />
-            <Tab 
-              icon={<WithdrawIcon />} 
-              label="Withdrawal Management" 
-              {...a11yProps(2)} 
-              sx={{ minHeight: 72 }}
-            />
-            <Tab 
-              icon={<TrendingIcon />} 
-              label="Trading Management" 
-              {...a11yProps(3)} 
-              sx={{ minHeight: 72 }}
-            />
-            <Tab 
-              icon={<ContactMailIcon />} 
-              label="Contact Management" 
-              {...a11yProps(4)} 
-              sx={{ minHeight: 72 }}
-            />
-            <Tab 
-              icon={<PeopleIcon />} 
-              label="User Management" 
-              {...a11yProps(5)} 
-              sx={{ minHeight: 72 }}
-            />
-            <Tab 
-              icon={<SettingsIcon />} 
-              label="System Settings" 
-              {...a11yProps(6)} 
-              sx={{ minHeight: 72 }}
-            />
-          </Tabs>
-        </Paper>
+                  bgcolor: '#1976d2',
+                  '&:hover': {
+                    bgcolor: '#1565c0',
+                  },
+                },
+                transition: 'all 0.2s',
+              }}
+            >
+              <ListItemIcon sx={{ color: currentTab === item.index ? '#fff' : 'rgba(255,255,255,0.7)' }}>
+                {item.icon}
+              </ListItemIcon>
+              <Box>
+                <ListItemText 
+                  primary={item.label}
+                  secondary={item.description}
+                  primaryTypographyProps={{
+                    fontWeight: currentTab === item.index ? 600 : 400,
+                    color: currentTab === item.index ? '#fff' : 'rgba(255,255,255,0.9)'
+                  }}
+                  secondaryTypographyProps={{
+                    fontSize: '0.75rem',
+                    color: 'rgba(255,255,255,0.5)'
+                  }}
+                />
+              </Box>
+            </ListItem>
+          ))}
+        </List>
+      </Drawer>
 
-        {/* Tab Content */}
-        <TabPanel value={currentTab} index={0}>
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        {/* Tab Content - No more horizontal tabs */}
+        {currentTab === 0 && (
           <Paper sx={{ p: 3, bgcolor: '#1a1d2b', color: '#fff' }}>
             <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
               📊 Admin Dashboard Overview
             </Typography>
-            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-              Welcome to the admin panel. Use the tabs above to manage different aspects of the system.
+            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.8)', mb: 4 }}>
+              Welcome to the admin panel. Use the menu to manage different aspects of the system.
             </Typography>
             
-            <Box sx={{ mt: 4, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 3 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 3 }}>
               <Paper sx={{ p: 3, bgcolor: '#232742', textAlign: 'center' }}>
                 <Typography variant="h6" fontWeight={600} sx={{ color: '#4caf50', mb: 1 }}>
                   Total Users
@@ -1609,25 +1654,14 @@ export default function AdminDashboard() {
               </Paper>
             </Box>
           </Paper>
-        </TabPanel>
+        )}
 
-        <TabPanel value={currentTab} index={1}>
-          <DepositManagement />
-        </TabPanel>
-
-        <TabPanel value={currentTab} index={2}>
-          <WithdrawalManagement />
-        </TabPanel>
-
-        <TabPanel value={currentTab} index={3}>
-          <TradingManagement />
-        </TabPanel>
-
-        <TabPanel value={currentTab} index={4}>
-          <AdminContactManager onSave={handleContactInfoSave} />
-        </TabPanel>
-
-        <TabPanel value={currentTab} index={5}>
+        {currentTab === 1 && <DepositManagement />}
+        {currentTab === 2 && <WithdrawalManagement />}
+        {currentTab === 3 && <TradingManagement />}
+        {currentTab === 4 && <AdminContactManager onSave={handleContactInfoSave} />}
+        
+        {currentTab === 5 && (
           <Paper sx={{ p: 3, bgcolor: '#1a1d2b', color: '#fff' }}>
             <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
               👥 User Management
@@ -1636,9 +1670,9 @@ export default function AdminDashboard() {
               User management features will be implemented here.
             </Typography>
           </Paper>
-        </TabPanel>
+        )}
 
-        <TabPanel value={currentTab} index={6}>
+        {currentTab === 6 && (
           <Paper sx={{ p: 3, bgcolor: '#1a1d2b', color: '#fff' }}>
             <Typography variant="h4" fontWeight={700} sx={{ mb: 2 }}>
               ⚙️ System Settings
@@ -1647,7 +1681,7 @@ export default function AdminDashboard() {
               System configuration settings will be available here.
             </Typography>
           </Paper>
-        </TabPanel>
+        )}
       </Container>
     </Box>
   );
