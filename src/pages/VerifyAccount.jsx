@@ -62,6 +62,10 @@ import {
   Delete,
   Close
 } from '@mui/icons-material';
+import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { kycAPI } from '../services/api';
+import { getUserKYCStatus, getUserKYCLabel, getUserKYCColor } from '../utils/userStatus';
 
 // KYC Document Types
 const documentTypes = [
@@ -79,6 +83,12 @@ const addressDocuments = [
   { value: 'rental_agreement', label: 'Rental Agreement', description: 'Current rental/lease agreement' }
 ];
 
+// Import necessary APIs and contexts
+import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { kycAPI } from '../services/api';
+import { getUserKYCStatus, getUserKYCLabel, getUserKYCColor } from '../utils/userStatus';
+
 // Country Options
 const countries = [
   'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 'France', 'Japan', 'Nigeria', 'South Africa', 'India', 'Brazil', 'Mexico', 'Spain', 'Italy', 'Netherlands', 'Other'
@@ -86,7 +96,11 @@ const countries = [
 
 export default function VerifyAccount() {
   const theme = useTheme();
+  const { user } = useUser();
+  const { addNotification } = useNotifications();
   const [activeStep, setActiveStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [kycStatus, setKycStatus] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -110,7 +124,24 @@ export default function VerifyAccount() {
     selfiePhoto: null
   });
   const [submitDialog, setSubmitDialog] = useState(false);
-  const [loading, setLoading] = useState(false);
+
+  // Load KYC status on component mount
+  React.useEffect(() => {
+    if (user?.id) {
+      loadKYCStatus();
+    }
+  }, [user]);
+
+  const loadKYCStatus = async () => {
+    try {
+      const response = await kycAPI.getStatus(user.id);
+      if (response.success) {
+        setKycStatus(response.data);
+      }
+    } catch (error) {
+      console.warn('Failed to load KYC status:', error);
+    }
+  };
 
   const handleInputChange = (field) => (event) => {
     setFormData(prev => ({
@@ -141,15 +172,52 @@ export default function VerifyAccount() {
     setSubmitDialog(true);
   };
 
-  const confirmSubmit = () => {
+  const confirmSubmit = async () => {
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Prepare KYC data
+      const kycData = {
+        userId: user?.id || user?.username || 'anonymous',
+        userName: user?.name || user?.username || 'Unknown User',
+        userEmail: user?.email || 'user@example.com',
+        personalInfo: {
+          fullName: `${formData.firstName} ${formData.middleName ? formData.middleName + ' ' : ''}${formData.lastName}`,
+          dateOfBirth: formData.dateOfBirth,
+          nationality: formData.nationality,
+          address: `${formData.address}, ${formData.city}, ${formData.state}, ${formData.country} ${formData.postalCode}`,
+          phoneNumber: formData.phoneNumber,
+          occupation: formData.occupation,
+          sourceOfFunds: formData.sourceOfFunds || 'Trading and Investments'
+        },
+        documents: formData.documents || [],
+        verificationLevel: 'basic'
+      };
+
+      // Submit to backend
+      const response = await kycAPI.submitKYC(kycData);
+      
+      if (response.success) {
+        addNotification(response.data.message || 'KYC verification submitted successfully!', 'success');
+        
+        // Reload KYC status
+        await loadKYCStatus();
+        
+        setSubmitDialog(false);
+        
+        // Reset active step to show status
+        setActiveStep(0);
+        
+      } else {
+        throw new Error(response.message || 'Submission failed');
+      }
+      
+    } catch (error) {
+      console.error('KYC submission error:', error);
+      addNotification(error.message || 'Failed to submit KYC verification. Please try again.', 'error');
+    } finally {
       setLoading(false);
-      setSubmitDialog(false);
-      alert('KYC verification submitted successfully! We will review your documents and update your account status within 24-48 hours.');
-    }, 2000);
+    }
   };
 
   const steps = [

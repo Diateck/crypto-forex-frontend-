@@ -58,6 +58,7 @@ import {
   TrendingFlat
 } from '@mui/icons-material';
 import { useUser } from '../contexts/UserContext';
+import { getUserKYCLabel, getUserKYCColor } from '../utils/userStatus';
 import { useBalance } from '../contexts/BalanceContext';
 import useLiveCopyTrading from '../hooks/useLiveCopyTrading';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
@@ -200,7 +201,7 @@ export default function CopyTrading() {
             variant="outlined" 
             size="small"
           />
-          <Chip icon={<VerifiedUser />} label="KYC" color="primary" variant="outlined" />
+          <Chip icon={<VerifiedUser />} label={getUserKYCLabel(user)} color={getUserKYCColor(user)} variant="outlined" />
           <Button variant="contained" color="primary" startIcon={<Email />} size="small">
             Mail Us
           </Button>

@@ -34,6 +34,8 @@ import {
   Timer,
   LocalFireDepartment
 } from '@mui/icons-material';
+import { useUser } from '../contexts/UserContext';
+import { getUserKYCLabel, getUserKYCColor } from '../utils/userStatus';
 
 // Trending NFT Collections Data
 const trendingNFTs = [
@@ -153,6 +155,7 @@ const topCollections = [
 
 export default function NFTGallery() {
   const theme = useTheme();
+  const { user } = useUser();
   const [tabValue, setTabValue] = useState(0);
   const [likedNFTs, setLikedNFTs] = useState(new Set());
   const [imageErrors, setImageErrors] = useState(new Set());
@@ -224,7 +227,7 @@ export default function NFTGallery() {
             </Box>
           </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-            <Chip icon={<VerifiedUser />} label="KYC" color="primary" variant="outlined" />
+            <Chip icon={<VerifiedUser />} label={getUserKYCLabel(user)} color={getUserKYCColor(user)} variant="outlined" />
             <Button variant="contained" color="primary" startIcon={<Email />} size="small">
               Mail Us
             </Button>

@@ -70,6 +70,10 @@ import {
   Close
 } from '@mui/icons-material';
 import { financialAPI } from '../services/api';
+import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { getUserUsername } from '../utils/userStatus';
+import { loansAPI } from '../services/api';
 
 // Loan/Credit Facility Options
 const loanFacilities = [
@@ -209,6 +213,8 @@ const mockLoanHistory = [
 
 export default function ApplyLoans() {
   const theme = useTheme();
+  const { user } = useUser();
+  const { addNotification } = useNotifications();
   const [formData, setFormData] = useState({
     loanAmount: '',
     creditFacility: '',
@@ -277,10 +283,32 @@ export default function ApplyLoans() {
     setLoading(true);
     
     try {
-      const response = await financialAPI.applyLoan(formData);
+      // Prepare loan application data
+      const loanData = {
+        userId: user?.id || getUserUsername(user),
+        userName: user?.name || getUserUsername(user),
+        userEmail: user?.email || formData.email || 'user@example.com',
+        loanProductId: formData.creditFacility,
+        amount: parseFloat(formData.loanAmount),
+        purpose: formData.purpose,
+        income: parseFloat(formData.monthlyIncome) || 0,
+        employmentStatus: formData.employmentStatus,
+        repaymentMethod: 'monthly',
+        additionalInfo: `Duration: ${formData.duration}, Address: ${formData.address}, Phone: ${formData.phone}`
+      };
+
+      // Try new loans API first
+      let response;
+      try {
+        response = await loansAPI.applyLoan(loanData);
+      } catch (error) {
+        console.warn('New loans API failed, trying legacy API:', error);
+        response = await financialAPI.applyLoan(formData);
+      }
       
       if (response.success) {
         setSubmitDialog(false);
+        addNotification(response.data?.message || response.message || 'Loan application submitted successfully!', 'success');
         alert('Loan application submitted successfully! We will review your application and contact you within 24-48 hours.');
         
         // Refresh loan history
@@ -393,7 +421,7 @@ export default function ApplyLoans() {
                   mt: 0.25
                 }}
               >
-                Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
+                Username: <span style={{ color: theme.palette.primary.main }}>{getUserUsername(user)}</span>
               </Typography>
             </Box>
           </Box>

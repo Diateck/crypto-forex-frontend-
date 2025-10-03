@@ -50,6 +50,7 @@ import {
 import { useUser } from '../contexts/UserContext';
 import { useBalance } from '../contexts/BalanceContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { getUserKYCLabel, getUserKYCColor } from '../utils/userStatus';
 import useLiveTrading from '../hooks/useLiveTrading';
 
 // Backend API configuration
@@ -406,7 +407,7 @@ export default function AccountHistory() {
           </Box>
         </Box>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-          <Chip icon={<VerifiedUser />} label="KYC" color="primary" variant="outlined" />
+          <Chip icon={<VerifiedUser />} label={getUserKYCLabel(user)} color={getUserKYCColor(user)} variant="outlined" />
           <Button variant="contained" color="primary" startIcon={<Email />} size="small">
             Mail Us
           </Button>

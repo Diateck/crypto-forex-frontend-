@@ -37,6 +37,7 @@ import {
   History
 } from '@mui/icons-material';
 import { useUser } from '../contexts/UserContext';
+import { getTraderStatusLabel, getKYCStatusColor } from '../utils/userStatus';
 import { useBalance } from '../contexts/BalanceContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import useLiveTrading from '../hooks/useLiveTrading';
@@ -578,8 +579,8 @@ export default function Trade() {
         >
           <Chip
             icon={<VerifiedUser />}
-            label="Verified Trader"
-            color="success"
+            label={getTraderStatusLabel(user?.kycStatus)}
+            color={getKYCStatusColor(user?.kycStatus)}
             variant="outlined"
             size="small"
             sx={{

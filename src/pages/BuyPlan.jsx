@@ -41,64 +41,67 @@ import {
   Language,
   Copyright
 } from '@mui/icons-material';
+import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { getUserUsername } from '../utils/userStatus';
+import { plansAPI } from '../services/api';
 
 const investmentPlans = [
   {
-    id: 1,
-    name: 'Bronze Plan',
+    id: 'starter',
+    name: 'Starter Plan',
     type: 'regular',
-    roi: '500',
-    minAmount: 4000,
-    maxAmount: 10000,
-    duration: '2 weeks',
+    roi: '15',
+    minimumDeposit: 100,
+    maximumDeposit: 999,
+    profitPercentage: 15,
+    duration: '7 days',
     color: '#CD7F32',
     gradient: 'linear-gradient(135deg, #CD7F32 0%, #A0522D 100%)',
-    features: [
-      'Daily ROI of 500%',
-      '24/7 Customer Support',
-      'Secure Investment',
-      'Quick Withdrawal',
-      'Investment Protection'
-    ]
+    features: ['Basic trading signals', 'Email support', 'Market analysis'],
+    popular: false
   },
   {
-    id: 2,
-    name: 'Gold Plan',
+    id: 'professional',
+    name: 'Professional Plan',
     type: 'VIP',
-    roi: '750',
-    minAmount: 5200,
-    maxAmount: 20000,
-    duration: '2 weeks',
+    roi: '25',
+    minimumDeposit: 1000,
+    maximumDeposit: 4999,
+    profitPercentage: 25,
+    duration: '14 days',
     color: '#FFD700',
     gradient: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
-    features: [
-      'Daily ROI of 750%',
-      'VIP Customer Support',
-      'Priority Withdrawal',
-      'Advanced Security',
-      'Dedicated Account Manager',
-      'Investment Insurance'
-    ]
+    features: ['Advanced trading signals', 'Priority support', 'Daily market updates', 'Risk management tools'],
+    popular: true
   },
   {
-    id: 3,
-    name: 'Platinum Plan',
+    id: 'premium',
+    name: 'Premium Plan',
     type: 'VIP',
-    roi: '1200',
-    minAmount: 10000,
-    maxAmount: 50000000,
-    duration: '7 Days',
-    color: '#E5E4E2',
-    gradient: 'linear-gradient(135deg, #E5E4E2 0%, #C0C0C0 100%)',
-    features: [
-      'Daily ROI of 1200%',
-      'Premium VIP Support',
-      'Instant Withdrawal',
-      'Maximum Security',
-      'Personal Investment Advisor',
-      'Full Investment Protection',
-      'Exclusive Trading Signals'
-    ]
+    roi: '35',
+    minimumDeposit: 5000,
+    maximumDeposit: 19999,
+    profitPercentage: 35,
+    duration: '21 days',
+    color: '#C0C0C0',
+    gradient: 'linear-gradient(135deg, #C0C0C0 0%, #808080 100%)',
+    features: ['Premium signals', '24/7 support', 'Personal account manager', 'Exclusive webinars'],
+    popular: false
+  },
+  {
+    id: 'vip',
+    name: 'VIP Plan',
+    type: 'VIP',
+    roi: '50',
+    minimumDeposit: 20000,
+    maximumDeposit: 100000,
+    profitPercentage: 50,
+    duration: '30 days',
+    color: '#9932CC',
+    gradient: 'linear-gradient(135deg, #9932CC 0%, #8A2BE2 100%)',
+    features: ['VIP signals', 'Dedicated support', 'Custom strategies', 'Direct broker contact'],
+    popular: false
   }
 ];
 
@@ -115,27 +118,106 @@ const languages = [
 
 export default function BuyPlan() {
   const theme = useTheme();
+  const { user } = useUser();
+  const { addNotification } = useNotifications();
   const [investDialogOpen, setInvestDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [investAmount, setInvestAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [loading, setLoading] = useState(false);
+  const [plans, setPlans] = useState(investmentPlans); // Start with local data as fallback
+  const [userPlans, setUserPlans] = useState([]);
+
+  // Load backend data on component mount
+  React.useEffect(() => {
+    loadPlansData();
+    if (user) {
+      loadUserPlans();
+    }
+  }, [user]);
+
+  const loadPlansData = async () => {
+    try {
+      const response = await plansAPI.getPlans();
+      if (response.success && response.data.plans) {
+        setPlans(response.data.plans);
+      }
+    } catch (error) {
+      console.warn('Failed to load plans from backend, using fallback data:', error);
+    }
+  };
+
+  const loadUserPlans = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const response = await plansAPI.getUserPlans(user.id);
+      if (response.success && response.data.plans) {
+        setUserPlans(response.data.plans);
+      }
+    } catch (error) {
+      console.warn('Failed to load user plans:', error);
+    }
+  };
 
   const handleInvestClick = (plan) => {
     setSelectedPlan(plan);
     setInvestDialogOpen(true);
   };
 
-  const handleConfirmInvestment = () => {
-    // Here you would implement the actual investment logic
-    console.log('Investment:', {
-      plan: selectedPlan,
-      amount: investAmount,
-      paymentMethod: paymentMethod
-    });
-    setInvestDialogOpen(false);
-    setInvestAmount('');
-    setPaymentMethod('');
+  const handleConfirmInvestment = async () => {
+    if (!user || !selectedPlan || !investAmount || !paymentMethod) {
+      addNotification('Please fill in all required fields', 'error');
+      return;
+    }
+
+    const amount = parseFloat(investAmount);
+    if (isNaN(amount) || amount < selectedPlan.minimumDeposit || amount > selectedPlan.maximumDeposit) {
+      addNotification(`Amount must be between $${selectedPlan.minimumDeposit} and $${selectedPlan.maximumDeposit}`, 'error');
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      // Prepare plan purchase data
+      const planData = {
+        userId: user.id || getUserUsername(user),
+        userName: user.name || getUserUsername(user),
+        userEmail: user.email || 'user@example.com',
+        planId: selectedPlan.id,
+        planName: selectedPlan.name,
+        amount: amount,
+        paymentMethod: paymentMethod,
+        expectedProfit: amount * (selectedPlan.profitPercentage / 100),
+        duration: selectedPlan.duration
+      };
+
+      // Try backend first
+      const response = await plansAPI.purchasePlan(planData);
+      
+      if (response.success) {
+        addNotification(response.data.message || 'Investment plan purchased successfully!', 'success');
+        
+        // Reload user plans
+        await loadUserPlans();
+        
+        // Close dialog and reset form
+        setInvestDialogOpen(false);
+        setInvestAmount('');
+        setPaymentMethod('');
+        
+      } else {
+        throw new Error(response.message || 'Purchase failed');
+      }
+      
+    } catch (error) {
+      console.error('Plan purchase error:', error);
+      addNotification(error.message || 'Failed to purchase plan. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -163,7 +245,7 @@ export default function BuyPlan() {
                 Elon Investment Broker
               </Typography>
               <Typography variant="h6" fontWeight={700} color="#fff">
-                Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
+                Username: <span style={{ color: theme.palette.primary.main }}>{getUserUsername(user)}</span>
               </Typography>
             </Box>
           </Box>
@@ -266,7 +348,7 @@ export default function BuyPlan() {
                       mb: 1
                     }}>
                       <Typography variant="body2" fontWeight="600">Minimum:</Typography>
-                      <Typography variant="body2">${plan.minAmount.toLocaleString()}</Typography>
+                      <Typography variant="body2">${plan.minimumDeposit.toLocaleString()}</Typography>
                     </Box>
                     <Box sx={{ 
                       display: 'flex',
@@ -274,7 +356,7 @@ export default function BuyPlan() {
                       mb: 1
                     }}>
                       <Typography variant="body2" fontWeight="600">Maximum:</Typography>
-                      <Typography variant="body2">${plan.maxAmount.toLocaleString()}</Typography>
+                      <Typography variant="body2">${plan.maximumDeposit.toLocaleString()}</Typography>
                     </Box>
                     <Box sx={{ 
                       display: 'flex',
@@ -419,7 +501,7 @@ export default function BuyPlan() {
                   <Typography>ROI: {selectedPlan.roi}% Daily</Typography>
                   <Typography>Duration: {selectedPlan.duration}</Typography>
                   <Typography>
-                    Range: ${selectedPlan.minAmount.toLocaleString()} - ${selectedPlan.maxAmount.toLocaleString()}
+                    Range: ${selectedPlan.minimumDeposit.toLocaleString()} - ${selectedPlan.maximumDeposit.toLocaleString()}
                   </Typography>
                 </Paper>
 

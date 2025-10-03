@@ -273,4 +273,40 @@ export const contactAPI = {
   submitContactForm: (formData) => apiService.post('/contact/submit', formData)
 };
 
+// Investment Plans API endpoints
+export const plansAPI = {
+  getPlans: () => apiService.get('/plans'),
+  getUserPlans: (userId) => apiService.get(`/plans/user/${userId}`),
+  purchasePlan: (planData) => apiService.post('/plans/purchase', planData),
+  getPlanStatistics: () => apiService.get('/plans/statistics')
+};
+
+// KYC API endpoints
+export const kycAPI = {
+  getStatus: (userId) => apiService.get(`/kyc/status/${userId}`),
+  submitKYC: (kycData) => apiService.post('/kyc/submit', kycData),
+  uploadDocument: (documentData) => apiService.post('/kyc/upload-document', documentData),
+  getPendingApplications: () => apiService.get('/kyc/pending'),
+  reviewApplication: (applicationId, reviewData) => apiService.post(`/kyc/review/${applicationId}`, reviewData)
+};
+
+// Referrals API endpoints
+export const referralsAPI = {
+  getUserReferrals: (userId) => apiService.get(`/referrals/${userId}`),
+  registerReferral: (referralData) => apiService.post('/referrals/register', referralData),
+  addCommission: (commissionData) => apiService.post('/referrals/commission', commissionData),
+  getLeaderboard: () => apiService.get('/referrals/leaderboard'),
+  getStatistics: () => apiService.get('/referrals/statistics')
+};
+
+// Loans API endpoints
+export const loansAPI = {
+  getProducts: () => apiService.get('/loans/products'),
+  getUserLoans: (userId) => apiService.get(`/loans/user/${userId}`),
+  applyLoan: (loanData) => apiService.post('/loans/apply', loanData),
+  getPendingApplications: () => apiService.get('/loans/pending'),
+  reviewApplication: (applicationId, reviewData) => apiService.post(`/loans/review/${applicationId}`, reviewData),
+  getStatistics: () => apiService.get('/loans/statistics')
+};
+
 export default apiService;

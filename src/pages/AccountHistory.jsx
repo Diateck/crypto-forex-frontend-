@@ -41,6 +41,8 @@ import {
   DatePicker,
   InputAdornment
 } from '@mui/material';
+import { useUser } from '../contexts/UserContext';
+import { getUserUsername } from '../utils/userStatus';
 import {
   Person,
   Email,
@@ -257,6 +259,7 @@ const mockTransactionHistory = [
 
 export default function AccountHistory() {
   const theme = useTheme();
+  const { user } = useUser();
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterType, setFilterType] = useState('all');
@@ -410,7 +413,7 @@ export default function AccountHistory() {
                   mt: 0.25
                 }}
               >
-                Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
+                Username: <span style={{ color: theme.palette.primary.main }}>{getUserUsername(user)}</span>
               </Typography>
             </Box>
           </Box>

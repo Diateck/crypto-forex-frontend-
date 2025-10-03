@@ -26,6 +26,8 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useTheme } from '@mui/material/styles';
 import { useUser } from '../contexts/UserContext';
+import { getUserEmail, getKYCStatusLabel, getKYCStatusColor } from '../utils/userStatus';
+import { getUserDisplayName, getKYCStatusLabel, getKYCStatusColor } from '../utils/userStatus';
 
 // Backend API configuration - Use live deployed backend
 const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
@@ -516,7 +518,7 @@ export default function Deposits() {
                 mt: 0.25
               }}
             >
-              User: <span style={{ color: theme.palette.primary.main }}>Theophilus Crown</span>
+              User: <span style={{ color: theme.palette.primary.main }}>{user?.name || user?.firstName + ' ' + user?.lastName || 'User'}</span>
             </Typography>
           </Box>
         </Box>
@@ -860,7 +862,7 @@ export default function Deposits() {
                   mb: 1
                 }}
               >
-                Full Name: Theophilus Crown
+                Full Name: {user?.name || user?.firstName + ' ' + user?.lastName || 'User'}
               </Typography>
               <Typography 
                 variant="subtitle2" 
@@ -870,7 +872,7 @@ export default function Deposits() {
                   mb: 1
                 }}
               >
-                Email: theophiluscrown693@gmail.com
+                Email: {getUserEmail(user)}
               </Typography>
               <Typography 
                 variant="subtitle2" 

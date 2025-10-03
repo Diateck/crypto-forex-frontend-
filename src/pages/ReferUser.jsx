@@ -78,6 +78,10 @@ import {
   Language,
   Public
 } from '@mui/icons-material';
+import { useUser } from '../contexts/UserContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import { getUserUsername, getReferralLink } from '../utils/userStatus';
+import { referralsAPI } from '../services/api';
 
 // Mock referral data
 const mockReferralData = {
@@ -164,18 +168,67 @@ const referralTiers = [
 
 export default function ReferUser() {
   const theme = useTheme();
+  const { user } = useUser();
+  const { addNotification } = useNotifications();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [selectedReferral, setSelectedReferral] = useState(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [backendReferralData, setBackendReferralData] = useState(null);
+
+  // Load referral data on component mount
+  React.useEffect(() => {
+    if (user?.id) {
+      loadReferralData();
+    }
+  }, [user]);
+
+  const loadReferralData = async () => {
+    try {
+      const response = await referralsAPI.getUserReferrals(user.id);
+      if (response.success) {
+        setBackendReferralData(response.data);
+      }
+    } catch (error) {
+      console.warn('Failed to load referral data from backend:', error);
+    }
+  };
+
+  // Create dynamic referral data from user - use backend data if available
+  const referralData = backendReferralData ? {
+    referralId: getUserUsername(user),
+    referralLink: backendReferralData.referralLink,
+    totalReferrals: backendReferralData.stats.totalReferrals,
+    activeReferrals: backendReferralData.stats.activeReferrals,
+    totalCommissions: backendReferralData.stats.totalCommissions,
+    pendingCommissions: backendReferralData.stats.pendingCommissions,
+    tier: backendReferralData.stats.tier,
+    nextTierProgress: backendReferralData.stats.nextTierProgress,
+    commissionRate: backendReferralData.stats.commissionRate,
+    nextPayoutDate: backendReferralData.stats.nextPayoutDate,
+    referrals: backendReferralData.referrals
+  } : {
+    referralId: getUserUsername(user),
+    referralLink: getReferralLink(user),
+    totalReferrals: user?.referralStats?.totalReferrals || 0,
+    activeReferrals: user?.referralStats?.activeReferrals || 0,
+    totalCommissions: user?.referralStats?.totalCommissions || 0,
+    pendingCommissions: user?.referralStats?.pendingCommissions || 0,
+    tier: user?.referralStats?.tier || 'Bronze',
+    nextTierProgress: user?.referralStats?.nextTierProgress || 0,
+    commissionRate: user?.referralStats?.commissionRate || 5,
+    nextPayoutDate: user?.referralStats?.nextPayoutDate || '2024-01-15',
+    referrals: user?.referralStats?.referrals || []
+  };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(mockReferralData.referralLink);
+    navigator.clipboard.writeText(referralData.referralLink);
     // Show success message
   };
 
   const handleShare = (platform) => {
-    const text = `Join me on Elon Investment Broker and start your trading journey! Use my referral link: ${mockReferralData.referralLink}`;
-    const url = mockReferralData.referralLink;
+    const text = `Join me on Elon Investment Broker and start your trading journey! Use my referral link: ${referralData.referralLink}`;
+    const url = referralData.referralLink;
 
     switch (platform) {
       case 'facebook':
@@ -218,11 +271,11 @@ export default function ReferUser() {
   };
 
   const getCurrentTier = () => {
-    return referralTiers.find(tier => tier.name === mockReferralData.tier) || referralTiers[0];
+    return referralTiers.find(tier => tier.name === referralData.tier) || referralTiers[0];
   };
 
   const getNextTier = () => {
-    const currentIndex = referralTiers.findIndex(tier => tier.name === mockReferralData.tier);
+    const currentIndex = referralTiers.findIndex(tier => tier.name === referralData.tier);
     return referralTiers[currentIndex + 1] || null;
   };
 
@@ -375,7 +428,7 @@ export default function ReferUser() {
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 2 }}>
                     <TextField
                       fullWidth
-                      value={mockReferralData.referralLink}
+                      value={referralData.referralLink}
                       InputProps={{
                         readOnly: true,
                         sx: { 
@@ -423,7 +476,7 @@ export default function ReferUser() {
                       textShadow: '0 0 10px rgba(77, 208, 225, 0.5)'
                     }}
                   >
-                    {mockReferralData.referralId}
+                    {referralData.referralId}
                   </Typography>
                 </Box>
 
@@ -451,7 +504,7 @@ export default function ReferUser() {
                   <CardContent sx={{ textAlign: 'center', p: 2 }}>
                     <Group sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
                     <Typography variant="h4" fontWeight="bold" color="primary.main">
-                      {mockReferralData.totalReferrals}
+                      {referralData.totalReferrals}
                     </Typography>
                     <Typography variant="body2" color="rgba(255,255,255,0.7)">
                       Total Referrals
@@ -464,7 +517,7 @@ export default function ReferUser() {
                   <CardContent sx={{ textAlign: 'center', p: 2 }}>
                     <CheckCircle sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
                     <Typography variant="h4" fontWeight="bold" color="success.main">
-                      {mockReferralData.activeReferrals}
+                      {referralData.activeReferrals}
                     </Typography>
                     <Typography variant="body2" color="rgba(255,255,255,0.7)">
                       Active Referrals
@@ -477,7 +530,7 @@ export default function ReferUser() {
                   <CardContent sx={{ textAlign: 'center', p: 2 }}>
                     <AttachMoney sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
                     <Typography variant="h4" fontWeight="bold" color="warning.main">
-                      ${mockReferralData.totalCommissions.toLocaleString()}
+                      ${referralData.totalCommissions.toLocaleString()}
                     </Typography>
                     <Typography variant="body2" color="rgba(255,255,255,0.7)">
                       Total Earned
@@ -490,7 +543,7 @@ export default function ReferUser() {
                   <CardContent sx={{ textAlign: 'center', p: 2 }}>
                     <Schedule sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
                     <Typography variant="h4" fontWeight="bold" color="info.main">
-                      ${mockReferralData.pendingCommissions.toLocaleString()}
+                      ${referralData.pendingCommissions.toLocaleString()}
                     </Typography>
                     <Typography variant="body2" color="rgba(255,255,255,0.7)">
                       Pending
@@ -542,7 +595,7 @@ export default function ReferUser() {
                     </Typography>
                     <LinearProgress 
                       variant="determinate" 
-                      value={mockReferralData.nextTierProgress} 
+                      value={referralData.nextTierProgress} 
                       sx={{
                         height: 8,
                         borderRadius: 4,
@@ -553,7 +606,7 @@ export default function ReferUser() {
                       }}
                     />
                     <Typography variant="caption" color="rgba(255,255,255,0.6)" sx={{ mt: 1, display: 'block' }}>
-                      {mockReferralData.nextTierProgress}% Complete
+                      {referralData.nextTierProgress}% Complete
                     </Typography>
                   </Box>
                 )}

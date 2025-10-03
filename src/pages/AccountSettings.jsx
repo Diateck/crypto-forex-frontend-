@@ -73,9 +73,12 @@ import {
   School,
   Work
 } from '@mui/icons-material';
+import { useUser } from '../contexts/UserContext';
+import { getUserDisplayName, getUserUsername, getUserEmail, getReferralLink } from '../utils/userStatus';
 
 export default function AccountSettings() {
   const theme = useTheme();
+  const { user } = useUser();
   const [currentTab, setCurrentTab] = useState(0);
   const [showPassword, setShowPassword] = useState({
     old: false,
@@ -85,11 +88,11 @@ export default function AccountSettings() {
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const [formData, setFormData] = useState({
-    fullName: 'Theophilus Ogunjimiolusegun',
-    username: 'theophilus',
-    email: 'ogunjimiolusegun807@gmail.com',
-    phone: '8134567890',
-    country: 'Nigeria',
+    fullName: getUserDisplayName(user),
+    username: getUserUsername(user),
+    email: getUserEmail(user),
+    phone: user?.phone || '',
+    country: user?.country || 'Nigeria',
     state: 'Lagos',
     zipCode: '100001',
     address: '123 Victoria Island, Lagos',
@@ -160,7 +163,7 @@ export default function AccountSettings() {
   };
 
   const copyReferralLink = () => {
-    navigator.clipboard.writeText('https://elonbroker.com/ref/theophilus');
+    navigator.clipboard.writeText(getReferralLink(user));
   };
 
   const countries = [
@@ -228,7 +231,7 @@ export default function AccountSettings() {
                   mt: 0.25
                 }}
               >
-                Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
+                Username: <span style={{ color: theme.palette.primary.main }}>{getUserUsername(user)}</span>
               </Typography>
             </Box>
           </Box>
@@ -705,7 +708,7 @@ export default function AccountSettings() {
                   <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                     <TextField
                       fullWidth
-                      value="https://elonbroker.com/ref/theophilus"
+                      value={getReferralLink(user)}
                       InputProps={{
                         readOnly: true,
                         sx: { color: '#fff', bgcolor: 'rgba(255,255,255,0.05)' }
