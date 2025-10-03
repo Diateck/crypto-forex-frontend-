@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { userAPI, apiService } from '../services/api';
+import userAuthAPI from '../services/userAuthAPI';
 
 const UserContext = createContext();
 
@@ -12,14 +12,7 @@ export const useUser = () => {
 };
 
 export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState({
-    id: 'demo_user',
-    username: 'theophilus',
-    email: 'demo@elonbroker.com',
-    firstName: 'Demo',
-    lastName: 'User',
-    kycStatus: 'pending'
-  });
+  const [user, setUser] = useState(null);
   const [userStats, setUserStats] = useState({
     totalBalance: 0,
     profit: 0,
@@ -30,100 +23,162 @@ export const UserProvider = ({ children }) => {
     closedTrades: 0,
     winLossRatio: 0
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [backendStatus, setBackendStatus] = useState('fallback');
 
-  // Check if user is authenticated based on stored token
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return !!localStorage.getItem('authToken');
-    }
-    return false;
-  });
+  // Check if user is authenticated
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    checkBackendStatus();
-    if (isAuthenticated) {
-      loadUserData();
-    } else {
-      // Keep fallback data visible
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
+    checkAuthStatus();
+  }, []);
 
-  const checkBackendStatus = async () => {
-    try {
-      const health = await apiService.healthCheck();
-      setBackendStatus(health.status === 'ok' ? 'connected' : 'fallback');
-    } catch (error) {
-      setBackendStatus('fallback');
-      console.warn('Backend unavailable, using fallback data');
-    }
-  };
-
-  const loadUserData = async () => {
+  const checkAuthStatus = async () => {
     try {
       setLoading(true);
-      setError(null);
       
-      const [profileResponse, statsResponse] = await Promise.all([
-        userAPI.getProfile(),
-        userAPI.getStats()
-      ]);
-      
-      // Handle backend response format
-      if (profileResponse.success) {
-        setUser(profileResponse.data.user || profileResponse.data);
+      // Check if user is authenticated
+      if (userAuthAPI.isAuthenticated()) {
+        // Verify token with backend
+        const result = await userAuthAPI.verifyToken();
+        
+        if (result.success) {
+          setIsAuthenticated(true);
+          await loadUserData();
+        } else {
+          // Token invalid, clear auth state
+          setIsAuthenticated(false);
+          setUser(null);
+        }
       } else {
-        setUser(profileResponse); // Fallback format
+        // Not authenticated
+        setIsAuthenticated(false);
+        setUser(null);
       }
-      
-      if (statsResponse.success) {
-        setUserStats(statsResponse.data.stats || statsResponse.data);
-      } else {
-        setUserStats(statsResponse); // Fallback format
-      }
-      
-    } catch (err) {
-      setError(err.message);
-      console.error('Failed to load user data:', err);
+    } catch (error) {
+      console.error('Auth status check failed:', error);
+      setIsAuthenticated(false);
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateUser = async (userData) => {
+  const loadUserData = async () => {
     try {
-      const response = await userAPI.updateProfile(userData);
-      const updatedUser = response.success ? response.data.user : response;
-      setUser(updatedUser);
-      return updatedUser;
+      setError(null);
+      
+      // Get user profile and balance
+      const [profileResult, balanceResult] = await Promise.all([
+        userAuthAPI.getProfile(),
+        userAuthAPI.getBalance()
+      ]);
+      
+      if (profileResult.success) {
+        setUser(profileResult.user);
+        
+        // Update user stats from balance
+        if (balanceResult.success) {
+          setUserStats(prev => ({
+            ...prev,
+            totalBalance: balanceResult.balance.totalBalance || 0,
+            availableBalance: balanceResult.balance.availableBalance || 0,
+            tradingBalance: balanceResult.balance.tradingBalance || 0,
+            accountStatus: profileResult.user.verification?.isKYCVerified ? 'VERIFIED' : 'UNVERIFIED'
+          }));
+        }
+      } else {
+        setError(profileResult.error);
+      }
+      
     } catch (err) {
       setError(err.message);
-      throw err;
+      console.error('Failed to load user data:', err);
     }
   };
 
-  const refreshStats = () => {
-    return loadUserData();
+  const register = async (userData) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const result = await userAuthAPI.register(userData);
+      
+      if (result.success) {
+        setUser(result.user);
+        setIsAuthenticated(true);
+        await loadUserData();
+        return result;
+      } else {
+        setError(result.error);
+        return result;
+      }
+    } catch (err) {
+      const errorMessage = err.message || 'Registration failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const login = async (credentials) => {
+  const login = async (email, password) => {
     try {
+      setLoading(true);
       setError(null);
-      const response = await userAPI.login(credentials);
       
-      if (response.success) {
-        setUser(response.data.user);
+      const result = await userAuthAPI.login(email, password);
+      
+      if (result.success) {
+        setUser(result.user);
         setIsAuthenticated(true);
-        await loadUserData(); // Load complete user data after login
-        return response.data.user;
+        await loadUserData();
+        return result;
       } else {
-        // Handle fallback response
-        setUser(response);
-        setIsAuthenticated(true);
-        return response;
+        setError(result.error);
+        return result;
+      }
+    } catch (err) {
+      const errorMessage = err.message || 'Login failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await userAuthAPI.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setUserStats({
+        totalBalance: 0,
+        profit: 0,
+        totalBonus: 0,
+        accountStatus: 'UNVERIFIED',
+        totalTrades: 0,
+        openTrades: 0,
+        closedTrades: 0,
+        winLossRatio: 0
+      });
+      setIsAuthenticated(false);
+      setError(null);
+    }
+  };
+
+  const updateUser = async (userData) => {
+    try {
+      const result = await userAuthAPI.updateProfile(userData);
+      
+      if (result.success) {
+        setUser(result.user);
+        return result;
+      } else {
+        setError(result.error);
+        return result;
       }
     } catch (err) {
       setError(err.message);
@@ -131,12 +186,23 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    apiService.removeToken();
-    setUser(null);
-    setUserStats(null);
-    setIsAuthenticated(false);
-    setError(null);
+  const refreshUserData = () => {
+    return loadUserData();
+  };
+
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      const result = await userAuthAPI.changePassword(currentPassword, newPassword);
+      
+      if (result.success && result.requireRelogin) {
+        // Password changed successfully, user needs to login again
+        await logout();
+      }
+      
+      return result;
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   };
 
   const value = {
@@ -145,12 +211,13 @@ export const UserProvider = ({ children }) => {
     loading,
     error,
     isAuthenticated,
-    backendStatus,
-    updateUser,
-    refreshStats,
+    register,
     login,
     logout,
-    checkBackendStatus,
+    updateUser,
+    refreshUserData,
+    changePassword,
+    checkAuthStatus,
   };
 
   return (

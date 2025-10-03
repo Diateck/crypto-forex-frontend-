@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemText, CssBaseline, Box, ThemeProvider, createTheme, ListItemIcon, IconButton, Collapse } from '@mui/material';
+import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemText, CssBaseline, Box, ThemeProvider, createTheme, ListItemIcon, IconButton, Collapse, CircularProgress } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useLocation } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -28,7 +28,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import { UserProvider } from './contexts';
+import { UserProvider, useUser } from './contexts';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { BalanceProvider } from './contexts/BalanceContext';
 import NotificationPanel from './components/NotificationPanel';
@@ -115,14 +115,29 @@ const pages = [
 
 
 
+// Protected Route Component
 function RequireAuth({ children }) {
-  const navigate = useNavigate();
-  useEffect(() => {
-    const isAuth = localStorage.getItem('isAuth');
-    if (!isAuth) {
-      navigate('/login');
-    }
-  }, [navigate]);
+  const { isAuthenticated, loading } = useUser();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <Box 
+        display="flex" 
+        justifyContent="center" 
+        alignItems="center" 
+        minHeight="100vh"
+        bgcolor="background.default"
+      >
+        <CircularProgress color="primary" />
+      </Box>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
   return children;
 }
 
@@ -132,13 +147,13 @@ function AppContent() {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState({});
+  const { logout, user, isAuthenticated } = useUser();
   
   const handleDrawerOpen = () => setDrawerOpen(true);
   const handleDrawerClose = () => setDrawerOpen(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAuth');
-    localStorage.removeItem('user');
+  const handleLogout = async () => {
+    await logout();
     setDrawerOpen(false);
     navigate('/login');
   };
@@ -202,9 +217,16 @@ function AppContent() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700, letterSpacing: 1 }}>
+          <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700, letterSpacing: 1, flexGrow: 1 }}>
             Elon Investment Broker
           </Typography>
+          
+          {/* User info in header */}
+          {user && (
+            <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+              Welcome, {user.name}
+            </Typography>
+          )}
         </Toolbar>
       </AppBar>
       <Drawer
