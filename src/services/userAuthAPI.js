@@ -36,7 +36,7 @@ class UserAuthAPI {
       console.error('Registration error:', error);
       return {
         success: false,
-        error: 'Network error occurred during registration'
+        error: 'Server is currently busy. Please try again in a few minutes.'
       };
     }
   }
@@ -76,7 +76,7 @@ class UserAuthAPI {
       console.error('Login error:', error);
       return {
         success: false,
-        error: 'Network error occurred during login'
+        error: 'Server is currently busy. Please try again in a few minutes.'
       };
     }
   }

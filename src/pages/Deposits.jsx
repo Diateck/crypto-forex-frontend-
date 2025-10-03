@@ -302,9 +302,9 @@ export default function Deposits() {
       // Prepare comprehensive deposit data for backend
       const depositData = {
         // User Information
-        userId: user?.id || 'demo_user_123',
-        userName: user?.username || user?.name || 'Theophilus Crown',
-        userEmail: user?.email || 'theophiluscrown693@gmail.com',
+        userId: user?.id || null,
+        userName: user?.name || user?.username || null,
+        userEmail: user?.email || null,
         
         // Deposit Details
         amount: parseFloat(depositForm.amount),

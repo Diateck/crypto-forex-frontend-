@@ -310,9 +310,9 @@ export default function Withdrawals() {
       // Prepare comprehensive withdrawal data for backend
       const withdrawalData = {
         // User Information
-        userId: user?.id || 'demo_user_123',
-        userName: user?.username || user?.name || 'Theophilus Crown',
-        userEmail: user?.email || 'theophiluscrown693@gmail.com',
+        userId: user?.id || null,
+        userName: user?.name || user?.username || null,
+        userEmail: user?.email || null,
         
         // Withdrawal Details
         type: withdrawalForm.type,
@@ -507,7 +507,7 @@ export default function Withdrawals() {
                 mt: 0.25
               }}
             >
-              User: <span style={{ color: theme.palette.primary.main }}>Theophilus Crown</span>
+              User: <span style={{ color: theme.palette.primary.main }}>{user?.name || user?.username || 'Not Available'}</span>
             </Typography>
           </Box>
         </Box>

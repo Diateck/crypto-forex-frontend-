@@ -18,7 +18,7 @@ const adminAuthAPI = {
       console.error('Login API Error:', error);
       return { 
         success: false, 
-        error: 'Network error. Please check your connection.' 
+        error: 'Server is currently busy. Please try again in a few minutes.' 
       };
     }
   },

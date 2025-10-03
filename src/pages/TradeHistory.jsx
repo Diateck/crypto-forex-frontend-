@@ -396,7 +396,7 @@ export default function AccountHistory() {
               Elon Investment Broker
             </Typography>
             <Typography variant="h6" fontWeight={700} color="#fff">
-              Username: <span style={{ color: theme.palette.primary.main }}>{user?.username || user?.name || 'theophilus'}</span>
+              Username: <span style={{ color: theme.palette.primary.main }}>{user?.name || user?.username || 'Not Available'}</span>
             </Typography>
             {!isLive && (
               <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 0.5 }}>

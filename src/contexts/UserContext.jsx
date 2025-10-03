@@ -57,6 +57,7 @@ export const UserProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Auth status check failed:', error);
+      setError('Server is currently busy. Please try again in a few minutes.');
       setIsAuthenticated(false);
       setUser(null);
     } finally {

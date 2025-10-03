@@ -219,7 +219,7 @@ export default function NFTGallery() {
                 Elon Investment Broker
               </Typography>
               <Typography variant="h6" fontWeight={700} color="#fff">
-                Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
+                Username: <span style={{ color: theme.palette.primary.main }}>{user?.name || user?.username || 'Not Available'}</span>
               </Typography>
             </Box>
           </Box>

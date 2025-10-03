@@ -143,8 +143,12 @@ function Register() {
         // Success - redirect will happen via useEffect
         console.log('Registration successful');
       } else {
-        // Handle registration error
-        if (result.error.includes('email')) {
+        // Check if it's a server connectivity issue
+        if (result.error.includes('Network error') || result.error.includes('fetch')) {
+          setErrors({ 
+            general: 'Server is currently busy. Please try again in a few minutes.' 
+          });
+        } else if (result.error.includes('email')) {
           setErrors({ email: result.error });
         } else {
           setErrors({ general: result.error });
@@ -152,7 +156,9 @@ function Register() {
       }
     } catch (error) {
       console.error('Registration error:', error);
-      setErrors({ general: 'An unexpected error occurred. Please try again.' });
+      setErrors({ 
+        general: 'Server is currently busy. Please try again in a few minutes.' 
+      });
     } finally {
       setIsSubmitting(false);
     }

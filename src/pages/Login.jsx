@@ -87,8 +87,12 @@ export default function Login() {
         // Success - redirect will happen via useEffect
         console.log('Login successful');
       } else {
-        // Handle login error
-        if (result.error.includes('email')) {
+        // Check if it's a server connectivity issue
+        if (result.error.includes('Network error') || result.error.includes('fetch')) {
+          setErrors({ 
+            general: 'Server is currently busy. Please try again in a few minutes.' 
+          });
+        } else if (result.error.includes('email')) {
           setErrors({ email: result.error });
         } else if (result.error.includes('password')) {
           setErrors({ password: result.error });
@@ -98,7 +102,9 @@ export default function Login() {
       }
     } catch (error) {
       console.error('Login error:', error);
-      setErrors({ general: 'An unexpected error occurred. Please try again.' });
+      setErrors({ 
+        general: 'Server is currently busy. Please try again in a few minutes.' 
+      });
     } finally {
       setIsSubmitting(false);
     }

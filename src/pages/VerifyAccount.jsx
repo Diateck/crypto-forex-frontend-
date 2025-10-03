@@ -225,7 +225,7 @@ export default function VerifyAccount() {
                   mt: 0.25
                 }}
               >
-                Username: <span style={{ color: theme.palette.primary.main }}>theophilus</span>
+                Username: <span style={{ color: theme.palette.primary.main }}>{user?.name || user?.username || 'Not Available'}</span>
               </Typography>
             </Box>
           </Box>

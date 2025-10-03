@@ -84,12 +84,17 @@ function AdminLogin() {
         setLoginAttempts(0);
         navigate('/admin-dashboard');
       } else {
-        setError(response.error || 'Login failed');
+        // Check if it's a server connectivity issue
+        if (response.error.includes('Network error') || response.error.includes('fetch')) {
+          setError('Server is currently busy. Please try again in a few minutes.');
+        } else {
+          setError(response.error || 'Login failed');
+        }
         setLoginAttempts(prev => prev + 1);
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('Network error. Please try again.');
+      setError('Server is currently busy. Please try again in a few minutes.');
       setLoginAttempts(prev => prev + 1);
     } finally {
       setLoading(false);

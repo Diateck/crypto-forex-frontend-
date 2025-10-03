@@ -161,7 +161,7 @@ export default function Dashboard() {
         });
       } else {
         setBackendConnected(false);
-        setBackendError('Unable to connect to backend server. Using demo data.');
+        setBackendError('Server is currently busy. Please try again in a few minutes.');
       }
     } catch (error) {
       setBackendConnected(false);
