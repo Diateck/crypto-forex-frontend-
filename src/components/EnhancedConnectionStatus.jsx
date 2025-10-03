@@ -193,13 +193,29 @@ function EnhancedConnectionStatus() {
                 </Button>
                 
                 {process.env.NODE_ENV === 'development' && (
-                  <Button 
-                    size="small" 
-                    variant="outlined"
-                    onClick={() => window.keepAliveDebugger?.exportLogs()}
-                  >
-                    Export Logs
-                  </Button>
+                  <>
+                    <Button 
+                      size="small" 
+                      variant="outlined"
+                      onClick={() => window.keepAliveDebugger?.exportLogs()}
+                    >
+                      Export Logs
+                    </Button>
+                    
+                    <Button 
+                      size="small" 
+                      variant="outlined"
+                      onClick={async () => {
+                        const stats = await keepAliveService.getBackendStats();
+                        if (stats) {
+                          console.log('Backend Stats:', stats);
+                          alert(`Backend Uptime: ${stats.server.uptime.formatted}\nTotal Requests: ${stats.requests.total}`);
+                        }
+                      }}
+                    >
+                      Backend Stats
+                    </Button>
+                  </>
                 )}
               </Box>
 

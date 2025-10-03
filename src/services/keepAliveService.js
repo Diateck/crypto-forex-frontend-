@@ -51,7 +51,10 @@ class KeepAliveService {
       this.totalPings++;
       console.log(`🏓 Pinging backend server... (${this.totalPings} total pings)`);
       
-      const response = await fetch(`${this.baseUrl}/health`, {
+      // Use the lightweight ping endpoint for frequent checks
+      const endpoint = this.consecutiveFailures > 0 ? '/health' : '/ping';
+      
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -69,14 +72,15 @@ class KeepAliveService {
         this.consecutiveFailures = 0;
         this.successfulPings++;
         
-        console.log(`✅ Backend alive - Response: ${responseTime}ms | Success Rate: ${this.successfulPings}/${this.totalPings}`, {
-          status: data.status,
-          timestamp: data.timestamp
+        console.log(`✅ Backend alive (${endpoint}) - Response: ${responseTime}ms | Success Rate: ${this.successfulPings}/${this.totalPings}`, {
+          status: data.status || 'alive',
+          timestamp: data.timestamp,
+          endpoint: endpoint
         });
         
         // Dispatch custom event for other components
         window.dispatchEvent(new CustomEvent('backend-ping-success', {
-          detail: { responseTime, data, totalPings: this.totalPings }
+          detail: { responseTime, data, totalPings: this.totalPings, endpoint }
         }));
       } else {
         throw new Error(`HTTP ${response.status}`);
@@ -177,6 +181,29 @@ class KeepAliveService {
   // Manual ping for immediate health check
   async healthCheck() {
     return this.ping();
+  }
+
+  // Get backend statistics
+  async getBackendStats() {
+    try {
+      const response = await fetch(`${this.baseUrl}/keep-alive/stats`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const stats = await response.json();
+        console.log('📊 Backend Statistics:', stats);
+        return stats;
+      } else {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (error) {
+      console.error('❌ Failed to get backend stats:', error);
+      return null;
+    }
   }
 }
 
