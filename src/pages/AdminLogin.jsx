@@ -64,6 +64,11 @@ function AdminLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (loginAttempts >= 10) {
+      setError('Too many failed attempts. Please refresh the page and try again.');
+      return;
+    }
+    
     if (!formData.username || !formData.password) {
       setError('Please enter both username and password');
       return;
@@ -84,8 +89,12 @@ function AdminLogin() {
         setLoginAttempts(0);
         navigate('/admin-dashboard');
       } else {
-        // Check if it's a server connectivity issue
-        if (response.error.includes('Network error') || response.error.includes('fetch')) {
+        // Check error type from backend response
+        if (response.errorType === 'credentials') {
+          setError(response.error || 'Invalid credentials');
+        } else if (response.error.includes('Network error') || response.error.includes('fetch')) {
+          setError('Server is currently busy. Please try again in a few minutes.');
+        } else if (response.error.includes('Server is currently busy')) {
           setError('Server is currently busy. Please try again in a few minutes.');
         } else {
           setError(response.error || 'Login failed');
@@ -154,7 +163,7 @@ function AdminLogin() {
                 </Alert>
               )}
 
-              {loginAttempts >= 3 && (
+              {loginAttempts >= 10 && (
                 <Alert severity="warning" sx={{ mb: 3 }}>
                   Multiple failed attempts detected. Please verify your credentials.
                 </Alert>
@@ -233,6 +242,9 @@ function AdminLogin() {
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
                   Use your admin credentials to access the control panel
+                </Typography>
+                <Typography variant="caption" color="info.main" sx={{ mt: 2, display: 'block', bgcolor: 'info.main', color: 'white', p: 1, borderRadius: 1 }}>
+                  📝 Current Credentials: Username: admin | Password: admin123
                 </Typography>
               </Box>
             </CardContent>
