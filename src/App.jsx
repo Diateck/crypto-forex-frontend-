@@ -32,6 +32,8 @@ import { UserProvider, useUser } from './contexts';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { BalanceProvider } from './contexts/BalanceContext';
 import NotificationPanel from './components/NotificationPanel';
+import ConnectionStatus from './components/ConnectionStatus';
+import keepAliveService from './services/keepAliveService';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -366,11 +368,18 @@ function AppContent() {
 }
 
 function App() {
+  // Start keep-alive service when app initializes
+  React.useEffect(() => {
+    keepAliveService.start();
+    return () => keepAliveService.stop();
+  }, []);
+
   return (
     <ThemeProvider theme={darkTheme}>
       <UserProvider>
         <BalanceProvider>
           <NotificationProvider>
+            <ConnectionStatus />
             <Router>
               <AppContent />
             </Router>

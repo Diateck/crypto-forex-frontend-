@@ -1,10 +1,12 @@
+import connectionManager from './connectionManager';
+
 const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api/auth';
 
 class UserAuthAPI {
   // Register new user
   async register(userData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/register`, {
+      const response = await connectionManager.fetchWithRetry(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -44,7 +46,7 @@ class UserAuthAPI {
   // Login user
   async login(email, password) {
     try {
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      const response = await connectionManager.fetchWithRetry(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,7 +89,7 @@ class UserAuthAPI {
       const token = localStorage.getItem('userToken');
       
       if (token) {
-        await fetch(`${API_BASE_URL}/logout`, {
+        await connectionManager.fetchWithRetry(`${API_BASE_URL}/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -114,7 +116,7 @@ class UserAuthAPI {
         return { success: false, error: 'No token found' };
       }
 
-      const response = await fetch(`${API_BASE_URL}/verify-token`, {
+      const response = await connectionManager.fetchWithRetry(`${API_BASE_URL}/verify-token`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -164,7 +166,7 @@ class UserAuthAPI {
         return { success: false, error: 'No authentication token' };
       }
 
-      const response = await fetch(`${API_BASE_URL}/profile`, {
+      const response = await connectionManager.fetchWithRetry(`${API_BASE_URL}/profile`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -205,7 +207,7 @@ class UserAuthAPI {
         return { success: false, error: 'No authentication token' };
       }
 
-      const response = await fetch(`${API_BASE_URL}/profile`, {
+      const response = await connectionManager.fetchWithRetry(`${API_BASE_URL}/profile`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -234,7 +236,7 @@ class UserAuthAPI {
       console.error('Profile update error:', error);
       return {
         success: false,
-        error: 'Network error occurred while updating profile'
+        error: 'Server is currently busy. Please try again in a few minutes.'
       };
     }
   }
@@ -248,7 +250,7 @@ class UserAuthAPI {
         return { success: false, error: 'No authentication token' };
       }
 
-      const response = await fetch(`${API_BASE_URL}/change-password`, {
+      const response = await connectionManager.fetchWithRetry(`${API_BASE_URL}/change-password`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -277,7 +279,7 @@ class UserAuthAPI {
       console.error('Password change error:', error);
       return {
         success: false,
-        error: 'Network error occurred while changing password'
+        error: 'Server is currently busy. Please try again in a few minutes.'
       };
     }
   }
@@ -291,7 +293,7 @@ class UserAuthAPI {
         return { success: false, error: 'No authentication token' };
       }
 
-      const response = await fetch(`${API_BASE_URL}/balance`, {
+      const response = await connectionManager.fetchWithRetry(`${API_BASE_URL}/balance`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -316,7 +318,7 @@ class UserAuthAPI {
       console.error('Balance fetch error:', error);
       return {
         success: false,
-        error: 'Network error occurred while fetching balance'
+        error: 'Server is currently busy. Please try again in a few minutes.'
       };
     }
   }
@@ -334,7 +336,7 @@ class UserAuthAPI {
       const params = new URLSearchParams({ limit, offset });
       if (type) params.append('type', type);
 
-      const response = await fetch(`${API_BASE_URL}/activities?${params}`, {
+      const response = await connectionManager.fetchWithRetry(`${API_BASE_URL}/activities?${params}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -362,7 +364,7 @@ class UserAuthAPI {
       console.error('Activities fetch error:', error);
       return {
         success: false,
-        error: 'Network error occurred while fetching activities'
+        error: 'Server is currently busy. Please try again in a few minutes.'
       };
     }
   }
