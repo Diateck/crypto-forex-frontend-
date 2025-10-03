@@ -33,7 +33,9 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { BalanceProvider } from './contexts/BalanceContext';
 import NotificationPanel from './components/NotificationPanel';
 import ConnectionStatus from './components/ConnectionStatus';
+import EnhancedConnectionStatus from './components/EnhancedConnectionStatus';
 import keepAliveService from './services/keepAliveService';
+import keepAliveDebugger from './utils/debugKeepAlive';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -370,8 +372,21 @@ function AppContent() {
 function App() {
   // Start keep-alive service when app initializes
   React.useEffect(() => {
+    console.log('🚀 Initializing enhanced keep-alive system...');
+    
+    // Start the keep-alive service
     keepAliveService.start();
-    return () => keepAliveService.stop();
+    
+    // Start debugging in development
+    if (process.env.NODE_ENV === 'development') {
+      keepAliveDebugger.startLogging();
+      console.log('🔍 Keep-alive debugging enabled. Use window.keepAliveDebugger and window.keepAlive in console');
+    }
+    
+    return () => {
+      keepAliveService.stop();
+      keepAliveDebugger.stopLogging();
+    };
   }, []);
 
   return (
@@ -380,6 +395,7 @@ function App() {
         <BalanceProvider>
           <NotificationProvider>
             <ConnectionStatus />
+            <EnhancedConnectionStatus />
             <Router>
               <AppContent />
             </Router>

@@ -3,11 +3,13 @@ class KeepAliveService {
   constructor() {
     this.intervalId = null;
     this.isRunning = false;
-    this.pingInterval = 10 * 60 * 1000; // 10 minutes
+    this.pingInterval = 5 * 60 * 1000; // 5 minutes (more aggressive)
     this.baseUrl = 'https://crypto-forex-backend-9mme.onrender.com';
     this.lastPingTime = null;
     this.consecutiveFailures = 0;
     this.maxFailures = 3;
+    this.totalPings = 0;
+    this.successfulPings = 0;
   }
 
   // Start the keep-alive service
@@ -17,16 +19,19 @@ class KeepAliveService {
       return;
     }
 
-    console.log('🚀 Starting keep-alive service...');
+    console.log('🚀 Starting aggressive keep-alive service (5-minute intervals)...');
     this.isRunning = true;
     
-    // Initial ping
+    // Initial ping immediately
     this.ping();
     
-    // Set up interval
+    // Set up interval - ping every 5 minutes
     this.intervalId = setInterval(() => {
       this.ping();
     }, this.pingInterval);
+
+    // Also add a secondary safety net - ping every 3 minutes during active sessions
+    this.startActiveSessionMode();
   }
 
   // Stop the keep-alive service
@@ -43,15 +48,17 @@ class KeepAliveService {
   async ping() {
     try {
       const startTime = Date.now();
-      console.log('🏓 Pinging backend server...');
+      this.totalPings++;
+      console.log(`🏓 Pinging backend server... (${this.totalPings} total pings)`);
       
       const response = await fetch(`${this.baseUrl}/health`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache', // Prevent caching
         },
         // Short timeout for health checks
-        signal: AbortSignal.timeout(15000) // 15 seconds timeout
+        signal: AbortSignal.timeout(10000) // 10 seconds timeout
       });
 
       const responseTime = Date.now() - startTime;
@@ -60,49 +67,84 @@ class KeepAliveService {
       if (response.ok) {
         const data = await response.json();
         this.consecutiveFailures = 0;
-        console.log(`✅ Backend alive - Response time: ${responseTime}ms`, {
+        this.successfulPings++;
+        
+        console.log(`✅ Backend alive - Response: ${responseTime}ms | Success Rate: ${this.successfulPings}/${this.totalPings}`, {
           status: data.status,
           timestamp: data.timestamp
         });
         
         // Dispatch custom event for other components
         window.dispatchEvent(new CustomEvent('backend-ping-success', {
-          detail: { responseTime, data }
+          detail: { responseTime, data, totalPings: this.totalPings }
         }));
       } else {
         throw new Error(`HTTP ${response.status}`);
       }
     } catch (error) {
       this.consecutiveFailures++;
-      console.warn(`⚠️ Backend ping failed (${this.consecutiveFailures}/${this.maxFailures}):`, error.message);
+      console.warn(`⚠️ Backend ping failed (${this.consecutiveFailures}/${this.maxFailures}) | Success Rate: ${this.successfulPings}/${this.totalPings}:`, error.message);
       
       // Dispatch failure event
       window.dispatchEvent(new CustomEvent('backend-ping-failed', {
         detail: { error: error.message, failures: this.consecutiveFailures }
       }));
 
-      // If too many failures, increase ping frequency temporarily
+      // If too many failures, increase ping frequency even more
       if (this.consecutiveFailures >= this.maxFailures) {
-        console.log('🔄 Too many failures, increasing ping frequency');
-        this.increaseFrequency();
+        console.log('🔄 Too many failures, switching to emergency mode (2-minute pings)');
+        this.emergencyMode();
       }
     }
   }
 
-  // Temporarily increase ping frequency when server is struggling
-  increaseFrequency() {
+  // Start active session mode for more frequent pings during user activity
+  startActiveSessionMode() {
+    // Detect user activity (mouse, keyboard, scroll)
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    let lastActivity = Date.now();
+    let activeSessionInterval = null;
+
+    const handleActivity = () => {
+      lastActivity = Date.now();
+      
+      // If not already in active session mode, start it
+      if (!activeSessionInterval) {
+        console.log('👤 User active - Starting intensive keep-alive mode (3-minute intervals)');
+        activeSessionInterval = setInterval(() => {
+          // Check if user was active in last 15 minutes
+          if (Date.now() - lastActivity < 15 * 60 * 1000) {
+            this.ping();
+          } else {
+            // User inactive, stop intensive mode
+            console.log('💤 User inactive - Stopping intensive keep-alive mode');
+            clearInterval(activeSessionInterval);
+            activeSessionInterval = null;
+          }
+        }, 3 * 60 * 1000); // 3 minutes during active sessions
+      }
+    };
+
+    activityEvents.forEach(event => {
+      document.addEventListener(event, handleActivity, { passive: true });
+    });
+  }
+
+  // Emergency mode for when server is struggling
+  emergencyMode() {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       
-      // Ping every 5 minutes during issues
+      console.log('🚨 Emergency mode activated - Pinging every 2 minutes');
+      // Ping every 2 minutes during emergency
       this.intervalId = setInterval(() => {
         this.ping();
-      }, 5 * 60 * 1000);
+      }, 2 * 60 * 1000);
 
-      // Reset to normal frequency after 30 minutes
+      // Reset to normal frequency after 20 minutes
       setTimeout(() => {
         this.resetFrequency();
-      }, 30 * 60 * 1000);
+      }, 20 * 60 * 1000);
     }
   }
 
@@ -125,7 +167,10 @@ class KeepAliveService {
       isRunning: this.isRunning,
       lastPingTime: this.lastPingTime,
       consecutiveFailures: this.consecutiveFailures,
-      pingInterval: this.pingInterval
+      pingInterval: this.pingInterval,
+      totalPings: this.totalPings,
+      successfulPings: this.successfulPings,
+      successRate: this.totalPings > 0 ? ((this.successfulPings / this.totalPings) * 100).toFixed(1) + '%' : '0%'
     };
   }
 
