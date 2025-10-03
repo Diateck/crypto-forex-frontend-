@@ -224,11 +224,10 @@ function AdminLogin() {
 
               <Box textAlign="center">
                 <Typography variant="body2" color="text.secondary">
-                  Default Credentials (Demo):
+                  Secure Admin Access
                 </Typography>
-                <Typography variant="body2" sx={{ mt: 1 }}>
-                  <strong>Username:</strong> admin<br />
-                  <strong>Password:</strong> admin123
+                <Typography variant="body2" sx={{ mt: 1, fontStyle: 'italic' }}>
+                  Use your admin credentials to access the control panel
                 </Typography>
               </Box>
             </CardContent>
