@@ -53,6 +53,7 @@ import Technical from './pages/Technical';
 import Chart from './pages/Chart';
 import Calendar from './pages/Calendar';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminLogin from './pages/AdminLogin';
 
 const drawerWidth = 240;
 
@@ -158,7 +159,7 @@ function AppContent() {
 
   // Check if current route is login, register, or admin
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
-  const isAdminPage = location.pathname === '/admin';
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   if (isAuthPage) {
     // Render only the auth page, no AppBar/Drawer
@@ -178,7 +179,9 @@ function AppContent() {
     return (
       <Box sx={{ minHeight: '100vh', bgcolor: '#0a0e1a' }}>
         <Routes>
-          <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/admin" element={<Navigate to="/admin-login" replace />} />
         </Routes>
       </Box>
     );
