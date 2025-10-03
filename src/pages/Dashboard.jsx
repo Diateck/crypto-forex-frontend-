@@ -592,7 +592,7 @@ export default function Dashboard() {
                     mt: 0.25
                   }}
                 >
-                  Username: <span style={{ color: theme.palette.primary.main }}>{user?.username || 'theophilus'}</span>
+                  Username: <span style={{ color: theme.palette.primary.main }}>{user?.name || 'Guest User'}</span>
                 </Typography>
               </Box>
             </Box>

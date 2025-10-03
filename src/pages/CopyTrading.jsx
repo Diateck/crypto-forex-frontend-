@@ -186,7 +186,7 @@ export default function CopyTrading() {
             </Typography>
             <Typography variant="h6" fontWeight={700} color="#fff">
               Username: <span style={{ color: theme.palette.primary.main }}>
-                {user?.username || 'theophilus'}
+                {user?.name || user?.username || 'Guest User'}
               </span>
             </Typography>
           </Box>
