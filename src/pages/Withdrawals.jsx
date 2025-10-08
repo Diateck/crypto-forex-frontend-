@@ -32,6 +32,7 @@ import { useTheme } from '@mui/material/styles';
 import { useUser } from '../contexts/UserContext';
 import { useBalance } from '../contexts/BalanceContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { safeParseResponse } from '../utils/safeResponse';
 
 // Backend API configuration - Use live deployed backend
 const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
@@ -48,7 +49,7 @@ const withdrawalsAPI = {
         },
         body: JSON.stringify(withdrawalData)
       });
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };
@@ -63,7 +64,7 @@ const withdrawalsAPI = {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
       });
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };
@@ -74,7 +75,7 @@ const withdrawalsAPI = {
   getWithdrawalLimits: async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/withdrawals/limits`);
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };
@@ -92,7 +93,7 @@ const withdrawalsAPI = {
         },
         body: JSON.stringify({ amount })
       });
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };

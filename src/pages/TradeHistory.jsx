@@ -61,30 +61,26 @@ const activityAPI = {
   // Get all user activities (trades, deposits, withdrawals)
   getAllActivities: async (userId) => {
     try {
-      const [tradesResponse, depositsResponse, withdrawalsResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/trading/history/${userId}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
-        }),
-        fetch(`${API_BASE_URL}/deposits/history/${userId}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
-        }),
-        fetch(`${API_BASE_URL}/withdrawals/history/${userId}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
-        })
+      const { safeParseResponse } = await import('../utils/safeResponse');
+
+      const [tradesResp, depositsResp, withdrawalsResp] = await Promise.all([
+        fetch(`${API_BASE_URL}/trading/history/${userId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } }),
+        fetch(`${API_BASE_URL}/deposits/history/${userId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } }),
+        fetch(`${API_BASE_URL}/withdrawals/history/${userId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } })
       ]);
 
-      const results = await Promise.all([
-        tradesResponse.ok ? tradesResponse.json() : { success: false },
-        depositsResponse.ok ? depositsResponse.json() : { success: false },
-        withdrawalsResponse.ok ? withdrawalsResponse.json() : { success: false }
+      const [tradesResult, depositsResult, withdrawalsResult] = await Promise.all([
+        safeParseResponse(tradesResp),
+        safeParseResponse(depositsResp),
+        safeParseResponse(withdrawalsResp)
       ]);
 
       return {
         success: true,
         data: {
-          trades: results[0].success ? results[0].data : [],
-          deposits: results[1].success ? results[1].data : [],
-          withdrawals: results[2].success ? results[2].data : []
+          trades: tradesResult.success ? tradesResult.data : [],
+          deposits: depositsResult.success ? depositsResult.data : [],
+          withdrawals: withdrawalsResult.success ? withdrawalsResult.data : []
         }
       };
     } catch (error) {

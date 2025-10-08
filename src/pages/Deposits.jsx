@@ -27,6 +27,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useTheme } from '@mui/material/styles';
 import { useUser } from '../contexts/UserContext';
 import { getUserEmail, getUserDisplayName, getKYCStatusLabel, getKYCStatusColor } from '../utils/userStatus';
+import { safeParseResponse } from '../utils/safeResponse';
 
 // Backend API configuration - Use live deployed backend
 const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
@@ -43,7 +44,8 @@ const depositsAPI = {
         },
         body: JSON.stringify(depositData)
       });
-      return await response.json();
+      const parsed = await safeParseResponse(response);
+      return parsed;
     } catch (error) {
       console.error('API Error:', error);
       // Fallback to localStorage for now
@@ -59,7 +61,8 @@ const depositsAPI = {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
       });
-      return await response.json();
+      const parsed = await safeParseResponse(response);
+      return parsed;
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };
@@ -70,7 +73,8 @@ const depositsAPI = {
   getPaymentMethods: async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/deposits/payment-methods`);
-      return await response.json();
+      const parsed = await safeParseResponse(response);
+      return parsed;
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };
@@ -91,7 +95,8 @@ const depositsAPI = {
         },
         body: formData
       });
-      return await response.json();
+      const parsed = await safeParseResponse(response);
+      return parsed;
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'File upload failed' };

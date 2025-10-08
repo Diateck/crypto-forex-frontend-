@@ -41,6 +41,7 @@ import { getTraderStatusLabel, getKYCStatusColor } from '../utils/userStatus';
 import { useBalance } from '../contexts/BalanceContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import useLiveTrading from '../hooks/useLiveTrading';
+import { safeParseResponse } from '../utils/safeResponse';
 
 // Backend API configuration - Updated to use deployed backend
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crypto-forex-backend-9mme.onrender.com/api';
@@ -57,7 +58,7 @@ const tradingAPI = {
         },
         body: JSON.stringify(tradeData)
       });
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };
@@ -75,7 +76,7 @@ const tradingAPI = {
         },
         body: JSON.stringify({ tradeId, closePrice })
       });
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };
@@ -90,7 +91,7 @@ const tradingAPI = {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
       });
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };
@@ -105,7 +106,7 @@ const tradingAPI = {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         }
       });
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };
@@ -122,7 +123,7 @@ const tradingAPI = {
         },
         body: JSON.stringify({ symbols })
       });
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };
@@ -140,7 +141,7 @@ const tradingAPI = {
         },
         body: JSON.stringify({ userId, tradeAmount })
       });
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('API Error:', error);
       return { success: false, error: 'API connection failed' };

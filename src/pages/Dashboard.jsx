@@ -22,17 +22,18 @@ import { marketAPI } from '../services/api';
 import useLiveDashboard from '../hooks/useLiveDashboard';
 import useLiveCopyTrading from '../hooks/useLiveCopyTrading';
 import ContactModal from '../components/ContactModal';
+import { safeParseResponse } from '../utils/safeResponse';
+import { nextDelayMs, retryAfterToMs } from '../utils/backoff';
 
 // Backend API base URL - Use live deployed backend
 const BACKEND_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
 
-// Backend API functions
+// Backend API functions with safe parsing
 const dashboardAPI = {
   getOverview: async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/dashboard/overview`);
-      if (!response.ok) throw new Error('Failed to fetch overview');
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Dashboard overview API error:', error);
       return { success: false, error: error.message };
@@ -41,8 +42,7 @@ const dashboardAPI = {
   getBalance: async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/dashboard/balance`);
-      if (!response.ok) throw new Error('Failed to fetch balance');
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Dashboard balance API error:', error);
       return { success: false, error: error.message };
@@ -51,8 +51,7 @@ const dashboardAPI = {
   getKYCStatus: async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/dashboard/kyc-status`);
-      if (!response.ok) throw new Error('Failed to fetch KYC status');
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Dashboard KYC API error:', error);
       return { success: false, error: error.message };
@@ -61,8 +60,7 @@ const dashboardAPI = {
   getTradingOverview: async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/dashboard/trading-overview`);
-      if (!response.ok) throw new Error('Failed to fetch trading overview');
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Dashboard trading API error:', error);
       return { success: false, error: error.message };
@@ -71,8 +69,7 @@ const dashboardAPI = {
   getStats: async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/dashboard/stats`);
-      if (!response.ok) throw new Error('Failed to fetch stats');
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Dashboard stats API error:', error);
       return { success: false, error: error.message };
@@ -81,8 +78,7 @@ const dashboardAPI = {
   getNotifications: async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/dashboard/notifications`);
-      if (!response.ok) throw new Error('Failed to fetch notifications');
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Dashboard notifications API error:', error);
       return { success: false, error: error.message };
@@ -124,10 +120,32 @@ export default function Dashboard() {
   
   // Load backend data on component mount
   useEffect(() => {
-    loadBackendData();
-    // Refresh backend data every 30 seconds
-    const interval = setInterval(loadBackendData, 30000);
-    return () => clearInterval(interval);
+    let mounted = true;
+    let timeoutId = null;
+    let attempt = 0;
+
+    const scheduleNext = (ms) => {
+      if (!mounted) return;
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(runOnce, ms);
+    };
+
+    const runOnce = async () => {
+      if (!mounted) return;
+      const res = await loadBackendData();
+      // If an endpoint provided a Retry-After, honor it (loadBackendData will return a delay in ms), otherwise use 60s
+      const delay = typeof res === 'number' ? res : 60000;
+      attempt = res && res.error ? attempt + 1 : 0;
+      scheduleNext(delay);
+    };
+
+    // start
+    runOnce();
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
   
   const loadBackendData = async () => {
@@ -157,16 +175,22 @@ export default function Dashboard() {
           kycStatus: kycResult.success ? kycResult.data : null,
           tradingOverview: tradingResult.success ? tradingResult.data : null,
           stats: statsResult.success ? statsResult.data : null,
-          notifications: notificationsResult.success ? notificationsResult.data.notifications : []
+          notifications: notificationsResult.success ? (Array.isArray(notificationsResult.data) ? notificationsResult.data : notificationsResult.data.notifications || []) : []
         });
+
+        return 60000;
       } else {
         setBackendConnected(false);
         setBackendError('Server is currently busy. Please try again in a few minutes.');
+        // Suggest backoff of 60s when no endpoint succeeded
+        return 60000;
       }
     } catch (error) {
       setBackendConnected(false);
       setBackendError(`Backend connection failed: ${error.message}`);
       console.error('Backend data loading error:', error);
+      // On unexpected error, suggest short backoff
+      return nextDelayMs(1);
     } finally {
       setBackendLoading(false);
     }
@@ -283,10 +307,10 @@ export default function Dashboard() {
     };
 
     // Load market data only if backend is available
-    if (backendStatus === 'connected') {
+      if (backendStatus === 'connected') {
       loadMarketData();
-      // Set up interval for live updates only if backend is connected
-      const interval = setInterval(loadMarketData, 30000);
+      // Set up interval for live updates only if backend is connected (60s)
+      const interval = setInterval(loadMarketData, 60000);
       return () => clearInterval(interval);
     }
   }, [backendStatus]);
