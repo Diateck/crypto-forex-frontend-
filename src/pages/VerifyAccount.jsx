@@ -62,10 +62,6 @@ import {
   Delete,
   Close
 } from '@mui/icons-material';
-import { useUser } from '../contexts/UserContext';
-import { useNotifications } from '../contexts/NotificationContext';
-import { kycAPI } from '../services/api';
-import { getUserKYCStatus, getUserKYCLabel, getUserKYCColor } from '../utils/userStatus';
 
 // KYC Document Types
 const documentTypes = [
