@@ -1,9 +1,13 @@
 // Keep-Alive Service to prevent backend from sleeping
+import { safeParseResponse } from '../utils/safeResponse.js';
+import { nextDelayMs, retryAfterToMs } from '../utils/backoff';
+
 class KeepAliveService {
   constructor() {
     this.intervalId = null;
     this.isRunning = false;
-    this.pingInterval = 5 * 60 * 1000; // 5 minutes (more aggressive)
+  // Default ping every 5 minutes. We'll avoid overly aggressive pings.
+  this.pingInterval = 5 * 60 * 1000; // 5 minutes
     this.baseUrl = 'https://crypto-forex-backend-9mme.onrender.com';
     this.lastPingTime = null;
     this.consecutiveFailures = 0;
@@ -19,15 +23,15 @@ class KeepAliveService {
       return;
     }
 
-    console.log('🚀 Starting aggressive keep-alive service (5-minute intervals)...');
+  console.log('🚀 Starting keep-alive service (5-minute intervals)...');
     this.isRunning = true;
     
-    // Initial ping immediately
-    this.ping();
+  // Initial ping immediately but do not block startup
+  this.ping().catch(() => {});
     
     // Set up interval - ping every 5 minutes
     this.intervalId = setInterval(() => {
-      this.ping();
+  this.ping().catch(() => {});
     }, this.pingInterval);
 
     // Also add a secondary safety net - ping every 3 minutes during active sessions
@@ -50,45 +54,76 @@ class KeepAliveService {
       const startTime = Date.now();
       this.totalPings++;
       console.log(`🏓 Pinging backend server... (${this.totalPings} total pings)`);
-      
+
       // Use the lightweight ping endpoint for frequent checks
       const endpoint = this.consecutiveFailures > 0 ? '/health' : '/ping';
-      
+
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache', // Prevent caching
         },
-        // Short timeout for health checks
         signal: AbortSignal.timeout(10000) // 10 seconds timeout
       });
 
       const responseTime = Date.now() - startTime;
       this.lastPingTime = new Date().toISOString();
 
-      if (response.ok) {
-        const data = await response.json();
+      const parsed = await safeParseResponse(response);
+
+      if (parsed.success) {
         this.consecutiveFailures = 0;
         this.successfulPings++;
-        
+        const data = parsed.data || {};
+
         console.log(`✅ Backend alive (${endpoint}) - Response: ${responseTime}ms | Success Rate: ${this.successfulPings}/${this.totalPings}`, {
           status: data.status || 'alive',
           timestamp: data.timestamp,
           endpoint: endpoint
         });
-        
+
         // Dispatch custom event for other components
         window.dispatchEvent(new CustomEvent('backend-ping-success', {
           detail: { responseTime, data, totalPings: this.totalPings, endpoint }
         }));
       } else {
-        throw new Error(`HTTP ${response.status}`);
+        // Handle 429 specially by honoring Retry-After when present
+        this.consecutiveFailures++;
+        console.warn(`⚠️ Backend ping returned error status ${parsed.status}:`, parsed.error);
+
+        if (parsed.status === 429) {
+          const ra = parsed.retryAfter || retryAfterToMs(response);
+          const delay = ra ? Number(ra) : nextDelayMs(this.consecutiveFailures);
+          console.log(`⏳ Server asked to retry after ${delay}ms. Scheduling next ping accordingly.`);
+          // Clear existing interval and schedule a single delayed ping
+          if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+          }
+          setTimeout(() => {
+            if (this.isRunning) this.ping().catch(() => {});
+            // after the delayed ping, restore the interval
+            if (!this.intervalId && this.isRunning) {
+              this.intervalId = setInterval(() => this.ping().catch(() => {}), this.pingInterval);
+            }
+          }, delay);
+        } else {
+          // Generic failure handling
+          window.dispatchEvent(new CustomEvent('backend-ping-failed', {
+            detail: { error: parsed.error, failures: this.consecutiveFailures }
+          }));
+
+          if (this.consecutiveFailures >= this.maxFailures) {
+            console.log('🔄 Too many failures, switching to emergency mode (2-minute pings)');
+            this.emergencyMode();
+          }
+        }
       }
     } catch (error) {
       this.consecutiveFailures++;
       console.warn(`⚠️ Backend ping failed (${this.consecutiveFailures}/${this.maxFailures}) | Success Rate: ${this.successfulPings}/${this.totalPings}:`, error.message);
-      
+
       // Dispatch failure event
       window.dispatchEvent(new CustomEvent('backend-ping-failed', {
         detail: { error: error.message, failures: this.consecutiveFailures }
@@ -193,13 +228,12 @@ class KeepAliveService {
         }
       });
 
-      if (response.ok) {
-        const stats = await response.json();
-        console.log('📊 Backend Statistics:', stats);
-        return stats;
-      } else {
-        throw new Error(`HTTP ${response.status}`);
+      const parsed = await safeParseResponse(response);
+      if (parsed.success) {
+        console.log('📊 Backend Statistics:', parsed.data);
+        return parsed.data;
       }
+      throw new Error(parsed.error || `HTTP ${response.status}`);
     } catch (error) {
       console.error('❌ Failed to get backend stats:', error);
       return null;

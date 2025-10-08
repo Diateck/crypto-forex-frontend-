@@ -1,4 +1,5 @@
 // API Configuration and Base Service
+import { safeParseResponse } from '../utils/safeResponse.js';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://crypto-forex-backend.onrender.com';
 const API_TIMEOUT = 5000; // Reduced timeout to prevent long waits
 
@@ -56,12 +57,24 @@ class ApiService {
 
       clearTimeout(timeoutId);
 
+      // Handle non-OK responses gracefully
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const retryAfter = response.headers.get('Retry-After') || null;
+        const contentType = response.headers.get('content-type') || '';
+
+        // Try to parse JSON error body if present using safe parser
+        const parsedErr = await safeParseResponse(response).catch(() => ({ success: false, error: response.statusText }));
+        return { success: false, status: response.status, error: parsedErr.error || parsedErr.data || { message: response.statusText }, retryAfter };
       }
 
-      const data = await response.json();
-      return { success: true, data };
+      // Try to parse JSON, but handle non-JSON safely
+      const contentType = response.headers.get('content-type') || '';
+      // Use safe parser for OK responses as well
+      const parsed = await safeParseResponse(response).catch(() => ({ success: false, error: 'Invalid server response' }));
+      if (parsed.success) return { success: true, data: parsed.data };
+      // If parsing failed but response.ok, return raw text fallback
+      const text = await response.text().catch(() => null);
+      return { success: true, data: text };
     } catch (error) {
       console.warn(`API Request failed for ${endpoint}:`, error.message);
       return this.getFallbackData(endpoint, error);

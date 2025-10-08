@@ -1,6 +1,8 @@
 // Admin Authentication API Service
 const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
 
+import { safeParseResponse } from '../utils/safeResponse.js';
+
 const adminAuthAPI = {
   // Login admin
   async login(username, password) {
@@ -12,8 +14,7 @@ const adminAuthAPI = {
         },
         body: JSON.stringify({ username, password })
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Login API Error:', error);
       return { 
@@ -34,12 +35,11 @@ const adminAuthAPI = {
           'Authorization': `Bearer ${token}`
         }
       });
-      
       // Clear local storage regardless of response
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminData');
-      
-      return await response.json();
+
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Logout API Error:', error);
       // Still clear local storage
@@ -64,15 +64,14 @@ const adminAuthAPI = {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      const result = await response.json();
-      
-      if (!result.success) {
+      const result = await safeParseResponse(response);
+
+      if (!result.success && result.status === 401) {
         // Token is invalid, clear local storage
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminData');
       }
-      
+
       return result;
     } catch (error) {
       console.error('Token verification error:', error);
@@ -93,8 +92,7 @@ const adminAuthAPI = {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Get profile error:', error);
       return { success: false, error: 'Failed to fetch profile' };
@@ -113,8 +111,7 @@ const adminAuthAPI = {
         },
         body: JSON.stringify({ currentPassword, newPassword })
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Change password error:', error);
       return { success: false, error: 'Failed to change password' };
@@ -133,14 +130,13 @@ const adminAuthAPI = {
         },
         body: JSON.stringify(profileData)
       });
-      
-      const result = await response.json();
-      
+      const result = await safeParseResponse(response);
+
       // Update local storage if successful
-      if (result.success && result.data.admin) {
+      if (result.success && result.data && result.data.admin) {
         localStorage.setItem('adminData', JSON.stringify(result.data.admin));
       }
-      
+
       return result;
     } catch (error) {
       console.error('Update profile error:', error);
@@ -159,8 +155,7 @@ const adminAuthAPI = {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Get login history error:', error);
       return { success: false, error: 'Failed to fetch login history' };

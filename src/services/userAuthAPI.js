@@ -1,4 +1,5 @@
 import connectionManager from './connectionManager';
+import { safeParseResponse } from '../utils/safeResponse.js';
 
 const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api/auth';
 
@@ -14,26 +15,29 @@ class UserAuthAPI {
         body: JSON.stringify(userData)
       });
 
-      const data = await response.json();
+      const parsed = await safeParseResponse(response);
 
-      if (data.success) {
+      if (parsed.status === 429) {
+        return parsed;
+      }
+
+      if (parsed.success) {
         // Store token and user data
-        localStorage.setItem('userToken', data.data.token);
-        localStorage.setItem('userData', JSON.stringify(data.data.user));
+        const userObj = parsed.data?.user || parsed.data;
+        const token = parsed.data?.token || parsed.data?.accessToken || null;
+        if (token) localStorage.setItem('userToken', token);
+        if (userObj) localStorage.setItem('userData', JSON.stringify(userObj));
         localStorage.setItem('isAuth', 'true');
-        
+
         return {
           success: true,
-          user: data.data.user,
-          token: data.data.token,
-          message: data.message
-        };
-      } else {
-        return {
-          success: false,
-          error: data.message
+          user: userObj,
+          token,
+          message: parsed.data?.message || parsed.message
         };
       }
+
+      return { success: false, error: parsed.error || parsed.message };
     } catch (error) {
       console.error('Registration error:', error);
       return {
@@ -54,26 +58,21 @@ class UserAuthAPI {
         body: JSON.stringify({ email, password })
       });
 
-      const data = await response.json();
+      const parsed = await safeParseResponse(response);
 
-      if (data.success) {
-        // Store token and user data
-        localStorage.setItem('userToken', data.data.token);
-        localStorage.setItem('userData', JSON.stringify(data.data.user));
+      if (parsed.status === 429) return parsed;
+
+      if (parsed.success) {
+        const userObj = parsed.data?.user || parsed.data;
+        const token = parsed.data?.token || parsed.data?.accessToken || null;
+        if (token) localStorage.setItem('userToken', token);
+        if (userObj) localStorage.setItem('userData', JSON.stringify(userObj));
         localStorage.setItem('isAuth', 'true');
-        
-        return {
-          success: true,
-          user: data.data.user,
-          token: data.data.token,
-          message: data.message
-        };
-      } else {
-        return {
-          success: false,
-          error: data.message
-        };
+
+        return { success: true, user: userObj, token, message: parsed.data?.message || parsed.message };
       }
+
+      return { success: false, error: parsed.error || parsed.message };
     } catch (error) {
       console.error('Login error:', error);
       return {
@@ -124,36 +123,29 @@ class UserAuthAPI {
         }
       });
 
-      const data = await response.json();
+      const parsed = await safeParseResponse(response);
 
-      if (data.success) {
-        return {
-          success: true,
-          data: data.data
-        };
-      } else {
-        // Token is invalid, clear localStorage
+      // Respect rate limiting
+      if (parsed.status === 429) return parsed;
+
+      if (parsed.success) {
+        return { success: true, data: parsed.data };
+      }
+
+      // Only clear auth on explicit unauthorized response
+      if (parsed.status === 401) {
         localStorage.removeItem('userToken');
         localStorage.removeItem('userData');
         localStorage.removeItem('isAuth');
-        
-        return {
-          success: false,
-          error: data.message
-        };
+        return { success: false, error: parsed.error || 'Unauthorized' };
       }
+
+      return { success: false, error: parsed.error || parsed.message || 'Token verification failed' };
     } catch (error) {
       console.error('Token verification error:', error);
       
-      // Clear localStorage on error
-      localStorage.removeItem('userToken');
-      localStorage.removeItem('userData');
-      localStorage.removeItem('isAuth');
-      
-      return {
-        success: false,
-        error: 'Token verification failed'
-      };
+      // Do not clear localStorage on transient network errors
+      return { success: false, error: 'Token verification failed' };
     }
   }
 
@@ -174,21 +166,16 @@ class UserAuthAPI {
         }
       });
 
-      const data = await response.json();
+      const parsed = await safeParseResponse(response);
 
-      if (data.success) {
-        // Update stored user data
-        localStorage.setItem('userData', JSON.stringify(data.data));
-        return {
-          success: true,
-          user: data.data
-        };
-      } else {
-        return {
-          success: false,
-          error: data.message
-        };
+      if (parsed.status === 429) return parsed;
+
+      if (parsed.success) {
+        localStorage.setItem('userData', JSON.stringify(parsed.data));
+        return { success: true, user: parsed.data };
       }
+
+      return { success: false, error: parsed.error || parsed.message };
     } catch (error) {
       console.error('Profile fetch error:', error);
       return {
@@ -216,22 +203,16 @@ class UserAuthAPI {
         body: JSON.stringify(profileData)
       });
 
-      const data = await response.json();
+      const parsed = await safeParseResponse(response);
 
-      if (data.success) {
-        // Update stored user data
-        localStorage.setItem('userData', JSON.stringify(data.data));
-        return {
-          success: true,
-          user: data.data,
-          message: data.message
-        };
-      } else {
-        return {
-          success: false,
-          error: data.message
-        };
+      if (parsed.status === 429) return parsed;
+
+      if (parsed.success) {
+        localStorage.setItem('userData', JSON.stringify(parsed.data));
+        return { success: true, user: parsed.data, message: parsed.data?.message || parsed.message };
       }
+
+      return { success: false, error: parsed.error || parsed.message };
     } catch (error) {
       console.error('Profile update error:', error);
       return {
@@ -258,23 +239,17 @@ class UserAuthAPI {
         },
         body: JSON.stringify({ currentPassword, newPassword })
       });
+      const parsed = await safeParseResponse(response);
 
-      const data = await response.json();
+      if (parsed.status === 429) return parsed;
 
-      if (data.success) {
+      if (parsed.success) {
         // Password changed successfully, force logout
         this.logout();
-        return {
-          success: true,
-          message: data.message,
-          requireRelogin: true
-        };
-      } else {
-        return {
-          success: false,
-          error: data.message
-        };
+        return { success: true, message: parsed.data?.message || parsed.message, requireRelogin: true };
       }
+
+      return { success: false, error: parsed.error || parsed.message };
     } catch (error) {
       console.error('Password change error:', error);
       return {
@@ -301,19 +276,9 @@ class UserAuthAPI {
         }
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        return {
-          success: true,
-          balance: data.data
-        };
-      } else {
-        return {
-          success: false,
-          error: data.message
-        };
-      }
+      const parsed = await safeParseResponse(response);
+      if (parsed.success) return { success: true, balance: parsed.data };
+      return { success: false, error: parsed.error || parsed.message };
     } catch (error) {
       console.error('Balance fetch error:', error);
       return {
@@ -344,22 +309,17 @@ class UserAuthAPI {
         }
       });
 
-      const data = await response.json();
-
-      if (data.success) {
+      const parsed = await safeParseResponse(response);
+      if (parsed.success) {
         return {
           success: true,
-          activities: data.data.activities,
-          total: data.data.total,
-          offset: data.data.offset,
-          limit: data.data.limit
-        };
-      } else {
-        return {
-          success: false,
-          error: data.message
+          activities: parsed.data.activities,
+          total: parsed.data.total,
+          offset: parsed.data.offset,
+          limit: parsed.data.limit
         };
       }
+      return { success: false, error: parsed.error || parsed.message };
     } catch (error) {
       console.error('Activities fetch error:', error);
       return {

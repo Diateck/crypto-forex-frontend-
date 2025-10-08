@@ -74,7 +74,10 @@ class ConnectionManager {
 
         clearTimeout(timeoutId);
 
-        // If we get here, connection is working
+        // If we get here, the network transported a response.
+        // Do NOT treat 429 (Too Many Requests) as a connectivity failure here
+        // — return the response to the caller so they can inspect status and
+        // Retry-After header and decide on backoff behavior.
         if (this.connectionStatus !== 'connected') {
           this.setStatus('connected', 'Connection restored');
         }
@@ -112,14 +115,21 @@ class ConnectionManager {
       this.setStatus('connecting', 'Testing connection...');
       
       const response = await this.fetchWithRetry('https://crypto-forex-backend-9mme.onrender.com/health');
-      
-      if (response.ok) {
-        const data = await response.json();
-        this.setStatus('connected', 'Connection test successful');
-        return { success: true, data };
-      } else {
-        throw new Error(`HTTP ${response.status}`);
+  const { safeParseResponse } = await import('../utils/safeResponse.js');
+      const parsed = await safeParseResponse(response);
+
+      if (parsed.status === 429) {
+        // Respect server's retry suggestion but treat as failure for connection test
+        this.setStatus('disconnected', 'Rate limited during connection test');
+        return { success: false, status: 429, retryAfter: parsed.retryAfter };
       }
+
+      if (parsed.success) {
+        this.setStatus('connected', 'Connection test successful');
+        return { success: true, data: parsed.data };
+      }
+
+      throw new Error(parsed.error || 'Connection test failed');
     } catch (error) {
       this.setStatus('disconnected', `Connection test failed: ${error.message}`);
       return { success: false, error: error.message };

@@ -16,12 +16,7 @@ const adminAPI = {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}` // For authentication
         }
       });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Dashboard API Error:', error);
       return { 
@@ -77,8 +72,7 @@ const adminAPI = {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Users API Error:', error);
       return { success: false, error: 'Failed to fetch users' };
@@ -94,8 +88,7 @@ const adminAPI = {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('User Details API Error:', error);
       return { success: false, error: 'Failed to fetch user details' };
@@ -112,8 +105,7 @@ const adminAPI = {
         },
         body: JSON.stringify({ status, reason })
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Update User Status API Error:', error);
       return { success: false, error: 'Failed to update user status' };
@@ -131,8 +123,7 @@ const adminAPI = {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('KYC API Error:', error);
       return { 
@@ -187,8 +178,7 @@ const adminAPI = {
         },
         body: JSON.stringify({ adminNotes })
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Approve KYC API Error:', error);
       return { success: false, error: 'Failed to approve KYC' };
@@ -205,8 +195,7 @@ const adminAPI = {
         },
         body: JSON.stringify({ rejectionReason, adminNotes })
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Reject KYC API Error:', error);
       return { success: false, error: 'Failed to reject KYC' };
@@ -224,8 +213,7 @@ const adminAPI = {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Admin Deposits API Error:', error);
       return { 
@@ -285,8 +273,7 @@ const adminAPI = {
         },
         body: JSON.stringify({ adminNotes })
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Approve Deposit API Error:', error);
       return { success: false, error: 'Failed to approve deposit' };
@@ -303,8 +290,7 @@ const adminAPI = {
         },
         body: JSON.stringify({ adminNotes })
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Reject Deposit API Error:', error);
       return { success: false, error: 'Failed to reject deposit' };
@@ -322,8 +308,7 @@ const adminAPI = {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Admin Withdrawals API Error:', error);
       return { 
@@ -382,8 +367,7 @@ const adminAPI = {
         },
         body: JSON.stringify({ adminNotes })
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Approve Withdrawal API Error:', error);
       return { success: false, error: 'Failed to approve withdrawal' };
@@ -400,8 +384,7 @@ const adminAPI = {
         },
         body: JSON.stringify({ adminNotes })
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Reject Withdrawal API Error:', error);
       return { success: false, error: 'Failed to reject withdrawal' };
@@ -419,8 +402,7 @@ const adminAPI = {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Trading API Error:', error);
       return { 
@@ -480,8 +462,7 @@ const adminAPI = {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Settings API Error:', error);
       return { success: false, error: 'Failed to fetch settings' };
@@ -498,8 +479,7 @@ const adminAPI = {
         },
         body: JSON.stringify({ settings })
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Update Settings API Error:', error);
       return { success: false, error: 'Failed to update settings' };
@@ -517,8 +497,7 @@ const adminAPI = {
           'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         }
       });
-      
-      return await response.json();
+      return await safeParseResponse(response);
     } catch (error) {
       console.error('Logs API Error:', error);
       return { success: false, error: 'Failed to fetch activity logs' };
