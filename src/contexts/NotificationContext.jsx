@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
+import { safeParseResponse } from '../utils/safeResponse.js';
+import { nextDelayMs, retryAfterToMs } from '../utils/backoff';
 
 const NotificationContext = createContext();
 
@@ -75,7 +77,9 @@ export const NotificationProvider = ({ children }) => {
   // Backend API configuration
   const BACKEND_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
 
-  // Fetch notifications from backend
+  const attemptRef = useRef(0);
+
+  // Fetch notifications from backend with safe parsing and backoff
   const fetchNotifications = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/dashboard/notifications`, {
@@ -85,28 +89,43 @@ export const NotificationProvider = ({ children }) => {
         }
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          // Add unique IDs and timestamps if not present
-          const processedNotifications = data.data.map((notification, index) => ({
-            id: notification.id || `backend-${Date.now()}-${index}`,
-            type: notification.type || 'info',
-            title: notification.title || 'Notification',
-            message: notification.message,
-            timestamp: notification.timestamp || new Date().toISOString(),
-            read: false,
-            source: 'backend'
-          }));
+      const parsed = await safeParseResponse(response);
 
-          dispatch({
-            type: NOTIFICATION_ACTIONS.SET_NOTIFICATIONS,
-            payload: processedNotifications
-          });
-        }
+      if (parsed.success && parsed.data) {
+        attemptRef.current = 0; // reset on success
+        const data = Array.isArray(parsed.data) ? parsed.data : parsed.data.notifications || [];
+
+        const processedNotifications = data.map((notification, index) => ({
+          id: notification.id || `backend-${Date.now()}-${index}`,
+          type: notification.type || 'info',
+          title: notification.title || 'Notification',
+          message: notification.message,
+          timestamp: notification.timestamp || new Date().toISOString(),
+          read: false,
+          source: 'backend'
+        }));
+
+        dispatch({
+          type: NOTIFICATION_ACTIONS.SET_NOTIFICATIONS,
+          payload: processedNotifications
+        });
+      } else if (parsed.status === 429) {
+        // honor Retry-After header if present
+        const raMs = parsed.retryAfter || retryAfterToMs(response);
+        const delay = raMs ? Number(raMs) : nextDelayMs(attemptRef.current);
+        attemptRef.current++;
+        console.warn(`Notifications endpoint rate-limited. Backing off for ${delay}ms.`);
+        // schedule next poll after delay by returning and letting interval handle it
+        return delay;
+      } else {
+        attemptRef.current++;
+        console.warn('Failed to fetch notifications:', parsed.error);
+        return nextDelayMs(attemptRef.current);
       }
     } catch (error) {
+      attemptRef.current++;
       console.error('Failed to fetch notifications:', error);
+      return nextDelayMs(attemptRef.current);
     }
   };
 
@@ -166,14 +185,32 @@ export const NotificationProvider = ({ children }) => {
     state.isVisible = !state.isVisible;
   };
 
-  // Fetch notifications on mount and set up interval
+  // Fetch notifications on mount and set up backoff-aware polling
   useEffect(() => {
-    fetchNotifications();
-    
-    // Refresh notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    
-    return () => clearInterval(interval);
+    let mounted = true;
+    let timeoutId = null;
+
+    const scheduleNext = (ms) => {
+      if (!mounted) return;
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(runOnce, ms);
+    };
+
+    const runOnce = async () => {
+      if (!mounted) return;
+      const result = await fetchNotifications();
+      // If fetchNotifications returned a numeric delay, use it; otherwise use normal 60s
+      const delay = typeof result === 'number' ? result : 60000;
+      scheduleNext(delay);
+    };
+
+    // Start immediately
+    runOnce();
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const contextValue = {

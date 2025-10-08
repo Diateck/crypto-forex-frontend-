@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
+import { safeParseResponse } from '../utils/safeResponse.js';
+import { nextDelayMs, retryAfterToMs } from '../utils/backoff';
 
 const BalanceContext = createContext();
 
@@ -77,11 +79,13 @@ export const BalanceProvider = ({ children }) => {
   // Backend API configuration
   const BACKEND_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
 
-  // Fetch balance from backend
+  const attemptRef = useRef(0);
+
+  // Fetch balance from backend with safe parsing/backoff
   const fetchBalance = async () => {
     try {
       dispatch({ type: BALANCE_ACTIONS.SET_LOADING, payload: true });
-      
+
       const response = await fetch(`${BACKEND_URL}/dashboard/balance`, {
         method: 'GET',
         headers: {
@@ -89,25 +93,35 @@ export const BalanceProvider = ({ children }) => {
         }
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          dispatch({
-            type: BALANCE_ACTIONS.SET_BALANCE,
-            payload: data.data.totalBalance || data.data.balance || 0
-          });
-          state.isConnected = true;
-        }
-      } else {
-        throw new Error('Failed to fetch balance');
+      const parsed = await safeParseResponse(response);
+
+      if (parsed.success && parsed.data) {
+        attemptRef.current = 0;
+        const bal = parsed.data.totalBalance || parsed.data.balance || 0;
+        dispatch({ type: BALANCE_ACTIONS.SET_BALANCE, payload: bal });
+        state.isConnected = true;
+        return 60000; // normal next poll (60s)
       }
-    } catch (error) {
-      console.error('Balance fetch error:', error);
-      dispatch({
-        type: BALANCE_ACTIONS.SET_ERROR,
-        payload: 'Failed to fetch balance'
-      });
+
+      if (parsed.status === 429) {
+        attemptRef.current++;
+        const raMs = parsed.retryAfter || retryAfterToMs(response);
+        const delay = raMs ? Number(raMs) : nextDelayMs(attemptRef.current);
+        console.warn(`Balance endpoint rate-limited. Backing off for ${delay}ms.`);
+        return delay;
+      }
+
+      attemptRef.current++;
+      console.warn('Balance fetch error:', parsed.error);
+      dispatch({ type: BALANCE_ACTIONS.SET_ERROR, payload: 'Failed to fetch balance' });
       state.isConnected = false;
+      return nextDelayMs(attemptRef.current);
+    } catch (error) {
+      attemptRef.current++;
+      console.error('Balance fetch error:', error);
+      dispatch({ type: BALANCE_ACTIONS.SET_ERROR, payload: 'Failed to fetch balance' });
+      state.isConnected = false;
+      return nextDelayMs(attemptRef.current);
     }
   };
 
@@ -140,14 +154,29 @@ export const BalanceProvider = ({ children }) => {
     fetchBalance();
   };
 
-  // Fetch balance on mount and set up interval
+  // Fetch balance on mount and set up backoff-aware polling
   useEffect(() => {
-    fetchBalance();
-    
-    // Refresh balance every 30 seconds
-    const interval = setInterval(fetchBalance, 30000);
-    
-    return () => clearInterval(interval);
+    let mounted = true;
+    let timeoutId = null;
+
+    const scheduleNext = (ms) => {
+      if (!mounted) return;
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(runOnce, ms);
+    };
+
+    const runOnce = async () => {
+      if (!mounted) return;
+      const delay = await fetchBalance();
+      scheduleNext(typeof delay === 'number' ? delay : 60000);
+    };
+
+    runOnce();
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   const contextValue = {
