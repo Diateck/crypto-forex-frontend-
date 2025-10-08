@@ -27,7 +27,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { useTheme } from '@mui/material/styles';
 import { useUser } from '../contexts/UserContext';
 import { getUserEmail, getUserDisplayName, getKYCStatusLabel, getKYCStatusColor } from '../utils/userStatus';
-import { safeParseResponse } from '../utils/safeResponse';
+import { safeParseResponse } from '../utils/safeResponse.js';
 
 // Backend API configuration - Use live deployed backend
 const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';

@@ -22,7 +22,7 @@ import { marketAPI } from '../services/api';
 import useLiveDashboard from '../hooks/useLiveDashboard';
 import useLiveCopyTrading from '../hooks/useLiveCopyTrading';
 import ContactModal from '../components/ContactModal';
-import { safeParseResponse } from '../utils/safeResponse';
+import { safeParseResponse } from '../utils/safeResponse.js';
 import { nextDelayMs, retryAfterToMs } from '../utils/backoff';
 
 // Backend API base URL - Use live deployed backend

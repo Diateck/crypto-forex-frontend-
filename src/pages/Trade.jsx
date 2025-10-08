@@ -41,7 +41,7 @@ import { getTraderStatusLabel, getKYCStatusColor } from '../utils/userStatus';
 import { useBalance } from '../contexts/BalanceContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import useLiveTrading from '../hooks/useLiveTrading';
-import { safeParseResponse } from '../utils/safeResponse';
+import { safeParseResponse } from '../utils/safeResponse.js';
 
 // Backend API configuration - Updated to use deployed backend
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crypto-forex-backend-9mme.onrender.com/api';

@@ -32,7 +32,7 @@ import { useTheme } from '@mui/material/styles';
 import { useUser } from '../contexts/UserContext';
 import { useBalance } from '../contexts/BalanceContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { safeParseResponse } from '../utils/safeResponse';
+import { safeParseResponse } from '../utils/safeResponse.js';
 
 // Backend API configuration - Use live deployed backend
 const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';

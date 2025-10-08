@@ -61,7 +61,7 @@ const activityAPI = {
   // Get all user activities (trades, deposits, withdrawals)
   getAllActivities: async (userId) => {
     try {
-      const { safeParseResponse } = await import('../utils/safeResponse');
+  const { safeParseResponse } = await import('../utils/safeResponse.js');
 
       const [tradesResp, depositsResp, withdrawalsResp] = await Promise.all([
         fetch(`${API_BASE_URL}/trading/history/${userId}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } }),
