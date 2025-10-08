@@ -140,8 +140,8 @@ function Register() {
       });
       
       if (result.success) {
-        // Success - redirect will happen via useEffect
-        console.log('Registration successful');
+        // Success - auto-login and redirect to dashboard
+        navigate('/dashboard');
       } else {
         // Check if it's a server connectivity issue
         if (result.error.includes('Network error') || result.error.includes('fetch')) {
