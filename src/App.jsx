@@ -32,10 +32,8 @@ import { UserProvider, useUser } from './contexts';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { BalanceProvider } from './contexts/BalanceContext';
 import NotificationPanel from './components/NotificationPanel';
-import ConnectionStatus from './components/ConnectionStatus';
-import EnhancedConnectionStatus from './components/EnhancedConnectionStatus';
-import keepAliveService from './services/keepAliveService';
-import keepAliveDebugger from './utils/debugKeepAlive';
+// Connection status UI removed per request
+// Keep-alive service removed
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -370,23 +368,9 @@ function AppContent() {
 }
 
 function App() {
-  // Start keep-alive service when app initializes
+  // Keep-alive service removed — no background pings or connection UI
   React.useEffect(() => {
-    console.log('🚀 Initializing enhanced keep-alive system...');
-    
-    // Start the keep-alive service
-    keepAliveService.start();
-    
-    // Start debugging in development
-    if (process.env.NODE_ENV === 'development') {
-      keepAliveDebugger.startLogging();
-      console.log('🔍 Keep-alive debugging enabled. Use window.keepAliveDebugger and window.keepAlive in console');
-    }
-    
-    return () => {
-      keepAliveService.stop();
-      keepAliveDebugger.stopLogging();
-    };
+    // Intentionally left blank
   }, []);
 
   return (
@@ -394,8 +378,7 @@ function App() {
       <UserProvider>
         <BalanceProvider>
           <NotificationProvider>
-            <ConnectionStatus />
-            <EnhancedConnectionStatus />
+            {/* Connection status UI removed */}
             <Router>
               <AppContent />
             </Router>
