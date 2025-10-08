@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useBalance } from '../contexts/BalanceContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { safeParseResponse } from '../utils/safeResponse.js';
+import { nextDelayMs, retryAfterToMs } from '../utils/backoff';
 
 // Backend API base URL
 const API_BASE_URL = 'https://crypto-forex-backend-9mme.onrender.com/api';
@@ -33,10 +35,7 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
           }
         });
-        if (response.ok) {
-          return await response.json();
-        }
-        throw new Error('Failed to fetch positions');
+        return await safeParseResponse(response);
       } catch (error) {
         console.error('API Error:', error);
         return { success: false, error: error.message };
@@ -50,10 +49,7 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
           }
         });
-        if (response.ok) {
-          return await response.json();
-        }
-        throw new Error('Failed to fetch history');
+        return await safeParseResponse(response);
       } catch (error) {
         console.error('API Error:', error);
         return { success: false, error: error.message };
@@ -67,10 +63,7 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
           }
         });
-        if (response.ok) {
-          return await response.json();
-        }
-        throw new Error('Failed to fetch overview');
+        return await safeParseResponse(response);
       } catch (error) {
         console.error('API Error:', error);
         return { success: false, error: error.message };
@@ -86,10 +79,7 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
           },
           body: JSON.stringify({ symbols })
         });
-        if (response.ok) {
-          return await response.json();
-        }
-        throw new Error('Failed to fetch market data');
+        return await safeParseResponse(response);
       } catch (error) {
         console.error('API Error:', error);
         return { success: false, error: error.message };
@@ -98,12 +88,13 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
   };
 
   // Load trading data from backend
+  const attemptRef = useRef(0);
+
   const loadTradingData = useCallback(async () => {
     if (!userId) return;
 
     try {
       setLoading(true);
-
       const [positionsResult, historyResult, overviewResult] = await Promise.all([
         tradingAPI.getActivePositions(userId),
         tradingAPI.getTradingHistory(userId),
@@ -149,6 +140,13 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
         calculateTradingStats(newTradingData.tradeHistory);
       }
 
+
+      if (isBackendConnected) {
+        attemptRef.current = 0;
+      } else {
+        attemptRef.current++;
+      }
+
       newTradingData.isLive = isBackendConnected;
       newTradingData.lastUpdated = new Date().toISOString();
       newTradingData.error = null;
@@ -168,6 +166,8 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
   }, [userId]);
 
   // Load market data
+  const marketAttemptRef = useRef(0);
+
   const loadMarketData = useCallback(async () => {
     try {
       const symbols = [
@@ -175,18 +175,32 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
         'FX:EURUSD', 'FX:GBPUSD', 'FX:USDJPY',
         'NASDAQ:AAPL', 'NASDAQ:TSLA', 'NASDAQ:GOOGL'
       ];
-
       const marketResult = await tradingAPI.getMarketData(symbols);
-      
+
       if (marketResult.success) {
+        marketAttemptRef.current = 0;
         setTradingData(prev => ({
           ...prev,
           marketData: marketResult.data.prices || {},
           lastUpdated: new Date().toISOString()
         }));
+        return 5000;
       }
+
+      // handle rate-limit/backoff
+      marketAttemptRef.current++;
+      if (marketResult.status === 429) {
+        const ra = marketResult.retryAfter || null;
+        const delay = ra ? Number(ra) : nextDelayMs(marketAttemptRef.current);
+        console.warn(`Market data rate-limited. Backing off ${delay}ms.`);
+        return delay;
+      }
+
+      return nextDelayMs(marketAttemptRef.current);
     } catch (error) {
       console.warn('Market data update failed:', error);
+      marketAttemptRef.current++;
+      return nextDelayMs(marketAttemptRef.current);
     }
   }, []);
 
@@ -218,13 +232,12 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
         },
         body: JSON.stringify(tradeData)
       });
-
-      const result = await response.json();
+      const result = await safeParseResponse(response);
       
       if (result.success) {
         // Update balance immediately in context
         updateBalance(balance - tradeData.amount);
-        
+
         // Add success notification
         addNotification({
           message: result.message || 'Trade executed successfully!',
@@ -235,10 +248,10 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
         // Reload trading data
         await loadTradingData();
         
-        return result;
-      } else {
-        throw new Error(result.message || 'Trade submission failed');
+        return result.data || { success: true };
       }
+
+      throw new Error(result.error || result.message || 'Trade submission failed');
     } catch (error) {
       addNotification({
         message: `Trade failed: ${error.message}`,
@@ -260,24 +273,23 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
         },
         body: JSON.stringify({ tradeId, closePrice })
       });
+      const result = await safeParseResponse(response);
 
-      const result = await response.json();
-      
       if (result.success) {
         // Add success notification
         addNotification({
-          message: result.message || 'Trade closed successfully!',
-          type: result.data.pnl >= 0 ? 'success' : 'warning',
+          message: result.data?.message || 'Trade closed successfully!',
+          type: result.data?.pnl >= 0 ? 'success' : 'warning',
           timestamp: new Date().toISOString()
         });
 
         // Reload trading data and balance
         await loadTradingData();
         
-        return result;
-      } else {
-        throw new Error(result.message || 'Trade closure failed');
+        return result.data || { success: true };
       }
+
+      throw new Error(result.error || result.message || 'Trade closure failed');
     } catch (error) {
       addNotification({
         message: `Failed to close trade: ${error.message}`,
@@ -291,16 +303,37 @@ const useLiveTrading = (userId, updateInterval = 10000) => {
   // Initialize and set up intervals
   useEffect(() => {
     if (userId) {
-      loadTradingData();
-      loadMarketData();
+      // backoff-aware scheduling
+      let mounted = true;
+      let tradingTimeout = null;
+      let marketTimeout = null;
 
-      // Set up periodic updates
-      const tradingInterval = setInterval(loadTradingData, updateInterval);
-      const marketInterval = setInterval(loadMarketData, 5000); // Market data every 5 seconds
+      const scheduleTrading = (ms) => {
+        if (!mounted) return;
+        clearTimeout(tradingTimeout);
+        tradingTimeout = setTimeout(async () => {
+          await loadTradingData();
+          scheduleTrading( updateInterval );
+        }, ms);
+      };
+
+      const scheduleMarket = (ms) => {
+        if (!mounted) return;
+        clearTimeout(marketTimeout);
+        marketTimeout = setTimeout(async () => {
+          const delay = await loadMarketData();
+          scheduleMarket(typeof delay === 'number' ? delay : 5000);
+        }, ms);
+      };
+
+      // start
+      loadTradingData().then(() => scheduleTrading(updateInterval));
+      loadMarketData().then((delay) => scheduleMarket(typeof delay === 'number' ? delay : 5000));
 
       return () => {
-        clearInterval(tradingInterval);
-        clearInterval(marketInterval);
+        mounted = false;
+        clearTimeout(tradingTimeout);
+        clearTimeout(marketTimeout);
       };
     }
   }, [userId, updateInterval, loadTradingData, loadMarketData]);

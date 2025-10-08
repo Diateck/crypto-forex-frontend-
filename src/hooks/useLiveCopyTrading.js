@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { useBalance } from '../contexts/BalanceContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { safeParseResponse } from '../utils/safeResponse.js';
+import { nextDelayMs, retryAfterToMs } from '../utils/backoff';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://crypto-forex-backend-9mme.onrender.com/api';
 
@@ -46,18 +48,14 @@ export const useLiveCopyTrading = () => {
           'Content-Type': 'application/json',
         },
       });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setTraders(data.data);
+      const parsed = await safeParseResponse(response);
+
+      if (parsed.success) {
+        const data = parsed.data;
+        setTraders(data || []);
         addNotification?.({
           type: 'success',
-          message: `Loaded ${data.data.length} live traders from ${data.platforms.length} platforms`,
+          message: `Loaded ${Array.isArray(data) ? data.length : 0} live traders`,
           duration: 3000
         });
       } else {
@@ -121,23 +119,17 @@ export const useLiveCopyTrading = () => {
           'Content-Type': 'application/json',
         },
       });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setMyCopies(data.data);
-        
+      const parsed = await safeParseResponse(response);
+      if (parsed.success) {
+        const data = parsed.data || [];
+        setMyCopies(data);
+
         // Update balance context with copy trading performance
-        if (data.summary && updateBalance) {
-          updateBalance('copyTradingProfit', data.summary.totalProfit);
-          updateBalance('copyTradingInvested', data.summary.totalInvested);
+        if (parsed.data && parsed.data.summary && updateBalance) {
+          updateBalance('copyTradingProfit', parsed.data.summary.totalProfit);
+          updateBalance('copyTradingInvested', parsed.data.summary.totalInvested);
         }
       } else {
-        // Fallback to localStorage
         const savedCopies = JSON.parse(localStorage.getItem(`myCopies_${user.id}`) || '[]');
         setMyCopies(savedCopies);
       }
@@ -152,10 +144,9 @@ export const useLiveCopyTrading = () => {
   const fetchPlatforms = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/copy-trading/platforms`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setPlatforms(data.data);
+      const parsed = await safeParseResponse(response);
+      if (parsed.success) {
+        setPlatforms(parsed.data || []);
       }
     } catch (err) {
       console.error('Error fetching platforms:', err);
@@ -189,14 +180,15 @@ export const useLiveCopyTrading = () => {
           userId: user.id
         }),
       });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to copy trader');
+      const parsed = await safeParseResponse(response);
+
+      if (!parsed.success) {
+        throw new Error(parsed.error || 'Failed to copy trader');
       }
-      
-      if (data.success) {
+
+      const data = parsed.data;
+
+      if (parsed.success) {
         // Refresh my copies
         await fetchMyCopies();
         
@@ -247,9 +239,15 @@ export const useLiveCopyTrading = () => {
         body: JSON.stringify({ closePositions }),
       });
       
-      const data = await response.json();
-      
-      if (data.success) {
+      const parsed = await safeParseResponse(response);
+
+      if (!parsed.success) {
+        throw new Error(parsed.error || 'Failed to stop copy');
+      }
+
+      const data = parsed.data;
+
+      if (parsed.success) {
         // Refresh my copies
         await fetchMyCopies();
         
@@ -280,13 +278,9 @@ export const useLiveCopyTrading = () => {
   const getTraderDetails = useCallback(async (traderId) => {
     try {
       const response = await fetch(`${API_BASE_URL}/copy-trading/trader/${traderId}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        return data.data;
-      } else {
-        throw new Error(data.message);
-      }
+      const parsed = await safeParseResponse(response);
+      if (parsed.success) return parsed.data;
+      throw new Error(parsed.error || 'Failed to fetch trader details');
     } catch (err) {
       console.error('Error fetching trader details:', err);
       throw err;
@@ -297,13 +291,9 @@ export const useLiveCopyTrading = () => {
   const getTraderActivity = useCallback(async (traderId, limit = 20) => {
     try {
       const response = await fetch(`${API_BASE_URL}/copy-trading/trader/${traderId}/activity?limit=${limit}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        return data.data;
-      } else {
-        throw new Error(data.message);
-      }
+      const parsed = await safeParseResponse(response);
+      if (parsed.success) return parsed.data;
+      throw new Error(parsed.error || 'Failed to fetch trader activity');
     } catch (err) {
       console.error('Error fetching trader activity:', err);
       throw err;
@@ -316,14 +306,12 @@ export const useLiveCopyTrading = () => {
     
     try {
       const response = await fetch(`${API_BASE_URL}/copy-trading/performance/${user.id}?period=${period}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setPerformanceData(data.data);
-        return data.data;
-      } else {
-        throw new Error(data.message);
+      const parsed = await safeParseResponse(response);
+      if (parsed.success) {
+        setPerformanceData(parsed.data);
+        return parsed.data;
       }
+      throw new Error(parsed.error || 'Failed to fetch performance data');
     } catch (err) {
       console.error('Error fetching performance data:', err);
       // Fallback performance data
@@ -351,14 +339,12 @@ export const useLiveCopyTrading = () => {
     
     try {
       const response = await fetch(`${API_BASE_URL}/copy-trading/history/${user.id}?limit=${limit}&offset=${offset}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setTradingHistory(data.data);
-        return data.data;
-      } else {
-        throw new Error(data.message);
+      const parsed = await safeParseResponse(response);
+      if (parsed.success) {
+        setTradingHistory(parsed.data);
+        return parsed.data;
       }
+      throw new Error(parsed.error || 'Failed to fetch history');
     } catch (err) {
       console.error('Error fetching trading history:', err);
       setTradingHistory([]);
@@ -458,17 +444,34 @@ export const useLiveCopyTrading = () => {
     };
   }, [disconnectLiveStream]);
 
-  // Auto-refresh data every 30 seconds
+  // Auto-refresh data every 60 seconds with basic backoff
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchTopTraders();
+    let mounted = true;
+    let timeoutId = null;
+    let attempt = 0;
+
+    const scheduleNext = (ms) => {
+      if (!mounted) return;
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(runOnce, ms);
+    };
+
+    const runOnce = async () => {
+      if (!mounted) return;
+      const parsed = await fetchTopTraders();
       if (user?.id) {
-        fetchMyCopies();
-        fetchPerformanceData();
+        await fetchMyCopies();
+        await fetchPerformanceData();
       }
-    }, 30000);
-    
-    return () => clearInterval(interval);
+      scheduleNext(60000);
+    };
+
+    runOnce();
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [fetchTopTraders, fetchMyCopies, fetchPerformanceData, user?.id]);
 
   return {
